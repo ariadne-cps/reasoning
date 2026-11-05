@@ -26,7 +26,7 @@ Reasoning directly uses [Evolution](https://github.com/ariadne-cps/evolution),
 used for the initial CMake bootstrap. Evolution supplies its dependencies
 transitively. C++ test executables also link [Ariadne Testing](https://github.com/ariadne-cps/testing),
 pinned as the test-only `ss/tst` submodule. Reachability and safety test cases
-run in isolated fixtures; standalone header-compilation checks remain unchanged.
+run in isolated fixtures.
 
 ## Build and test
 

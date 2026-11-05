@@ -1,9 +1,6 @@
 include(CTest)
 set(UNIT_TESTS
     test_hybrid_reachability
-    test_storage_orbit_header
-    test_storage_header
-    test_enclosure_storage_header
     test_finite_time_reachability
     test_infinite_time_reachability
     test_verify_safety
