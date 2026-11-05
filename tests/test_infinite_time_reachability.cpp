@@ -142,6 +142,12 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture
 
         plot("test_reachability_analyser-map_infinite_time_lower_reach.png",Projection2d(2,0,1),graphics_box,
              reach_set_colour,lower_reach_set);
+
+        // Zero transient time and no bounding domain: both restriction and
+        // transient steps are skipped.
+        analyser.configuration().set_transient_time(0.0_dec);
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        analyser.lower_reach(initial_set);
     }
 
     Void test_outer_chain_reach() {

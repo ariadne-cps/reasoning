@@ -188,6 +188,7 @@ Void TestHybridReachability::test_analyser_configuration() {
     ARIADNE_TESTING_NOTE(ChainOverspillPolicy::IGNORE);
     ARIADNE_TESTING_NOTE(ChainOverspillPolicy::WARNING);
     ARIADNE_TESTING_NOTE(ChainOverspillPolicy::ERROR);
+    ARIADNE_TESTING_NOTE(static_cast<ChainOverspillPolicy>(255));
 }
 
 Void TestHybridReachability::test_lower_reachability() {
@@ -221,6 +222,10 @@ Void TestHybridReachability::test_lower_reachability() {
     analyser->configuration().set_transient_time(0.5);
     auto transient_lower_reach = analyser->lower_reach(initial);
     ARIADNE_TESTING_PROVE(transient_lower_reach.size() > 0u);
+
+    // No bounding domain: the restriction steps are skipped.
+    analyser->configuration().set_bounding_domain_ptr(nullptr);
+    analyser->lower_reach(initial);
 }
 
 Void TestHybridReachability::test_upper_reachability() {
@@ -261,6 +266,11 @@ Void TestHybridReachability::test_outer_chain_reach() {
     analyser->configuration().set_transient_time(1.0);
     auto transient_chain_reach = analyser->outer_chain_reach(initial);
     ARIADNE_TESTING_PROVE(transient_chain_reach.size() > 0u);
+
+    // No bounding domain: the restriction steps are skipped.
+    analyser->configuration().set_bounding_domain_ptr(nullptr);
+    auto unbounded_chain_reach = analyser->outer_chain_reach(initial);
+    ARIADNE_TESTING_PROVE(unbounded_chain_reach.size() > 0u);
 }
 
 Void TestHybridReachability::test_verify_safety() {

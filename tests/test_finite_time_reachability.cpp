@@ -197,6 +197,8 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
 
     Void test_analyser_accessors() {
         const AnalyserType& const_analyser = analyser;
+        // Print the configuration with no bounding domain set.
+        ARIADNE_TESTING_NOTE(const_analyser.configuration());
         ARIADNE_TESTING_EXPECT_EQUAL(const_analyser.configuration().maximum_grid_fineness(), 3u);
         ARIADNE_TESTING_NOTE(analyser.evolver().system());
         ARIADNE_TESTING_PROVE(&analyser.system() != nullptr);

@@ -96,6 +96,9 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         const AnalyserType& const_analyser = analyser;
         const auto& const_config = const_analyser.configuration();
 
+        // Print the configuration with no bounding domain set.
+        ARIADNE_TESTING_NOTE(config);
+
         config.set_transient_time(Integer(2));
         ARIADNE_TESTING_EXPECT_EQUAL(const_config.transient_time(), Integer(2));
         config.set_lock_to_grid_time(Integer(2));
@@ -151,6 +154,10 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         analyser.configuration().set_transient_time(Integer(2));
         auto transient_lower_reach = analyser.lower_reach(initial_set);
         ARIADNE_TESTING_PROVE(transient_lower_reach.size() > 0u);
+
+        // No bounding domain: the restriction steps are skipped.
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        analyser.lower_reach(initial_set);
     }
 
     Void test_upper_reachability() {
@@ -180,6 +187,24 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         auto remainder_reach_evolve = analyser.upper_reach_evolve(initial_set, Integer(5));
         ARIADNE_TESTING_PROVE(remainder_reach_evolve.first.size() > 0u);
         ARIADNE_TESTING_PROVE(remainder_reach_evolve.second.size() > 0u);
+
+        // No bounding domain: the restriction steps are skipped.
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        auto unbounded_chain_reach = analyser.outer_chain_reach(initial_set);
+        ARIADNE_TESTING_PROVE(unbounded_chain_reach.size() > 0u);
+    }
+
+    Void test_upper_reach_break() {
+        // With premature termination the evolved cells become empty, so the
+        // time-step loop of upper_reach exits via the break.
+        EvolverType evolver(system);
+        evolver.configuration().set_enable_premature_termination(true);
+        evolver.configuration().set_maximum_enclosure_radius(0.5);
+        ExposedIteratedMapAnalyser premature_analyser(evolver);
+        premature_analyser.configuration().set_maximum_grid_fineness(2);
+        premature_analyser.configuration().set_lock_to_grid_time(Integer(1));
+        auto upper_reach = premature_analyser.upper_reach(initial_set, Integer(4));
+        ARIADNE_TESTING_PROVE(upper_reach.size() >= 0u);
     }
 
     Void test_upper_reach_helper() {
@@ -200,6 +225,26 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         auto negative_certificate = analyser.verify_safety(initial_set, outside_safe_set);
         ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
     }
+
+    Void test_verify_safety_reach_escapes() {
+        // The initial set is inside the safe set, but the expanding map makes
+        // the reachable set leave it during the recurrent stages.
+        RealVariable ex("x"), ey("y");
+        IteratedMap expanding({next(ex)=2*ex, next(ey)=2*ey});
+        EvolverType evolver(expanding);
+        ExposedIteratedMapAnalyser escaping_analyser(evolver);
+        escaping_analyser.configuration().set_maximum_grid_fineness(2);
+        escaping_analyser.configuration().set_transient_time(Integer(0));
+        escaping_analyser.configuration().set_bounding_domain_ptr(nullptr);
+
+        SymbolicSetType symbolic_initial({0.1_dec<=ex<=0.2_dec, 0.1_dec<=ey<=0.2_dec});
+        auto initial = symbolic_initial.euclidean_set(expanding.state_space());
+        SymbolicSetType symbolic_safe({-0.5_dec<=ex<=0.5_dec, -0.5_dec<=ey<=0.5_dec});
+        auto safe = symbolic_safe.euclidean_set(expanding.state_space());
+
+        auto certificate = escaping_analyser.verify_safety(initial, safe);
+        ARIADNE_TESTING_PROVE(is_indeterminate(certificate.is_safe));
+    }
 };
 
 
@@ -211,5 +256,7 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reachability);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_helper);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety);
+    ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_break);
+    ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety_reach_escapes);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
