@@ -9,6 +9,7 @@
 
 Ariadne Reasoning implements reachability analysis, safety verification and
 grid-backed storage for continuous and hybrid dynamical systems.
+Although independently maintained and usable, this repository is also part of the [Ariadne repository structure](https://github.com/ariadne-cps/ariadne/blob/main/doc/structure.md).
 
 ## Layout
 
@@ -21,8 +22,8 @@ tests in `tests`, Python bindings in `python`, and standalone tutorials in
 Reasoning directly uses [Evolution](https://github.com/ariadne-cps/evolution),
 [SMT](https://github.com/ariadne-cps/smt), and
 [SAT](https://github.com/ariadne-cps/sat). The
-[Configuration](https://github.com/ariadne-cps/configuration) submodule is
-retained for the initial CMake bootstrap. Evolution supplies its dependencies
+[Build](https://github.com/ariadne-cps/build) submodule is
+used for the initial CMake bootstrap. Evolution supplies its dependencies
 transitively.
 
 ## Build and test

@@ -4,22 +4,22 @@ project(Reasoning VERSION 1.0)
 option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
 
-if(NOT TARGET ariadne-configuration)
+if(NOT TARGET ariadne-build)
     find_package(Git REQUIRED)
     execute_process(COMMAND "${GIT_EXECUTABLE}" -C "${CMAKE_CURRENT_SOURCE_DIR}"
-                    submodule update --init -- ss/cfg RESULT_VARIABLE _result)
+                    submodule update --init -- ss/bui RESULT_VARIABLE _result)
     if(_result)
-        message(FATAL_ERROR "Cannot initialize Configuration submodule")
+        message(FATAL_ERROR "Cannot initialize Build submodule")
     endif()
-    include("${CMAKE_CURRENT_SOURCE_DIR}/ss/cfg/cmake/ProjectOptions.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/ss/bui/cmake/ProjectOptions.cmake")
 endif()
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    require_same_dependency_commit(Configuration CHAINS
-        "configuration" "evolution|configuration"
-        "evolution|system|configuration" "evolution|integration|configuration"
-        "evolution|equation-solving|configuration"
-        "smt|configuration" "sat|configuration")
+    require_same_dependency_commit(Build CHAINS
+        "build" "evolution|build"
+        "evolution|system|build" "evolution|integration|build"
+        "evolution|equation-solving|build"
+        "smt|build" "sat|build")
     require_same_dependency_commit(Symbolic CHAINS
         "evolution|system|hybrid|labelled|expression-set|symbolic" "smt|symbolic")
     require_same_dependency_commit(EquationSolving CHAINS
