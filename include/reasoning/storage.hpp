@@ -200,7 +200,7 @@ class LabelledStorage
                     Mapping const& auxiliary_mapping, RealSpace const& auxiliary_space);
 
     LabelledStorage(Grid const& grid, LabelledMapping const& auxiliary)
-        : LabelledStorage(GridTreePaving(grid),auxiliary) { ARIADNE_PRECONDITION(grid.dimension()==auxiliary.argument_space().dimension()); }
+        : LabelledStorage(GridTreePaving(grid),auxiliary) { }
     LabelledStorage(GridTreePaving const& paving, LabelledMapping const& auxiliary)
         : LabelledStorage(paving,auxiliary.argument_space(),auxiliary.mapping(),auxiliary.result_space()) {
             ARIADNE_PRECONDITION(paving.dimension()==auxiliary.argument_space().dimension()); }

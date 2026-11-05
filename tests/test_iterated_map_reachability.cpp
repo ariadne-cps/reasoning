@@ -33,6 +33,7 @@
 #include "evolution/iterated_map_evolver.hpp"
 #include "expression-set/expression_set.hpp"
 #include "system/iterated_map.hpp"
+#include "logging/logging.hpp"
 
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/storage.hpp"
@@ -47,6 +48,17 @@ using namespace std;
 struct ExposedIteratedMapAnalyser : public ReachabilityAnalyser<IteratedMap> {
     using ReachabilityAnalyser<IteratedMap>::ReachabilityAnalyser;
     using ReachabilityAnalyser<IteratedMap>::_upper_reach;
+};
+
+// Restore the logging verbosity on destruction, so verbose diagnostics do
+// not leak into the other tests.
+struct LogVerbosityScope {
+    unsigned _previous;
+    explicit LogVerbosityScope(unsigned verbosity)
+        : _previous(Logger::instance().configuration().verbosity()) {
+        Logger::instance().configuration().set_verbosity(verbosity);
+    }
+    ~LogVerbosityScope() { Logger::instance().configuration().set_verbosity(_previous); }
 };
 
 
@@ -204,7 +216,7 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         premature_analyser.configuration().set_maximum_grid_fineness(2);
         premature_analyser.configuration().set_lock_to_grid_time(Integer(1));
         auto upper_reach = premature_analyser.upper_reach(initial_set, Integer(4));
-        ARIADNE_TESTING_PROVE(upper_reach.size() >= 0u);
+        ARIADNE_TESTING_NOTE(upper_reach.size());
     }
 
     Void test_upper_reach_helper() {
@@ -224,6 +236,23 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         auto outside_safe_set = outside_symbolic_safe_set.euclidean_set(system.state_space());
         auto negative_certificate = analyser.verify_safety(initial_set, outside_safe_set);
         ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
+    }
+
+    Void test_verbose_logging() {
+        // With high verbosity the LOGGING_* branches in the analyser are
+        // all executed.
+        LogVerbosityScope diagnostics(100u);
+        analyser.configuration().set_transient_time(Integer(0));
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set, Integer(2)).size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.lower_reach_evolve(initial_set, Integer(2)).first.size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.upper_reach(initial_set, Integer(2)).size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.upper_reach_evolve(initial_set, Integer(2)).first.size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.outer_chain_reach(initial_set).size() > 0u);
+        // Zero transient time: no infinite-time evolution is performed.
+        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set).is_empty());
+        auto certificate = analyser.verify_safety(initial_set, safe_set);
+        ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
     }
 
     Void test_verify_safety_reach_escapes() {
@@ -258,5 +287,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_break);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety_reach_escapes);
+    ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verbose_logging);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }

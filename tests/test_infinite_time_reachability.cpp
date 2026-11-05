@@ -183,11 +183,11 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture
 
         analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::WARNING);
         auto warned_set = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_PROVE(warned_set.size() >= 0u);
+        ARIADNE_TESTING_NOTE(warned_set.size());
 
         analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::IGNORE);
         auto ignored_set = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_PROVE(ignored_set.size() >= 0u);
+        ARIADNE_TESTING_NOTE(ignored_set.size());
     }
 
 };

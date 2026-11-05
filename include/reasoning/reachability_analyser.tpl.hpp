@@ -690,9 +690,8 @@ _checked_restriction(StorageType& set, const StorageType& bounding, ChainOverspi
             if (policy == ChainOverspillPolicy::WARNING) {
                 ARIADNE_WARN("The computed chain reach has been restricted, an outer approximation is not returned.");
             }
-            if (policy == ChainOverspillPolicy::ERROR) {
+            if (policy == ChainOverspillPolicy::ERROR)
                 ARIADNE_THROW(OuterChainOverspill,"outer_chain_reach","The computed chain reach has been restricted.");
-            }
         }
     }
 }
