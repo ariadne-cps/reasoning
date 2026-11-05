@@ -44,9 +44,8 @@
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "drawing/drawer.hpp"
-#include "drawing/drawing_command_line_interface.hpp"
 
-#include "macro/testing.hpp"
+#include "ariadne-testing.hpp"
 
 using namespace Ariadne;
 using namespace std;
@@ -59,17 +58,17 @@ Colour initial_set_colour(0.75,0.75,1.00);
 Colour guard_set_colour(0.75,0.75,0.75);
 
 // Test evolution of realistic hybrid systems
-class TestHybridReachability
+class TestHybridReachability : public Ariadne::Testing::ContextFixture
 {
-    mutable shared_ptr<HybridReachabilityAnalyser> analyser;
+    shared_ptr<HybridReachabilityAnalyser> analyser;
   private:
-    Void _set_analyser(const HybridAutomatonInterface& system) const;
+    Void _set_analyser(const HybridAutomatonInterface& system);
   public:
-    Void test() const;
-    Void test_bouncing_ball() const;
+    using ContextFixture::ContextFixture;
+    Void test_bouncing_ball();
 };
 
-Void TestHybridReachability::_set_analyser(const HybridAutomatonInterface& system) const
+Void TestHybridReachability::_set_analyser(const HybridAutomatonInterface& system)
 {
     GeneralHybridEvolver evolver(system);
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
@@ -79,14 +78,10 @@ Void TestHybridReachability::_set_analyser(const HybridAutomatonInterface& syste
     analyser.reset(new HybridReachabilityAnalyser(evolver));
     analyser->configuration().set_maximum_grid_fineness(2);
     analyser->configuration().set_lock_to_grid_time(5);
-    ARIADNE_TEST_PRINT(analyser->configuration());
+    ARIADNE_TESTING_NOTE(analyser->configuration());
 }
 
-Void TestHybridReachability::test() const {
-    ARIADNE_TEST_CALL(test_bouncing_ball());
-}
-
-Void TestHybridReachability::test_bouncing_ball() const {
+Void TestHybridReachability::test_bouncing_ball() {
     HybridAutomaton bouncing_ball;
     Real one(1);
     DiscreteLocation q;
@@ -98,7 +93,7 @@ Void TestHybridReachability::test_bouncing_ball() const {
     Real lambda(0.5_x);
     bouncing_ball.new_mode(q,{dot(x)=v,dot(v)=-one});
     bouncing_ball.new_transition(q,e,q,{next(x)=x,next(v)=-lambda*v},x<=0,EventKind::IMPACT);
-    ARIADNE_TEST_PRINT(bouncing_ball);
+    ARIADNE_TESTING_NOTE(bouncing_ball);
 
     Dyadic height=2;
     Dyadic radius=1/pow(two,6);
@@ -112,18 +107,16 @@ Void TestHybridReachability::test_bouncing_ball() const {
 
     auto reach_evolve=analyser->upper_reach_evolve(initial,time);
 
-    ARIADNE_TEST_ASSERT(reach_evolve.first.size()>0u);
-    ARIADNE_TEST_ASSERT(reach_evolve.second.size()>0u);
+    ARIADNE_TESTING_PROVE(reach_evolve.first.size()>0u);
+    ARIADNE_TESTING_PROVE(reach_evolve.second.size()>0u);
 }
 
 
-Int main(Int argc, const char* argv[])
+int main(int argc, char** argv)
 {
-    if (not DrawingCommandLineInterface().acquire(argc,argv)) return -1;
-
     DrawerManager::instance().set_drawer(GridDrawer(2));
 
-    TestHybridReachability().test();
-    return ARIADNE_TEST_FAILURES;
+    ARIADNE_TESTING_SUITE("test_hybrid_reachability");
+    ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_bouncing_ball);
+    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
-

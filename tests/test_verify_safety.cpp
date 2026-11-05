@@ -38,14 +38,13 @@
 #include "expression-set/expression_set.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "drawing/drawing_command_line_interface.hpp"
 
-#include "macro/testing.hpp"
+#include "ariadne-testing.hpp"
 
 using namespace std;
 using namespace Ariadne;
 
-class TestVerifySafety
+class TestVerifySafety : public Ariadne::Testing::ContextFixture
 {
 
     typedef VectorFieldEvolver EvolverType;
@@ -94,8 +93,9 @@ class TestVerifySafety
         return analyser;
     }
 
-    TestVerifySafety()
-        : system(build_system()),
+    TestVerifySafety(Ariadne::Testing::Context& context)
+        : ContextFixture(context),
+          system(build_system()),
           analyser(build_analyser(system)),
           x("x"),
           symbolic_initial_set({0.3125_dec<=x<=0.34375_dec}),
@@ -113,16 +113,16 @@ class TestVerifySafety
     Void test_verify_safety_no_bounding() {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto safety_certificate=analyser.verify_safety(initial_set,safe_set);
-        ARIADNE_TEST_PRINT(safety_certificate.is_safe);
-        ARIADNE_TEST_PRINT(safety_certificate.chain_reach_set.size());
-        ARIADNE_TEST_PRINT(safety_certificate.safe_set.size());
-        ARIADNE_TEST_ASSERT(definitely(safety_certificate.is_safe));
+        ARIADNE_TESTING_NOTE(safety_certificate.is_safe);
+        ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.size());
+        ARIADNE_TESTING_NOTE(safety_certificate.safe_set.size());
+        ARIADNE_TESTING_PROVE(definitely(safety_certificate.is_safe));
     }
 
     Void test_verify_safety_crossing_bounding() {
         // Restriction must reject an initial set entirely outside the bounding domain.
         analyser.configuration().set_bounding_domain(BoundingDomainType(analyser.system().dimension(),{1,2}));
-        ARIADNE_TEST_FAIL(analyser.verify_safety(initial_set,safe_set));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(analyser.verify_safety(initial_set,safe_set));
     }
 
     Void test_verify_safety_crossing_safe() {
@@ -132,24 +132,18 @@ class TestVerifySafety
         auto smaller_safe_set = smaller_symbolic_safe_set.euclidean_set(system.state_space());
 
         auto safety_certificate=analyser.verify_safety(initial_set,smaller_safe_set);
-        ARIADNE_TEST_ASSERT(is_indeterminate(safety_certificate.is_safe));
+        ARIADNE_TESTING_PROVE(is_indeterminate(safety_certificate.is_safe));
     }
 
-
-    Void test() {
-        ARIADNE_TEST_CALL(test_verify_safety_no_bounding());
-        ARIADNE_TEST_CALL(test_verify_safety_crossing_bounding());
-        ARIADNE_TEST_CALL(test_verify_safety_crossing_safe());
-    }
 
 };
 
 
-Int main(Int argc, const char* argv[])
+int main(int argc, char** argv)
 {
-    if (not DrawingCommandLineInterface().acquire(argc,argv)) return -1;
-
-    TestVerifySafety().test();
-    return ARIADNE_TEST_FAILURES;
+    ARIADNE_TESTING_SUITE("test_verify_safety");
+    ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_no_bounding);
+    ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_crossing_bounding);
+    ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_crossing_safe);
+    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
-

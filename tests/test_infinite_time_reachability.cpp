@@ -38,9 +38,8 @@
 #include "expression-set/expression_set.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "drawing/drawing_command_line_interface.hpp"
 
-#include "macro/testing.hpp"
+#include "ariadne-testing.hpp"
 
 using namespace std;
 using namespace Ariadne;
@@ -54,7 +53,7 @@ Colour guard_set_colour(0.75,0.75,0.75);
 Colour bounding_box_colour(0.75,0.75,0.875);
 Colour safe_set_colour(0.50,1.00,0.50);
 
-class TestInfiniteTimeReachability
+class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture
 {
 
     typedef VectorFieldEvolver EvolverType;
@@ -107,8 +106,9 @@ class TestInfiniteTimeReachability
         return analyser;
     }
 
-    TestInfiniteTimeReachability()
-        : system(build_system()),
+    TestInfiniteTimeReachability(Ariadne::Testing::Context& context)
+        : ContextFixture(context),
+          system(build_system()),
           analyser(build_analyser(system)),
           grid(2),
           x("x"),
@@ -136,7 +136,7 @@ class TestInfiniteTimeReachability
         cout << "Computing infinite time lower reachable set" << endl;
         StorageType lower_reach_set=analyser.lower_reach(initial_set);
 
-        ARIADNE_TEST_ASSERT(lower_reach_set.size() > 0);
+        ARIADNE_TESTING_PROVE(lower_reach_set.size() > 0);
 
         cout << "Reached " << lower_reach_set.size() << " cells " << endl << endl;
 
@@ -154,7 +154,7 @@ class TestInfiniteTimeReachability
 
         StorageType outer_chain_reach_set=analyser.outer_chain_reach(initial_set);
 
-        ARIADNE_TEST_ASSERT(outer_chain_reach_set.size() > 0);
+        ARIADNE_TESTING_PROVE(outer_chain_reach_set.size() > 0);
 
         cout << "Reached " << outer_chain_reach_set.size() << " cells " << endl << endl;
 
@@ -164,22 +164,16 @@ class TestInfiniteTimeReachability
         cout << "Recomputing with tight restriction" << endl;
 
         analyser.configuration().set_maximum_grid_extent(1);
-        ARIADNE_TEST_THROWS(analyser.outer_chain_reach(initial_set),OuterChainOverspill);
-    }
-
-    Void test() {
-        ARIADNE_TEST_CALL(test_infinite_time_lower_reach());
-        ARIADNE_TEST_CALL(test_outer_chain_reach());
+        ARIADNE_TESTING_EXPECT_THROWS(OuterChainOverspill, analyser.outer_chain_reach(initial_set));
     }
 
 };
 
 
-Int main(Int argc, const char* argv[])
+int main(int argc, char** argv)
 {
-    if (not DrawingCommandLineInterface().acquire(argc,argv)) return -1;
-
-    TestInfiniteTimeReachability().test();
-    return ARIADNE_TEST_FAILURES;
+    ARIADNE_TESTING_SUITE("test_infinite_time_reachability");
+    ARIADNE_TESTING_ADD_TEST(TestInfiniteTimeReachability, test_infinite_time_lower_reach);
+    ARIADNE_TESTING_ADD_TEST(TestInfiniteTimeReachability, test_outer_chain_reach);
+    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
-

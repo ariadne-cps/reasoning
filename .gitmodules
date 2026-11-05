@@ -10,3 +10,7 @@
 [submodule "sat"]
 	path = ss/sat
 	url = https://github.com/ariadne-cps/sat
+
+[submodule "testing"]
+	path = ss/tst
+	url = https://github.com/ariadne-cps/testing
