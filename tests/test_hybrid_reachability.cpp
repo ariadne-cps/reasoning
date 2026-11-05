@@ -303,17 +303,17 @@ Void TestHybridReachability::test_upper_reach_helper() {
     auto initial = this->_initial_set(q);
     GeneralHybridEvolver evolver(system);
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
-    ExposedHybridAnalyser analyser(evolver);
-    analyser.configuration().set_maximum_grid_fineness(2);
+    ExposedHybridAnalyser exposed_analyser(evolver);
+    exposed_analyser.configuration().set_maximum_grid_fineness(2);
     HybridTime time(Decimal(1.0), 2u);
 
-    auto reach = analyser.upper_reach(initial, time);
+    auto reach = exposed_analyser.upper_reach(initial, time);
     ARIADNE_TESTING_PROVE(reach.size() > 0u);
-    auto upper = analyser._upper_reach(reach, time, 2u, evolver);
+    auto upper = exposed_analyser._upper_reach(reach, time, 2u, evolver);
     ARIADNE_TESTING_PROVE(upper.size() > 0u);
 
     // clone() on the base class (not the HybridReachabilityAnalyser override).
-    std::unique_ptr<ReachabilityAnalyser<HybridAutomatonInterface>> base_copy(analyser.clone());
+    std::unique_ptr<ReachabilityAnalyser<HybridAutomatonInterface>> base_copy(exposed_analyser.clone());
     ARIADNE_TESTING_PROVE(base_copy.get() != nullptr);
 }
 

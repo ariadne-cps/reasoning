@@ -201,7 +201,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_NOTE(const_analyser.configuration());
         ARIADNE_TESTING_EXPECT_EQUAL(const_analyser.configuration().maximum_grid_fineness(), 3u);
         ARIADNE_TESTING_NOTE(analyser.evolver().system());
-        ARIADNE_TESTING_PROVE(&analyser.system() != nullptr);
+        ARIADNE_TESTING_PROVE(analyser.system().state_space() == system.state_space());
 
         std::unique_ptr<AnalyserType> copy(analyser.clone());
         ARIADNE_TESTING_PROVE(copy.get() != nullptr);
