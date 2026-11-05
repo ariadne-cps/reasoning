@@ -4,7 +4,7 @@
 The same example is exercised by the C++ tutorial and test_verify_safety.cpp.
 """
 
-from pyariadne import (
+from pyariadne_reasoning import (
     ContinuousReachabilityAnalyser,
     GradedTaylorSeriesIntegrator,
     Rational,

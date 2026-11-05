@@ -27,7 +27,7 @@ cmake --build tutorial/build --parallel
 
 ## Python tutorial
 
-Point `PYTHONPATH` to the installed `pyariadne` extension and configure the
+Point `PYTHONPATH` to the installed `pyariadne_reasoning` extension and configure the
 dynamic library search path if needed, then run:
 
 ```bash

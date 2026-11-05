@@ -1,5 +1,5 @@
 """Check Reasoning bindings in the composed Python module."""
-import pyariadne as a
+import pyariadne_reasoning as a
 
 def test_reasoning_bindings():
     for name in ("SatSolver", "SmtSolver", "Storage", "LabelledStorage", "HybridStorage",
