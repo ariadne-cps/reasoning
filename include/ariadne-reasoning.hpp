@@ -1,6 +1,8 @@
 #ifndef ARIADNE_ARIADNE_REASONING_HPP
 #define ARIADNE_ARIADNE_REASONING_HPP
 #include "ariadne-evolution.hpp"
+#include "ariadne-sat.hpp"
+#include "ariadne-smt.hpp"
 #include "reasoning/traits.hpp"
 #include "reasoning/storage.hpp"
 #include "reasoning/storage_orbit.hpp"

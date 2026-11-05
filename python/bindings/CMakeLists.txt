@@ -10,4 +10,4 @@ set_target_properties(pyariadne-reasoning-submodule-obj PROPERTIES POSITION_INDE
 add_library(pyariadne-reasoning INTERFACE)
 target_sources(pyariadne-reasoning INTERFACE $<TARGET_OBJECTS:pyariadne-reasoning-submodule-obj>)
 target_link_libraries(pyariadne-reasoning INTERFACE pyariadne-evolution pyariadne-smt pyariadne-sat)
-ariadne_add_python_module(NAME reasoning MODULE_SOURCE reasoning_module.cpp)
+ariadne_add_python_module(NAME reasoning MODULE_IMPORT_NAME pyariadne_reasoning MODULE_SOURCE reasoning_module.cpp)

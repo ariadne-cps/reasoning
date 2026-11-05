@@ -43,8 +43,4 @@ See [the tutorial](tutorial/README.md) for a small C++ safety-verification examp
 ## Python
 
 The standalone build composes upstream Python bindings with Reasoning in
-`pyariadne`. Python smoke tests run through CTest with the `python` label.
-
-## License
-
-Ariadne Reasoning is distributed under the GNU General Public License v3.0.
+`pyariadne_reasoning`. Python smoke tests run through CTest with the `python` label.
