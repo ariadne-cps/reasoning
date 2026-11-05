@@ -53,6 +53,12 @@ Colour guard_set_colour(0.75,0.75,0.75);
 Colour bounding_box_colour(0.75,0.75,0.875);
 Colour safe_set_colour(0.50,1.00,0.50);
 
+// Expose the protected helper so its behaviour can be verified directly.
+struct ExposedVectorFieldAnalyser : public ReachabilityAnalyser<VectorField> {
+    using ReachabilityAnalyser<VectorField>::ReachabilityAnalyser;
+    using ReachabilityAnalyser<VectorField>::_upper_reach;
+};
+
 class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
 {
 
@@ -189,6 +195,33 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
              reach_set_colour,reach_evolve_set.first,final_set_colour,reach_evolve_set.second);
     }
 
+    Void test_analyser_accessors() {
+        const AnalyserType& const_analyser = analyser;
+        // Print the configuration with no bounding domain set.
+        ARIADNE_TESTING_NOTE(const_analyser.configuration());
+        ARIADNE_TESTING_EXPECT_EQUAL(const_analyser.configuration().maximum_grid_fineness(), 3u);
+        ARIADNE_TESTING_NOTE(analyser.evolver().system());
+        ARIADNE_TESTING_PROVE(analyser.system().state_space() == system.state_space());
+
+        std::unique_ptr<AnalyserType> copy(analyser.clone());
+        ARIADNE_TESTING_PROVE(copy.get() != nullptr);
+        ARIADNE_TESTING_PROVE(copy->system().state_space() == system.state_space());
+
+        EvolverType evolver(system, GradedTaylorSeriesIntegrator(StepMaximumError(1e-2_pr)));
+        ExposedVectorFieldAnalyser exposed(evolver);
+        exposed.configuration().set_maximum_grid_fineness(2);
+        auto reach = exposed.upper_reach(initial_set, 1.0_x);
+        ARIADNE_TESTING_PROVE(reach.size() > 0u);
+        auto upper = exposed._upper_reach(reach, 1.0_x, 3u, evolver);
+        ARIADNE_TESTING_PROVE(upper.size() > 0u);
+
+        // A time that is not a multiple of lock_to_grid_time exercises the
+        // remainder-time step of upper_reach_evolve.
+        auto reach_evolve = exposed.upper_reach_evolve(initial_set, 2.25_x);
+        ARIADNE_TESTING_PROVE(reach_evolve.first.size() > 0u);
+        ARIADNE_TESTING_PROVE(reach_evolve.second.size() > 0u);
+    }
+
 };
 
 
@@ -199,5 +232,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_lower_reach_evolve);
     ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_upper_reach_upper_evolve);
     ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_upper_reach_evolve);
+    ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_analyser_accessors);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }

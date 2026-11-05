@@ -142,6 +142,12 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture
 
         plot("test_reachability_analyser-map_infinite_time_lower_reach.png",Projection2d(2,0,1),graphics_box,
              reach_set_colour,lower_reach_set);
+
+        // Zero transient time and no bounding domain: both restriction and
+        // transient steps are skipped.
+        analyser.configuration().set_transient_time(0.0_dec);
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        analyser.lower_reach(initial_set);
     }
 
     Void test_outer_chain_reach() {
@@ -167,6 +173,23 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_EXPECT_THROWS(OuterChainOverspill, analyser.outer_chain_reach(initial_set));
     }
 
+    Void test_outer_chain_reach_overspill_policies() {
+        analyser.configuration().set_transient_time(12.0_dec);
+        analyser.configuration().set_lock_to_grid_time(6.0_dec);
+        analyser.configuration().set_maximum_grid_fineness(3);
+        analyser.configuration().set_bounding_domain_ptr(shared_ptr<BoundingDomainType>(new BoundingDomainType(bounding)));
+        // A tight extent forces a restriction of the computed chain reach.
+        analyser.configuration().set_maximum_grid_extent(1);
+
+        analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::WARNING);
+        auto warned_set = analyser.outer_chain_reach(initial_set);
+        ARIADNE_TESTING_NOTE(warned_set.size());
+
+        analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::IGNORE);
+        auto ignored_set = analyser.outer_chain_reach(initial_set);
+        ARIADNE_TESTING_NOTE(ignored_set.size());
+    }
+
 };
 
 
@@ -175,5 +198,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_SUITE("test_infinite_time_reachability");
     ARIADNE_TESTING_ADD_TEST(TestInfiniteTimeReachability, test_infinite_time_lower_reach);
     ARIADNE_TESTING_ADD_TEST(TestInfiniteTimeReachability, test_outer_chain_reach);
+    ARIADNE_TESTING_ADD_TEST(TestInfiniteTimeReachability, test_outer_chain_reach_overspill_policies);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }

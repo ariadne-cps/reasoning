@@ -70,26 +70,8 @@
 
 namespace Ariadne {
 
-inline Real operator-(Real const& r1, Rational const& q2) {
-    return r1-Real(q2);
-}
-
-inline FloatDPBounds operator*(Integer n1,  const FloatDP& x2) {
-    ARIADNE_ASSERT(n1==n1.get_si());
-    FloatDP x1((Int)n1.get_si(),dp);
-    return x1*x2;
-}
-
 inline Natural compute_time_steps(HybridTime time, HybridTime lock_to_grid_time) {
     return cast_positive(round(time.continuous_time()/lock_to_grid_time.continuous_time()));
-}
-
-inline String itoa(Nat m) {
-    std::stringstream ss; if(m<10) { ss<<"0"; } ss<<m; return ss.str();
-}
-
-inline const HybridExactBoxes& cast_exact(const HybridExactBoxes& boxes) {
-    return boxes;
 }
 
 } // namespace Ariadne

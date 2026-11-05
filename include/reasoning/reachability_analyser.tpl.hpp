@@ -596,7 +596,6 @@ verify_safety(const CompactSetInterfaceType& initial_set,
 {
     LOGGING_SCOPE_CREATE;
     const RegularLocatedSetInterfaceType* bounded_safe_set_ptr=dynamic_cast<RegularLocatedSetInterfaceType const*>(&safe_set);
-    assert(bounded_safe_set_ptr != nullptr);
     const GridType& grid=this->_configuration->grid();
     auto safe_paving=inner_approximation(*bounded_safe_set_ptr, grid, this->_configuration->maximum_grid_fineness());
     StorageType safe_cells(safe_paving,this->system());
@@ -691,9 +690,8 @@ _checked_restriction(StorageType& set, const StorageType& bounding, ChainOverspi
             if (policy == ChainOverspillPolicy::WARNING) {
                 ARIADNE_WARN("The computed chain reach has been restricted, an outer approximation is not returned.");
             }
-            if (policy == ChainOverspillPolicy::ERROR) {
+            if (policy == ChainOverspillPolicy::ERROR)
                 ARIADNE_THROW(OuterChainOverspill,"outer_chain_reach","The computed chain reach has been restricted.");
-            }
         }
     }
 }

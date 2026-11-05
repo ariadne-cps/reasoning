@@ -131,11 +131,7 @@ class HybridStorage
         return HybridStorageElementReference{this,loc}; }
 
     virtual Void draw(CanvasInterface& cnv, const Set<DiscreteLocation>& locs, const Variables2d& vars) const override {
-        if (this->_system_ptr!=nullptr) {
-            this->state_auxilary_set().draw(cnv,locs,vars);
-        } else {
-            this->state_set().draw(cnv,locs,vars);
-        }
+        this->state_auxilary_set().draw(cnv,locs,vars);
     }
 
     friend OutputStream& operator<<(OutputStream& os, HybridStorage const& set) {
