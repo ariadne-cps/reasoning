@@ -4,6 +4,9 @@ set(UNIT_TESTS
     test_finite_time_reachability
     test_infinite_time_reachability
     test_verify_safety
+    test_iterated_map_reachability
+    test_storage
+    test_hybrid_storage
 )
 foreach(TEST IN LISTS UNIT_TESTS)
     add_executable(${TEST} ${TEST}.cpp)

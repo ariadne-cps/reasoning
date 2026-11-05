@@ -190,7 +190,7 @@ class LabelledStorage
     : public LabelledDrawable2dInterface, public Storage
 {
     template<class SYS> static LabelledMapping labelled_auxiliary_mapping(SYS const& sys) {
-        return LabelledMapping(sys.state_space(),sys.auxilary_mapping(),sys.auxiliary_space()); }
+        return LabelledMapping(sys.state_space(),sys.auxiliary_mapping(),sys.auxiliary_space()); }
   public:
     typedef LabelledGrid GridType;
 
@@ -200,25 +200,25 @@ class LabelledStorage
                     Mapping const& auxiliary_mapping, RealSpace const& auxiliary_space);
 
     LabelledStorage(Grid const& grid, LabelledMapping const& auxiliary)
-        : LabelledStorage(GridTreePaving(grid),auxiliary) { assert(grid.dimension()==auxiliary.argument_space().dimension()); }
+        : LabelledStorage(GridTreePaving(grid),auxiliary) { ARIADNE_PRECONDITION(grid.dimension()==auxiliary.argument_space().dimension()); }
     LabelledStorage(GridTreePaving const& paving, LabelledMapping const& auxiliary)
-        : LabelledStorage(paving.grid(),auxiliary.argument_space(),auxiliary.mapping(),auxiliary.result_space()) {
-            assert(paving.dimension()==auxiliary.argument_space().dimension()); }
+        : LabelledStorage(paving,auxiliary.argument_space(),auxiliary.mapping(),auxiliary.result_space()) {
+            ARIADNE_PRECONDITION(paving.dimension()==auxiliary.argument_space().dimension()); }
     LabelledStorage(LabelledGrid const& grid, LabelledMapping const& auxiliary)
-        : LabelledStorage(grid.euclidean_grid(),auxiliary) { assert(grid.space()==auxiliary.argument_space()); }
+        : LabelledStorage(grid.euclidean_grid(),auxiliary) { ARIADNE_PRECONDITION(grid.space()==auxiliary.argument_space()); }
     LabelledStorage(LabelledGridTreePaving const& paving, LabelledMapping const& auxiliary)
-        : LabelledStorage(paving.euclidean_set(),auxiliary) { assert(paving.space()==auxiliary.argument_space()); }
+        : LabelledStorage(paving.euclidean_set(),auxiliary) { ARIADNE_PRECONDITION(paving.space()==auxiliary.argument_space()); }
 
     template<class SYS> LabelledStorage(Grid const& grid, SYS const& system)
         : LabelledStorage(grid,system.state_space(),system.auxiliary_mapping(),system.auxiliary_space()) { }
     template<class SYS> LabelledStorage(GridTreePaving const& paving, SYS const& system)
-        : LabelledStorage(paving,system.state_space(),system.auxilary_mapping(),system.auxiliary_space()) { }
+        : LabelledStorage(paving,system.state_space(),system.auxiliary_mapping(),system.auxiliary_space()) { }
     template<class SYS> LabelledStorage(LabelledGrid const& grid, SYS const& system)
         : LabelledStorage(grid.euclidean_grid(),system.state_space(),system.auxiliary_mapping(),system.auxiliary_space()) {
-            assert(grid.space()==system.state_space()); }
+            ARIADNE_PRECONDITION(grid.space()==system.state_space()); }
     template<class SYS> LabelledStorage(LabelledGridTreePaving const& paving, SYS const& system)
         : LabelledStorage(paving.euclidean_set(),system.state_space(),system.auxiliary_mapping(),system.auxiliary_space()) {
-            assert(paving.space()==system.state_space()); }
+            ARIADNE_PRECONDITION(paving.space()==system.state_space()); }
 
     Storage& euclidean_set() { return *this; }
     Storage const& euclidean_set() const { return *this; }

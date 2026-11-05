@@ -77,7 +77,6 @@ OutputStream& operator<<(OutputStream& os, const ChainOverspillPolicy& policy)
         case ChainOverspillPolicy::IGNORE: os<<"ignore"; break;
         case ChainOverspillPolicy::WARNING: os<<"warning"; break;
         case ChainOverspillPolicy::ERROR: os<<"error"; break;
-        default: abort();
     } return os;
 }
 
