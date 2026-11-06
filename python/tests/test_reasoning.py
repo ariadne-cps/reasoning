@@ -9,6 +9,28 @@ def test_reasoning_bindings():
                  "ReachabilityAnalyserConfiguration"):
         assert hasattr(a, name), name
 
+def test_neural_symbolic_expansion():
+    x = a.RealVariable("x")
+    for activation in (a.NeuralActivation.Identity, a.NeuralActivation.Relu,
+                       a.NeuralActivation.Tanh, a.NeuralActivation.Sigmoid,
+                       a.NeuralActivation.Softplus):
+        network = a.NeuralNetwork(1, [a.NeuralDenseLayerSpec(1, activation)])
+        snapshot = a.NeuralParameterSnapshot(network, [2.0, 0.5])
+        expressions = a.neurosymbolic_expand(snapshot, [x])
+        assert len(expressions) == 1
+
+    network = a.NeuralNetwork(2, [a.NeuralDenseLayerSpec(1, a.NeuralActivation.Identity)])
+    snapshot = a.NeuralParameterSnapshot(network, [2.0, -3.0, 0.5])
+    y = a.RealVariable("y")
+    assert len(a.neurosymbolic_expand(snapshot, [x, y])) == 1
+    try:
+        a.neurosymbolic_expand(snapshot, [x, x])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Duplicate symbolic inputs were accepted")
+
+
 def test_hybrid_reachability_analyser():
     """Compute a hybrid reachability result and an infinite-time certificate."""
     x = a.RealVariable("x")
@@ -50,4 +72,5 @@ def test_hybrid_reachability_analyser():
 
 if __name__ == "__main__":
     test_reasoning_bindings()
+    test_neural_symbolic_expansion()
     test_hybrid_reachability_analyser()

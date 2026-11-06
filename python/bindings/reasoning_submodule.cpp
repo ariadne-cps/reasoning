@@ -1,6 +1,7 @@
 #include "pybind11.hpp"
 #include "function-utilities.hpp"
 #include "reasoning/reachability_analyser.hpp"
+#include "reasoning/neural_symbolic.hpp"
 #include "reasoning/storage.hpp"
 #include "reasoning/hybrid_storage.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
@@ -170,6 +171,8 @@ Void export_hybrid_reasoning(pybind11::module& module) {
 
 
 void reasoning_submodule(pybind11::module& module) {
+    module.def("neurosymbolic_expand", &neurosymbolic_expand,
+        pybind11::arg("snapshot"), pybind11::arg("input_variables"));
     export_storage(module);
     pybind11::class_<HybridStorage>(module,"HybridStorage");
     export_hybrid_reasoning(module);

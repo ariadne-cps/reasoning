@@ -4,6 +4,7 @@
 #include "ariadne-sat.hpp"
 #include "ariadne-smt.hpp"
 #include "reasoning/traits.hpp"
+#include "reasoning/neural_symbolic.hpp"
 #include "reasoning/storage.hpp"
 #include "reasoning/storage_orbit.hpp"
 #include "reasoning/hybrid_storage.hpp"

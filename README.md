@@ -28,6 +28,15 @@ transitively. C++ test executables also link [Ariadne Testing](https://github.co
 pinned as the test-only `ss/tst` submodule. Reachability and safety test cases
 run in isolated fixtures.
 
+## Neural symbolic expansion
+
+The `neurosymbolic_expand(snapshot, variables)` function converts a frozen
+neural network into native `Expression<Real>` objects, using exact dyadic
+interpretations of stored binary64 parameters. It supports Identity, ReLU,
+Tanh, Sigmoid, and Softplus activations. The result can be evaluated,
+simplified, or differentiated using Ariadne's symbolic facilities; the
+expansion may grow with network size. C++ and Python APIs are provided.
+
 ## Build and test
 
 ```bash

@@ -17,7 +17,7 @@ endif()
 if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     require_same_dependency_commit(Build CHAINS
         "build" "evolution|build"
-        "evolution|system|build" "evolution|integration|build"
+        "evolution|system|build" "evolution|system|neural-set|build" "evolution|integration|build"
         "evolution|equation-solving|build"
         "smt|build" "sat|build")
     require_same_dependency_commit(Symbolic CHAINS
