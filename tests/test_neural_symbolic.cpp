@@ -42,7 +42,7 @@ public:
         NeuralParameterSnapshot model(
             NeuralNetwork(2,{{1,NeuralActivation::Identity}}),
             {2.0,-3.0,0.5});
-        auto const expr=neurosymbolic_expand(model,{x,y});
+        auto const expr=make_expression(model,{x,y});
         ARIADNE_TESTING_EXPECT_EQUAL(expr.size(),std::size_t{1});
         // Mathematical real arithmetic; both derivatives are constant.
         ARIADNE_TESTING_PROVE(identical(
@@ -60,9 +60,9 @@ public:
         ARIADNE_TESTING_PROVE(value.lower_raw().get_d()>-3.500000000001);
         ARIADNE_TESTING_PROVE(value.upper_raw().get_d()<-3.499999999999);
         ARIADNE_TESTING_EXPECT_THROWS(std::invalid_argument,
-            (void)neurosymbolic_expand(model,{x}));
+            (void)make_expression(model,{x}));
         ARIADNE_TESTING_EXPECT_THROWS(std::invalid_argument,
-            (void)neurosymbolic_expand(model,{x,x}));
+            (void)make_expression(model,{x,x}));
     }
 
     void test_supported_nonlinear_activations() {
@@ -75,7 +75,7 @@ public:
             NeuralParameterSnapshot model(
                 NeuralNetwork(1,{{1,activation}}),
                 {1.0,0.0});
-            auto const expressions=neurosymbolic_expand(model,{x});
+            auto const expressions=make_expression(model,{x});
             ARIADNE_TESTING_EXPECT_EQUAL(expressions.size(),std::size_t{1});
             ARIADNE_TESTING_PROVE(expressions[0].kind()!=OperatorKind::NULLARY);
 

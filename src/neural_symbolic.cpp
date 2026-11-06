@@ -52,7 +52,7 @@ RealExpression activate(RealExpression value, NeuralActivation activation) {
 
 } // namespace
 
-std::vector<Expression<Real>> neurosymbolic_expand(
+std::vector<Expression<Real>> make_expression(
     NeuralParameterSnapshot const& snapshot,
     std::vector<Variable<Real>> const& input_variables) {
     auto const& network=snapshot.network();

@@ -30,7 +30,7 @@ run in isolated fixtures.
 
 ## Neural symbolic expansion
 
-The `neurosymbolic_expand(snapshot, variables)` function converts a frozen
+The `make_expression(snapshot, variables)` function converts a frozen
 neural network into native `Expression<Real>` objects, using exact dyadic
 interpretations of stored binary64 parameters. It supports Identity, ReLU,
 Tanh, Sigmoid, and Softplus activations. The result can be evaluated,

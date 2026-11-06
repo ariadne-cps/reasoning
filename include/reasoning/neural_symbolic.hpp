@@ -50,7 +50,7 @@ namespace Ariadne {
  *  distinct variables; derivative() and simplify() can subsequently be
  *  applied to smooth expression regions using Symbolic.
  */
-std::vector<Expression<Real>> neurosymbolic_expand(
+std::vector<Expression<Real>> make_expression(
     NeuralParameterSnapshot const& snapshot,
     std::vector<Variable<Real>> const& input_variables);
 

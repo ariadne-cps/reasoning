@@ -16,15 +16,15 @@ def test_neural_symbolic_expansion():
                        a.NeuralActivation.Softplus):
         network = a.NeuralNetwork(1, [a.NeuralDenseLayerSpec(1, activation)])
         snapshot = a.NeuralParameterSnapshot(network, [2.0, 0.5])
-        expressions = a.neurosymbolic_expand(snapshot, [x])
+        expressions = a.make_expression(snapshot, [x])
         assert len(expressions) == 1
 
     network = a.NeuralNetwork(2, [a.NeuralDenseLayerSpec(1, a.NeuralActivation.Identity)])
     snapshot = a.NeuralParameterSnapshot(network, [2.0, -3.0, 0.5])
     y = a.RealVariable("y")
-    assert len(a.neurosymbolic_expand(snapshot, [x, y])) == 1
+    assert len(a.make_expression(snapshot, [x, y])) == 1
     try:
-        a.neurosymbolic_expand(snapshot, [x, x])
+        a.make_expression(snapshot, [x, x])
     except ValueError:
         pass
     else:
