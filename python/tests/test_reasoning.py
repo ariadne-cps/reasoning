@@ -16,19 +16,20 @@ def test_neural_symbolic_expansion():
                        a.NeuralActivation.Softplus):
         network = a.NeuralNetwork(1, [a.NeuralDenseLayerSpec(1, activation)])
         snapshot = a.NeuralParameterSnapshot(network, [2.0, 0.5])
-        expressions = a.make_expression(snapshot, [x])
+        expressions = a.make_expression(snapshot, a.RealSpace([x]))
         assert len(expressions) == 1
 
     network = a.NeuralNetwork(2, [a.NeuralDenseLayerSpec(1, a.NeuralActivation.Identity)])
     snapshot = a.NeuralParameterSnapshot(network, [2.0, -3.0, 0.5])
     y = a.RealVariable("y")
-    assert len(a.make_expression(snapshot, [x, y])) == 1
+    assert len(a.make_expression(snapshot, a.RealSpace([x, y]))) == 1
+    assert len(a.make_expression(snapshot, a.RealSpace([y, x]))) == 1
     try:
-        a.make_expression(snapshot, [x, x])
+        a.make_expression(snapshot, a.RealSpace([x]))
     except ValueError:
         pass
     else:
-        raise AssertionError("Duplicate symbolic inputs were accepted")
+        raise AssertionError("Wrong neural input space dimension was accepted")
 
 
 def test_hybrid_reachability_analyser():

@@ -172,11 +172,10 @@ Void export_hybrid_reasoning(pybind11::module& module) {
 
 void reasoning_submodule(pybind11::module& module) {
     module.def("make_expression",
-        [](NeuralParameterSnapshot const& snapshot,
-           std::vector<Variable<Real>> const& input_variables) {
-            return make_expression(snapshot,input_variables);
+        [](NeuralParameterSnapshot const& snapshot, Space<Real> const& space) {
+            return make_expression(snapshot,space);
         },
-        pybind11::arg("snapshot"),pybind11::arg("input_variables"));
+        pybind11::arg("snapshot"),pybind11::arg("space"));
     export_storage(module);
     pybind11::class_<HybridStorage>(module,"HybridStorage");
     export_hybrid_reasoning(module);

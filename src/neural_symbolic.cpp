@@ -54,19 +54,15 @@ RealExpression activate(RealExpression value, NeuralActivation activation) {
 
 std::vector<Expression<Real>> make_expression(
     NeuralParameterSnapshot const& snapshot,
-    std::vector<Variable<Real>> const& input_variables) {
+    Space<Real> const& space) {
     auto const& network=snapshot.network();
-    if (input_variables.size()!=network.input_dimension())
-        throw std::invalid_argument("Wrong number of symbolic inputs");
-    for (std::size_t i=0;i<input_variables.size();++i)
-        for (std::size_t j=i+1u;j<input_variables.size();++j)
-            if (input_variables[i]==input_variables[j])
-                throw std::invalid_argument("Symbolic input variables must be distinct");
+    if (space.size()!=network.input_dimension())
+        throw std::invalid_argument("Wrong dimension of neural input space");
 
     std::vector<RealExpression> state;
-    state.reserve(input_variables.size());
-    for (auto const& variable : input_variables)
-        state.emplace_back(variable);
+    state.reserve(space.size());
+    for (SizeType i=0; i<space.size(); ++i)
+        state.emplace_back(space.variable(i));
 
     auto const& weights=snapshot.values();
     for (auto const& layer : network.layers()) {

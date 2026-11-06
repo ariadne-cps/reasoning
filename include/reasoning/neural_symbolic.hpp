@@ -30,6 +30,7 @@
 
 #include "ann/network.hpp"
 #include "symbolic/expression.hpp"
+#include "symbolic/space.hpp"
 
 #include <vector>
 
@@ -46,13 +47,14 @@ namespace Ariadne {
  *  This expansion preserves mathematical real-function semantics, NOT
  *  finite-precision CPU floating-point evaluation order. It may be large.
  *
- *  The variable list must match the network input dimension and contain
- *  distinct variables; derivative() and simplify() can subsequently be
- *  applied to smooth expression regions using Symbolic.
+ *  The ordered argument space must match the network input dimension.
+ *  Its coordinate order determines which network input maps to each variable.
+ *  derivative() and simplify() can subsequently be applied to smooth
+ *  expression regions using Symbolic.
  */
 std::vector<Expression<Real>> make_expression(
     NeuralParameterSnapshot const& snapshot,
-    std::vector<Variable<Real>> const& input_variables);
+    Space<Real> const& space);
 
 } // namespace Ariadne
 

@@ -30,8 +30,9 @@ run in isolated fixtures.
 
 ## Neural symbolic expansion
 
-The `make_expression(snapshot, variables)` function converts a frozen
-neural network into native `Expression<Real>` objects, using exact dyadic
+The `make_expression(snapshot, space)` function converts a frozen
+neural network over an ordered `Space<Real>` into native
+`Expression<Real>` objects, using exact dyadic
 interpretations of stored binary64 parameters. It supports Identity, ReLU,
 Tanh, Sigmoid, and Softplus activations. The result can be evaluated,
 simplified, or differentiated using Ariadne's symbolic facilities; the
