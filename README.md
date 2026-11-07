@@ -87,3 +87,13 @@ value-owning adapters are provided temporarily by
 These adapters are staging code; their intended final destination is
 `drawing`, **after** the mathematical types are moved to lower modules.
 The Python registrations now reflect the mathematical class hierarchy.
+
+### State/auxiliary paving API
+
+Mathematical augmented pavings consistently expose `state_paving()` for the
+underlying state cells and `state_auxiliary_paving()` for the outer approximation
+of their auxiliary function graph. The previous `state_set()` aliases remain
+available in both the continuous and hybrid classes, and the continuous
+`state_auxiliary_set()` remains a forwarding alias. Analysis adapters use the
+canonical paving-oriented names; equivalence of the old and new entry points
+is regression-tested.

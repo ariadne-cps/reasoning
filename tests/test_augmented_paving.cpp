@@ -113,13 +113,18 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         storage.recombine();
         ARIADNE_TESTING_PROVE(storage.size() > 0u);
 
-        GridTreePaving& paving = storage.state_set();
+        GridTreePaving& paving = storage.state_paving();
         const AugmentedPaving& const_storage = storage;
-        const GridTreePaving& const_paving = const_storage.state_set();
+        const GridTreePaving& const_paving = const_storage.state_paving();
+        ARIADNE_TESTING_PROVE(&storage.state_set()==&storage.state_paving());
+        ARIADNE_TESTING_PROVE(&const_storage.state_set()==&const_storage.state_paving());
         ARIADNE_TESTING_PROVE(paving.size() == const_paving.size());
         ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
 
-        GridTreePaving auxiliary = storage.state_auxiliary_set();
+        GridTreePaving auxiliary = storage.state_auxiliary_paving();
+        GridTreePaving legacy_auxiliary = storage.state_auxiliary_set();
+        ARIADNE_TESTING_PROVE(subset(auxiliary,legacy_auxiliary));
+        ARIADNE_TESTING_PROVE(subset(legacy_auxiliary,auxiliary));
         ARIADNE_TESTING_EXPECT_EQUAL(auxiliary.dimension(), 3u);
         ARIADNE_TESTING_EXPECT_EQUAL(storage.auxiliary_mapping().result_size(), mapping.result_size());
         ARIADNE_TESTING_EXPECT_EQUAL(storage.auxiliary_function().result_size(), mapping.result_size());

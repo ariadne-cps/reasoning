@@ -80,25 +80,25 @@ class LabelledAugmentedPaving
 
     Void adjoin(LabelledAugmentedPaving const& other) {
         ARIADNE_PRECONDITION(this->_state_variables==other._state_variables);
-        this->state_set().adjoin(other.state_set()); }
+        this->state_paving().adjoin(other.state_paving()); }
     Void restrict(LabelledAugmentedPaving const& other) {
         ARIADNE_PRECONDITION(this->_state_variables==other._state_variables);
-        this->state_set().restrict(other.state_set()); }
+        this->state_paving().restrict(other.state_paving()); }
     Void remove(LabelledAugmentedPaving const& other) {
         ARIADNE_PRECONDITION(this->_state_variables==other._state_variables);
-        this->state_set().remove(other.state_set()); }
+        this->state_paving().remove(other.state_paving()); }
 
     friend Bool subset(LabelledAugmentedPaving const& set1, LabelledAugmentedPaving const& set2) {
         ARIADNE_PRECONDITION(set1._state_variables==set2._state_variables);
-        return subset(set1.state_set(),set2.state_set()); }
+        return subset(set1.state_paving(),set2.state_paving()); }
     friend Bool intersect(LabelledAugmentedPaving const& set1, LabelledAugmentedPaving const& set2) {
         ARIADNE_PRECONDITION(set1._state_variables==set2._state_variables);
-        return intersect(set1.state_set(),set2.state_set()); }
+        return intersect(set1.state_paving(),set2.state_paving()); }
 
     virtual LabelledAugmentedPaving* clone() const override { return new LabelledAugmentedPaving(*this); }
 
     friend OutputStream& operator<<(OutputStream& os, LabelledAugmentedPaving const& set) {
-        return os << "LabelledAugmentedPaving(" << set.state_set() << ", state_variables=" << set._state_variables << ", auxiliary_mapping=" << set.auxiliary_mapping().function() << ", auxiliary_variables=" << set._auxiliary_variables << ")"; }
+        return os << "LabelledAugmentedPaving(" << set.state_paving() << ", state_variables=" << set._state_variables << ", auxiliary_mapping=" << set.auxiliary_mapping().function() << ", auxiliary_variables=" << set._auxiliary_variables << ")"; }
 
   private:
     List<Identifier> _state_variables;

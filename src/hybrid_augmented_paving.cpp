@@ -3,11 +3,11 @@
 
 namespace Ariadne {
 HybridGridTreePaving HybridAugmentedPaving::state_auxiliary_paving() const {
-    HybridGrid state_grid=this->_state_set.grid();
+    HybridGrid state_grid=this->state_paving().grid();
     HybridScalings scalings=state_grid.scalings();
     HybridGrid result_grid(this->_auxiliary_mapping.state_auxiliary_space(),scalings);
     HybridGridTreePaving result(result_grid);
-    for (auto it=this->_state_set.locations_begin(); it!=this->_state_set.locations_end(); ++it) {
+    for (auto it=this->state_paving().locations_begin(); it!=this->state_paving().locations_end(); ++it) {
         DiscreteLocation const& q=it->first;
         GridTreePaving const& paving=it->second;
         LabelledMapping mapping=this->_auxiliary_mapping(q);

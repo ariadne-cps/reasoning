@@ -57,11 +57,17 @@ class AugmentedPaving
     AugmentedPaving(GridTreePaving const& gtp, Mapping const& aux)
         : _state_set(gtp), _auxiliary_mapping(aux) { }
 
-    GridTreePaving& state_set() { return this->_state_set; }
-    GridTreePaving const& state_set() const { return this->_state_set; }
-    GridTreePaving state_auxiliary_set() const {
+    //! The state paving, without its auxiliary graph.
+    GridTreePaving& state_paving() { return this->_state_set; }
+    GridTreePaving const& state_paving() const { return this->_state_set; }
+    //! Legacy reachability terminology, retained for existing callers.
+    GridTreePaving& state_set() { return this->state_paving(); }
+    GridTreePaving const& state_set() const { return this->state_paving(); }
+    //! Outer paving of {(x,f(x)) : x is contained in the state paving}.
+    GridTreePaving state_auxiliary_paving() const {
         Grid auxiliary_grid(this->_auxiliary_mapping.result_size());
         return outer_skew_product(this->_state_set, auxiliary_grid, this->_auxiliary_mapping); }
+    GridTreePaving state_auxiliary_set() const { return this->state_auxiliary_paving(); }
     Mapping const& auxiliary_mapping() const { return this->_auxiliary_mapping; }
     Mapping const& auxiliary_function() const { return this->_auxiliary_mapping; }
     Mapping const& auxiliary_data() const { return this->_auxiliary_mapping; }

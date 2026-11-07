@@ -100,9 +100,11 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         from_grid.adjoin_lower_approximation(initial, 4u, 3u);
         ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
 
-        HybridGridTreePaving& state_set = from_grid.state_set();
+        HybridGridTreePaving& state_set = from_grid.state_paving();
+        ARIADNE_TESTING_PROVE(&state_set==&from_grid.state_set());
         const HybridAugmentedPaving& const_storage = from_grid;
-        const HybridGridTreePaving& const_state_set = const_storage.state_set();
+        const HybridGridTreePaving& const_state_set = const_storage.state_paving();
+        ARIADNE_TESTING_PROVE(&const_state_set==&const_storage.state_set());
         ARIADNE_TESTING_PROVE(state_set.size() == const_state_set.size());
         ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
 

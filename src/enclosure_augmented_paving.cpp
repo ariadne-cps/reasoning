@@ -21,7 +21,7 @@ Void adjoin_outer_approximation_to(Enclosure const& enclosure, AugmentedPaving& 
                     "enclosure.auxiliary_mapping()="<<enclosure.auxiliary_mapping()<<", "
                     "storage.auxiliary_mapping()="<<storage.auxiliary_mapping());
     }
-    enclosure.configuration().paver().adjoin_outer_approximation(storage.state_set(),enclosure.state_set(),fineness);
+    enclosure.configuration().paver().adjoin_outer_approximation(storage.state_paving(),enclosure.state_set(),fineness);
 }
 
 

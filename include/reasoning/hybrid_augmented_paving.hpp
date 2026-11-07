@@ -89,10 +89,11 @@ class HybridAugmentedPaving
         return _auxiliary_mapping(loc); }
 
     HybridGrid grid() const { return this->_state_set.grid(); }
-    HybridGridTreePaving& state_set() {
-        return this->_state_set; }
-    HybridGridTreePaving const& state_set() const {
-        return this->_state_set; }
+    HybridGridTreePaving& state_paving() { return this->_state_set; }
+    HybridGridTreePaving const& state_paving() const { return this->_state_set; }
+    //! Compatibility aliases for analysis clients.
+    HybridGridTreePaving& state_set() { return this->state_paving(); }
+    HybridGridTreePaving const& state_set() const { return this->state_paving(); }
     HybridGridTreePaving state_auxiliary_paving() const;
 
     Bool is_empty() const { return this->_state_set.is_empty(); }
@@ -138,7 +139,7 @@ inline const LabelledAugmentedPaving HybridAugmentedPaving::operator[](DiscreteL
 }
 HybridAugmentedPavingElementReference::operator const LabelledAugmentedPaving () const {
     return LabelledAugmentedPaving(_hstorage->_state_set[_loc],_hstorage->auxiliary_mapping(_loc)); }
-Void HybridAugmentedPavingElementReference::clear() { return _hstorage->state_set()[_loc].clear(); }
+Void HybridAugmentedPavingElementReference::clear() { return _hstorage->state_paving()[_loc].clear(); }
 
 } // namespace Ariadne
 
