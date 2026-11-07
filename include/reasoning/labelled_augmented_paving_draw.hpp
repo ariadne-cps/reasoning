@@ -26,6 +26,19 @@ class LabelledAugmentedPavingDrawable final : public LabelledDrawable2dInterface
     LabelledAugmentedPaving _paving;
 };
 
+// Projection-based figures use the same auxiliary graph as AugmentedPaving.
+// A dedicated overload avoids reliance on implicit conversions or on
+// mathematical types inheriting rendering interfaces.
+inline Void draw_to_figure(Figure& figure, LabelledAugmentedPaving const& paving) {
+    draw_to_figure(figure,static_cast<AugmentedPaving const&>(paving));
+}
+inline Void draw(Figure& figure, LabelledAugmentedPaving const& paving) {
+    draw_to_figure(figure,paving);
+}
+inline Figure& operator<<(Figure& figure, LabelledAugmentedPaving const& paving) {
+    draw_to_figure(figure,paving); return figure;
+}
+
 inline Void draw_to_figure(LabelledFigure& figure, LabelledAugmentedPaving const& paving) {
     figure.draw(LabelledAugmentedPavingDrawable(paving));
 }
