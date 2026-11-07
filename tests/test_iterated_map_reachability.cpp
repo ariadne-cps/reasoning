@@ -36,7 +36,7 @@
 #include "logging/logging.hpp"
 
 #include "reasoning/reachability_analyser.hpp"
-#include "reasoning/storage.hpp"
+#include "paving/augmented_paving.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -140,8 +140,8 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         // Labelled views of an iterated-map system.
         LabelledGrid lgrid(system);
         LabelledGridTreePaving lgtp(lgrid);
-        LabelledStorage ls1(lgrid, system);
-        LabelledStorage ls2(lgtp, system);
+        LabelledAugmentedPaving ls1(lgrid, system);
+        LabelledAugmentedPaving ls2(lgtp, system);
         ARIADNE_TESTING_PROVE(ls1.state_space() == system.state_space());
         ARIADNE_TESTING_PROVE(ls2.state_space() == system.state_space());
     }

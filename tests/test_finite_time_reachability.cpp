@@ -35,6 +35,7 @@
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser.hpp"
+#include "labelled/labelled_augmented_paving_draw.hpp"
 #include "expression-set/expression_set.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"

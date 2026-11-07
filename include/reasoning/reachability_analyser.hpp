@@ -35,7 +35,8 @@
 #include "set/function_set.hpp"
 
 #include "evolution/enclosure.hpp"
-#include "reasoning/storage_orbit.hpp"
+#include "labelled/labelled_augmented_paving.hpp"
+#include "reasoning/augmented_paving_orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 
@@ -52,7 +53,7 @@ class AutomatonInterface;
 class Grid;
 class GridCell;
 class GridTreePaving;
-class Storage;
+class AugmentedPaving;
 
 template<class ES> class ListSet;
 
@@ -65,8 +66,8 @@ using ContinuousReachabilityAnalyser = ReachabilityAnalyser<VectorField>;
 
 template<> struct SafetyCertificate<EuclideanSpace> {
     const ValidatedSierpinskian is_safe;
-    const LabelledStorage chain_reach_set;
-    const LabelledStorage safe_set;
+    const LabelledAugmentedPaving chain_reach_set;
+    const LabelledAugmentedPaving safe_set;
 };
 
 //! \ingroup DynamicsModule

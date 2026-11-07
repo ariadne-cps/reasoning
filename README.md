@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/ariadne-cps/reasoning/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/reasoning)
 
 Ariadne Reasoning implements reachability analysis, safety verification and
-grid-backed storage for continuous and hybrid dynamical systems.
+grid-backed augmented pavings for continuous and hybrid dynamical systems.
 Although independently maintained and usable, this repository is also part of the [Ariadne repository structure](https://github.com/ariadne-cps/ariadne/blob/main/doc/structure.md).
 
 ## Layout
@@ -54,3 +54,16 @@ See [the tutorial](tutorial/README.md) for a small C++ safety-verification examp
 
 The standalone build composes upstream Python bindings with Reasoning in
 `pyariadne_reasoning`. Python smoke tests run through CTest with the `python` label.
+
+## Augmented paving migration
+
+The canonical `AugmentedPaving` is defined in `paving` and its rendering adapter
+in `drawing`. `LabelledGrid`, `LabelledMapping`, `LabelledAugmentedPaving`
+and the labelled rendering adapter are defined in `labelled`. The hybrid
+paving, lazy auxiliary mapping, and hybrid drawing adapter live in `hybrid`.
+Enclosure-to-augmented-paving conversions are implemented in `evolution`.
+
+Reasoning now contains only analysis-related components: analyser traits,
+reachability analysers, system-to-auxiliary-mapping adapters, and orbit
+specializations. Callers should directly include the appropriate module
+header. No legacy forwarding headers or `Storage` aliases are provided.

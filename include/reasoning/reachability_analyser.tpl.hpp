@@ -49,7 +49,8 @@
 #include "equation-solving/equation_solver.hpp"
 #include "set/function_set.hpp"
 
-#include "reasoning/enclosure_storage.hpp"
+#include "evolution/enclosure_augmented_paving.hpp"
+#include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/reachability_analyser.hpp"
 
 #include "logging/logging.hpp"
@@ -97,7 +98,7 @@ _reach_evolve_resume(const ListSet<EnclosureType>& initial_enclosures,
 {
     LOGGING_SCOPE_CREATE;
     const GridType& grid=this->_configuration->grid();
-    Pair<StorageType,StorageType> result=make_pair(StorageType(grid,this->system()),StorageType(grid,this->system()));
+    Pair<StorageType,StorageType> result=make_pair(make_analysis_paving<StorageType>(grid,this->system()),make_analysis_paving<StorageType>(grid,this->system()));
     StorageType& reach_cells=result.first; StorageType& evolve_cells=result.second;
 
     for(auto initial_enclosure : initial_enclosures) {
@@ -131,7 +132,7 @@ _upper_reach(const StorageType& set,
     -> StorageType
 {
     GridType grid=set.grid();
-    StorageType result(grid,this->system());
+    StorageType result = make_analysis_paving<StorageType>(grid,this->system());
     StorageType cells=set;
     cells.mince(accuracy);
     for(auto cell : cells) {
@@ -155,7 +156,7 @@ _upper_evolve(const StorageType& set,
 {
     LOGGING_SCOPE_CREATE;
     GridType grid=set.grid();
-    StorageType result(grid,this->system()); StorageType cells=set; cells.mince(accuracy);
+    StorageType result = make_analysis_paving<StorageType>(grid,this->system()); StorageType cells=set; cells.mince(accuracy);
     for (auto cell : cells) {
         LOGGING_PRINTLN_AT(1,"Evolving cell = "<<cell);
         EnclosureType initial_enclosure = evolver.enclosure(cell.box());
@@ -209,8 +210,8 @@ lower_evolve(const OvertSetInterfaceType& initial_set,
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     Nat grid_extent = this->_configuration->maximum_grid_extent();
     GridType grid=this->_configuration->grid();
-    StorageType initial_cells(grid,this->system());
-    StorageType final_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType final_cells = make_analysis_paving<StorageType>(grid,this->system());
 
     LOGGING_PRINTLN("Computing lower evolve set...");
 
@@ -239,8 +240,8 @@ lower_reach(const OvertSetInterfaceType& initial_set,
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     Nat grid_extent = this->_configuration->maximum_grid_extent();
     const GridType& grid=this->_configuration->grid();
-    StorageType initial_cells(grid,this->system());
-    StorageType reach_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType reach_cells = make_analysis_paving<StorageType>(grid,this->system());
 
     LOGGING_PRINTLN("Computing lower reach set...");
 
@@ -271,9 +272,9 @@ lower_reach_evolve(const OvertSetInterfaceType& initial_set,
 
     const GridType& grid=this->_configuration->grid();
 
-    StorageType initial_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
 
-    StorageType reach(grid,this->system()); StorageType evolve_cells(grid,this->system());
+    StorageType reach = make_analysis_paving<StorageType>(grid,this->system()); StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
 
     // Improve accuracy of initial set for lower computations
     initial_cells.adjoin_lower_approximation(initial_set,grid_extent,grid_fineness+4);
@@ -307,14 +308,15 @@ lower_reach(const OvertSetInterfaceType& initial_set) const
 
     Bool has_bounding_domain = this->_configuration->bounding_domain_ptr() != nullptr;
 
-    StorageType bounding(grid,this->system());
+    StorageType bounding = make_analysis_paving<StorageType>(grid,this->system());
     if (has_bounding_domain)
         bounding.adjoin_outer_approximation(this->_configuration->bounding_domain(),maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1,"maximum_grid_extent="<<maximum_grid_extent);
     LOGGING_PRINTLN_AT(1,"bounding_size="<<bounding.size());
 
-    StorageType initial_cells(grid,this->system()), evolve_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     initial_cells.adjoin_lower_approximation(initial_set,maximum_grid_extent,maximum_grid_fineness+4);
 
     if (has_bounding_domain) initial_cells.restrict(bounding);
@@ -322,7 +324,7 @@ lower_reach(const OvertSetInterfaceType& initial_set) const
 
     ListSet<EnclosureType> starting_enclosures;
 
-    StorageType reach_cells(grid,this->system());
+    StorageType reach_cells = make_analysis_paving<StorageType>(grid,this->system());
 
     if (possibly(transient_time > TimeType(0))) {
         LOGGING_PRINTLN("Computing transient evolution...");
@@ -347,7 +349,7 @@ lower_reach(const OvertSetInterfaceType& initial_set) const
 
     while (!evolve_cells.is_empty()) {
 
-        StorageType new_reach_cells(grid,this->system());
+        StorageType new_reach_cells = make_analysis_paving<StorageType>(grid,this->system());
         ListSet<EnclosureType> new_evolve_enclosures;
         make_lpair(new_reach_cells,evolve_cells) = _reach_evolve_resume(starting_enclosures,lock_to_grid_time,
                 maximum_grid_fineness,new_evolve_enclosures,Semantics::LOWER,*_evolver);
@@ -386,7 +388,7 @@ upper_evolve(const CompactSetInterfaceType& initial_set,
 {
     LOGGING_SCOPE_CREATE;
     const GridType& grid=this->_configuration->grid();
-    StorageType evolve_cells(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     evolve_cells.adjoin_outer_approximation(initial_set,grid_fineness);
     LOGGING_PRINTLN_AT(1,"initial_evolve.size()="<<evolve_cells.size());
@@ -421,7 +423,7 @@ upper_reach(const CompactSetInterfaceType& initial_set,
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN_AT(1,"initial_set="<<initial_set);
     const GridType& grid=this->_configuration->grid();
-    StorageType evolve_cells(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     LOGGING_PRINTLN_AT(2,"grid_fineness="<<grid_fineness);
     evolve_cells.adjoin_outer_approximation(initial_set,grid_fineness);
@@ -434,8 +436,8 @@ upper_reach(const CompactSetInterfaceType& initial_set,
 
     LOGGING_PRINTLN_AT(1,"time="<<time);
     LOGGING_PRINTLN_AT(1,"time_steps="<<time_steps<<"  lock_to_grid_time="<<lock_to_grid_time);
-    StorageType found_cells(grid,this->system());
-    StorageType accumulated_evolve_cells(grid,this->system());
+    StorageType found_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType accumulated_evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     LOGGING_PRINTLN("Computing time steps...")
 
     for(Natural i=0u; i!=time_steps; ++i) {
@@ -475,7 +477,7 @@ upper_reach_evolve(const CompactSetInterfaceType& initial_set,
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN_AT(1,"initial_set="<<initial_set);
     const GridType& grid=this->_configuration->grid();
-    StorageType evolve_cells(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     LOGGING_PRINTLN_AT(1,"grid_fineness="<<grid_fineness);
     evolve_cells.adjoin_outer_approximation(initial_set,grid_fineness);
@@ -491,7 +493,7 @@ upper_reach_evolve(const CompactSetInterfaceType& initial_set,
 
     LOGGING_PRINTLN("Computing reachability steps...");
 
-    StorageType found_cells(grid,this->system());
+    StorageType found_cells = make_analysis_paving<StorageType>(grid,this->system());
     for(Natural i=0u; i!=time_steps; ++i) {
         LOGGING_PRINTLN_AT(1,"computing "<<i+1u<<"-th reachability step...");
         this->_adjoin_upper_reach_evolve(found_cells,evolve_cells,evolve_cells,lock_to_grid_time,grid_fineness,*_evolver);
@@ -533,20 +535,20 @@ outer_chain_reach(const CompactSetInterfaceType& initial_set) const
     const GridType& grid=this->_configuration->grid();
 
     Bool has_bounding_domain = this->_configuration->bounding_domain_ptr()!=nullptr;
-    StorageType bounding(grid,this->system());
+    StorageType bounding = make_analysis_paving<StorageType>(grid,this->system());
     if (has_bounding_domain)
         bounding.adjoin_outer_approximation(this->_configuration->bounding_domain(),maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1,"maximum_grid_extent="<<maximum_grid_extent);
     LOGGING_PRINTLN_AT(1,"bounding_size="<<bounding.size());
 
-    StorageType initial_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
     initial_cells.adjoin_outer_approximation(initial_set,maximum_grid_fineness);
     _checked_restriction(initial_cells, bounding, overspill_policy);
     LOGGING_PRINTLN_AT(1,"initial_size="<<initial_cells.size());
 
-    StorageType reach_cells(grid,this->system());
-    StorageType evolve_cells(grid,this->system());
+    StorageType reach_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     if(definitely(transient_time > TimeType(0))) {
         LOGGING_PRINTLN("Computing transient evolution...");
         this->_adjoin_upper_reach_evolve(reach_cells,evolve_cells,initial_cells,transient_time,maximum_grid_fineness,*_evolver);
@@ -598,7 +600,7 @@ verify_safety(const CompactSetInterfaceType& initial_set,
     const RegularLocatedSetInterfaceType* bounded_safe_set_ptr=dynamic_cast<RegularLocatedSetInterfaceType const*>(&safe_set);
     const GridType& grid=this->_configuration->grid();
     auto safe_paving=inner_approximation(*bounded_safe_set_ptr, grid, this->_configuration->maximum_grid_fineness());
-    StorageType safe_cells(safe_paving,this->system());
+    StorageType safe_cells = make_analysis_paving<StorageType>(safe_paving,this->system());
 
     auto overspill_policy = ChainOverspillPolicy::ERROR;
 
@@ -611,14 +613,14 @@ verify_safety(const CompactSetInterfaceType& initial_set,
     LOGGING_PRINTLN_AT(1,"initial_set="<<initial_set);
 
     Bool has_bounding_domain = this->_configuration->bounding_domain_ptr()!=nullptr;
-    StorageType bounding(grid,this->system());
+    StorageType bounding = make_analysis_paving<StorageType>(grid,this->system());
     if (has_bounding_domain)
         bounding.adjoin_outer_approximation(this->_configuration->bounding_domain(),maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1,"maximum_grid_extent="<<maximum_grid_extent);
     LOGGING_PRINTLN_AT(1,"bounding_size="<<bounding.size());
 
-    StorageType initial_cells(grid,this->system());
+    StorageType initial_cells = make_analysis_paving<StorageType>(grid,this->system());
     initial_cells.adjoin_outer_approximation(initial_set,maximum_grid_fineness);
     _checked_restriction(initial_cells, bounding, overspill_policy);
     LOGGING_PRINTLN_AT(1,"initial_size="<<initial_cells.size());
@@ -627,8 +629,8 @@ verify_safety(const CompactSetInterfaceType& initial_set,
         return SafetyCertificateType { indeterminate,initial_cells,safe_cells };
     }
 
-    StorageType reach_cells(grid,this->system());
-    StorageType evolve_cells(grid,this->system());
+    StorageType reach_cells = make_analysis_paving<StorageType>(grid,this->system());
+    StorageType evolve_cells = make_analysis_paving<StorageType>(grid,this->system());
     if(definitely(transient_time > 0)) {
         LOGGING_PRINTLN("Computing transient evolution...");
         this->_adjoin_upper_reach_evolve(reach_cells,evolve_cells,initial_cells,transient_time,maximum_grid_fineness,*_evolver);

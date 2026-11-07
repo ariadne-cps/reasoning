@@ -5,8 +5,8 @@ set(UNIT_TESTS
     test_infinite_time_reachability
     test_verify_safety
     test_iterated_map_reachability
-    test_storage
-    test_hybrid_storage
+    test_augmented_paving
+    test_hybrid_augmented_paving
     test_neural_symbolic
 )
 foreach(TEST IN LISTS UNIT_TESTS)
@@ -17,3 +17,4 @@ foreach(TEST IN LISTS UNIT_TESTS)
 endforeach()
 add_custom_target(tests)
 add_dependencies(tests ${UNIT_TESTS})
+

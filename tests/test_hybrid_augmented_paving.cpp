@@ -1,5 +1,5 @@
 /***************************************************************************
- *            test_hybrid_storage.cpp
+ *            test_hybrid_augmented_paving.cpp
  *
  *  Copyright  2006-20  Luca Geretti
  *
@@ -39,8 +39,12 @@
 #include "drawing/drawer_manager.hpp"
 #include "drawing/drawer.hpp"
 
-#include "reasoning/hybrid_storage.hpp"
-#include "reasoning/hybrid_storage_orbit.hpp"
+#include "hybrid/hybrid_auxiliary_mapping.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_augmented_paving_draw.hpp"
+#include "reasoning/hybrid_augmented_paving_orbit_draw.hpp"
+#include "reasoning/analysis_paving_factory.hpp"
+#include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -48,7 +52,7 @@ using namespace Ariadne;
 using namespace std;
 
 
-class TestHybridStorage : public Ariadne::Testing::ContextFixture
+class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
 {
     RealVariable x;
     RealVariable y;
@@ -57,7 +61,7 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
   public:
     using ContextFixture::ContextFixture;
 
-    TestHybridStorage(Ariadne::Testing::Context& context)
+    TestHybridAugmentedPaving(Ariadne::Testing::Context& context)
         : ContextFixture(context),
           x("x"), y("y"), q(),
           system()
@@ -65,17 +69,25 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
         system.new_mode(q, {dot(x)=-x, dot(y)=-y});
     }
 
-    Void test_hybrid_storage_interface() {
+    Void test_hybrid_augmented_paving_interface() {
         HybridGrid grid(system.state_space());
         HybridGridTreePaving hgtp(grid);
-        HybridStorage from_grid(grid, system);
-        HybridStorage from_paving(hgtp, system);
+        HybridAugmentedPaving from_grid = make_analysis_paving<HybridAugmentedPaving>(grid,system);
+        // Construct independently from the originating automaton.
+        LabelledMapping explicit_mapping(system.continuous_state_space(q),
+                                         system.auxiliary_function(q),
+                                         system.continuous_auxiliary_space(q));
+        HybridAuxiliaryMapping auxiliary(system.state_auxiliary_space(),
+            [explicit_mapping](DiscreteLocation const&) { return explicit_mapping; });
+        HybridAugmentedPaving independent(grid,auxiliary);
+        ARIADNE_TESTING_PROVE(independent.auxiliary_mapping(q).argument_space() ==
+                              system.continuous_state_space(q));
+        HybridAugmentedPaving from_paving = make_analysis_paving<HybridAugmentedPaving>(hgtp,system);
 
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
         ARIADNE_TESTING_EXPECT_EQUAL(from_grid.size(), 0u);
         ARIADNE_TESTING_PROVE(from_grid.begin() == from_grid.end());
-        ARIADNE_TESTING_PROVE(from_grid.system().state_space() == system.state_space());
-        ARIADNE_TESTING_PROVE(from_grid.auxiliary_data().state_space() == system.state_space());
+        ARIADNE_TESTING_PROVE(from_grid.auxiliary_data().state_auxiliary_space()[q] == system.state_auxiliary_space()[q]);
         ARIADNE_TESTING_PROVE(from_grid.grid().space() == grid.space());
         ARIADNE_TESTING_PROVE(from_grid.auxiliary_mapping(q).argument_space() == system.continuous_state_space(q));
 
@@ -89,14 +101,23 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
         from_grid.adjoin_lower_approximation(initial, 4u, 3u);
         ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
 
-        HybridGridTreePaving& state_set = from_grid.state_set();
-        const HybridStorage& const_storage = from_grid;
-        const HybridGridTreePaving& const_state_set = const_storage.state_set();
+        HybridGridTreePaving& state_set = from_grid.state_paving();
+        ARIADNE_TESTING_PROVE(&state_set==&from_grid.state_set());
+        const HybridAugmentedPaving& const_storage = from_grid;
+        const HybridGridTreePaving& const_state_set = const_storage.state_paving();
+        ARIADNE_TESTING_PROVE(&const_state_set==&const_storage.state_set());
         ARIADNE_TESTING_PROVE(state_set.size() == const_state_set.size());
         ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
 
-        HybridGridTreePaving auxiliary_set = from_grid.state_auxilary_set();
+        HybridGridTreePaving auxiliary_set = from_grid.state_auxiliary_paving();
         ARIADNE_TESTING_PROVE(auxiliary_set.size() > 0u);
+        independent.adjoin_outer_approximation(initial,2u);
+        ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().size() > 0u);
+        ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().space(q) ==
+                              system.state_auxiliary_space()[q]);
+        HybridAugmentedPaving const& const_independent=independent;
+        LabelledAugmentedPaving labelled_view=const_independent[q];
+        ARIADNE_TESTING_PROVE(labelled_view.size()==independent.size());
 
         ARIADNE_TESTING_PROVE(subset(from_paving, from_grid));
         from_paving.adjoin(from_grid);
@@ -112,7 +133,7 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
 
         auto element = from_grid[q];
-        LabelledStorage labelled = element;
+        LabelledAugmentedPaving labelled = element;
         ARIADNE_TESTING_PROVE(labelled.size() == from_grid.size());
         element.clear();
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
@@ -120,7 +141,10 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
         from_grid.adjoin_outer_approximation(initial, 2u);
         NullCanvas canvas;
         Set<DiscreteLocation> locations{q};
-        from_grid.draw(canvas, locations, Variables2d(x, y));
+        draw(canvas, locations, Variables2d(x, y), from_grid);
+        HybridAugmentedPavingDrawable drawable(from_grid);
+        HybridDrawableInterface const& drawable_interface=drawable;
+        drawable_interface.draw(canvas,locations,Variables2d(x,y));
 
         ARIADNE_TESTING_NOTE(from_grid);
 
@@ -128,31 +152,31 @@ class TestHybridStorage : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
     }
 
-    Void test_hybrid_storage_orbit() {
+    Void test_hybrid_augmented_paving_orbit() {
         HybridGrid grid(system.state_space());
-        HybridStorage initial(grid, system);
+        HybridAugmentedPaving initial = make_analysis_paving<HybridAugmentedPaving>(grid,system);
         HybridBoundedConstraintSet initial_set(q, {0.9_dec<=x<=1.1_dec, 0.9_dec<=y<=1.1_dec});
         initial.adjoin_outer_approximation(initial_set, 2u);
 
-        Orbit<HybridStorage> orbit(initial);
+        Orbit<HybridAugmentedPaving> orbit(initial);
         ARIADNE_TESTING_PROVE(orbit.initial().size() == initial.size());
         ARIADNE_TESTING_PROVE(orbit.reach().is_empty());
         ARIADNE_TESTING_PROVE(orbit.intermediate().is_empty());
         ARIADNE_TESTING_PROVE(orbit.final().is_empty());
 
-        HybridStorage reach(grid, system);
+        HybridAugmentedPaving reach = make_analysis_paving<HybridAugmentedPaving>(grid,system);
         reach.adjoin_outer_approximation(initial_set, 2u);
-        HybridStorage intermediate = reach;
-        HybridStorage final_set = reach;
+        HybridAugmentedPaving intermediate = reach;
+        HybridAugmentedPaving final_set = reach;
 
-        Orbit<HybridStorage> full_orbit(initial, reach, intermediate, final_set);
+        Orbit<HybridAugmentedPaving> full_orbit(initial, reach, intermediate, final_set);
         ARIADNE_TESTING_PROVE(full_orbit.initial().size() == initial.size());
         ARIADNE_TESTING_PROVE(full_orbit.reach().size() == reach.size());
         ARIADNE_TESTING_PROVE(full_orbit.intermediate().size() == intermediate.size());
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
 
         NullCanvas canvas;
-        full_orbit.draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y));
+        draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit);
     }
 };
 
@@ -161,8 +185,8 @@ int main(int argc, char** argv)
 {
     DrawerManager::instance().set_drawer(GridDrawer(2));
 
-    ARIADNE_TESTING_SUITE("test_hybrid_storage");
-    ARIADNE_TESTING_ADD_TEST(TestHybridStorage, test_hybrid_storage_interface);
-    ARIADNE_TESTING_ADD_TEST(TestHybridStorage, test_hybrid_storage_orbit);
+    ARIADNE_TESTING_SUITE("test_hybrid_augmented_paving");
+    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_interface);
+    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_orbit);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
