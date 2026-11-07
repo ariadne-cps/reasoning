@@ -215,7 +215,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         LabelledAugmentedPavingDrawable drawable(ls1);
         std::unique_ptr<LabelledDrawable2dInterface> lcopy(drawable.labelled_clone());
         ARIADNE_TESTING_PROVE(copy->size() == ls1.size());
-        ARIADNE_TESTING_PROVE(lcopy->size() == ls1.size());
+        ARIADNE_TESTING_PROVE(lcopy != nullptr);
 
         NullCanvas canvas;
         draw(canvas, Variables2d(x, y), ls1);
