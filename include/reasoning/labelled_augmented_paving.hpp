@@ -30,12 +30,11 @@
 #include "reasoning/augmented_paving.hpp"
 #include "reasoning/labelled_grid.hpp"
 #include "reasoning/labelled_mapping.hpp"
-#include "labelled/graphics_interface.hpp"
 
 namespace Ariadne {
 
 class LabelledAugmentedPaving
-    : public LabelledDrawable2dInterface, public AugmentedPaving
+    : public AugmentedPaving
 {
     template<class SYS> static LabelledMapping labelled_auxiliary_mapping(SYS const& sys) {
         return LabelledMapping(sys.state_space(),sys.auxiliary_mapping(),sys.auxiliary_space()); }
@@ -97,10 +96,6 @@ class LabelledAugmentedPaving
         return intersect(set1.state_set(),set2.state_set()); }
 
     virtual LabelledAugmentedPaving* clone() const override { return new LabelledAugmentedPaving(*this); }
-    virtual LabelledAugmentedPaving* labelled_clone() const override { return clone(); }
-
-    using AugmentedPaving::draw;
-    virtual Void draw(CanvasInterface& c, const Variables2d& p) const override;
 
     friend OutputStream& operator<<(OutputStream& os, LabelledAugmentedPaving const& set) {
         return os << "LabelledAugmentedPaving(" << set.state_set() << ", state_variables=" << set._state_variables << ", auxiliary_mapping=" << set.auxiliary_mapping().function() << ", auxiliary_variables=" << set._auxiliary_variables << ")"; }

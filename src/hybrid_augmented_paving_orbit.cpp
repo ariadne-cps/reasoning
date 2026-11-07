@@ -59,8 +59,5 @@ final() const
     return this->_data->final;
 }
 
-Void Orbit<HybridAugmentedPaving>::draw(CanvasInterface& c, const Set<DiscreteLocation>& l, const Variables2d& v) const {
-    this->reach().draw(c,l,v);
-}
 
 } // namespace Ariadne

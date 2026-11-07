@@ -44,7 +44,6 @@
 
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/discrete_location.hpp"
-#include "hybrid/hybrid_graphics_interface.hpp"
 
 #include "geometry/box.hpp"
 // HybridAugmentedPaving owns a HybridGridTreePaving by value, so the type must be complete.
@@ -73,7 +72,6 @@ class HybridAugmentedPavingElementReference {
 //! \ingroup HybridSetSubModule
 //! \brief A hybrid paving with a location-indexed algebraic auxiliary mapping.
 class HybridAugmentedPaving
-    : public HybridDrawableInterface
 {
     HybridGridTreePaving  _state_set;
     HybridAuxiliaryMapping _auxiliary_mapping;
@@ -127,9 +125,6 @@ class HybridAugmentedPaving
     HybridAugmentedPavingElementReference operator[] (DiscreteLocation const& loc) {
         return HybridAugmentedPavingElementReference{this,loc}; }
 
-    virtual Void draw(CanvasInterface& cnv, const Set<DiscreteLocation>& locs, const Variables2d& vars) const override {
-        this->state_auxiliary_paving().draw(cnv,locs,vars);
-    }
 
     friend OutputStream& operator<<(OutputStream& os, HybridAugmentedPaving const& set) {
         return os << "HybridAugmentedPaving(" << set._state_set << ", state_auxiliary_space="

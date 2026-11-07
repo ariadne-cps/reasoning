@@ -1,7 +1,5 @@
 // Labelled augmented paving and labelled grid operations.
 #include "reasoning/labelled_augmented_paving.hpp"
-#include "labelled/figure.hpp"
-#include "drawing/grid_paving_draw.hpp"
 
 namespace Ariadne {
 
@@ -53,10 +51,5 @@ const LabelledMapping LabelledAugmentedPaving::auxiliary_data() const {
     return this->auxiliary_mapping();
 }
 
-Void LabelledAugmentedPaving::draw(CanvasInterface& canvas, const Variables2d& axes) const
-{
-    Projection2d proj=projection(this->state_auxiliary_space(),axes);
-    this->euclidean_set().draw(canvas,proj);
-}
 
 } // namespace Ariadne

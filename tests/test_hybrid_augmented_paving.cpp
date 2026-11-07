@@ -41,6 +41,7 @@
 
 #include "reasoning/hybrid_auxiliary_mapping.hpp"
 #include "reasoning/hybrid_augmented_paving.hpp"
+#include "reasoning/hybrid_augmented_paving_draw.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
@@ -137,7 +138,10 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         from_grid.adjoin_outer_approximation(initial, 2u);
         NullCanvas canvas;
         Set<DiscreteLocation> locations{q};
-        from_grid.draw(canvas, locations, Variables2d(x, y));
+        draw(canvas, locations, Variables2d(x, y), from_grid);
+        HybridAugmentedPavingDrawable drawable(from_grid);
+        HybridDrawableInterface const& drawable_interface=drawable;
+        drawable_interface.draw(canvas,locations,Variables2d(x,y));
 
         ARIADNE_TESTING_NOTE(from_grid);
 
@@ -169,7 +173,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
 
         NullCanvas canvas;
-        full_orbit.draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y));
+        draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit);
     }
 };
 

@@ -46,6 +46,8 @@
 
 #include "reasoning/augmented_paving.hpp"
 #include "reasoning/labelled_augmented_paving.hpp"
+#include "reasoning/augmented_paving_draw.hpp"
+#include "reasoning/labelled_augmented_paving_draw.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
 #include "reasoning/enclosure_augmented_paving.hpp"
 
@@ -127,11 +129,12 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(copy->size() == storage.size());
 
         NullCanvas canvas;
-        storage.draw(canvas, Projection2d(2, 0, 1));
-        // Drawing is dispatched through the rendering interface even though
-        // no drawing header is pulled into augmented_paving.hpp.
-        Drawable2dInterface const& drawable=storage;
-        drawable.draw(canvas, Projection2d(2, 0, 1));
+        draw(canvas, Projection2d(2, 0, 1), storage);
+        AugmentedPavingDrawable drawable(storage);
+        Drawable2dInterface const& drawable_interface=drawable;
+        drawable_interface.draw(canvas, Projection2d(2, 0, 1));
+        std::unique_ptr<Drawable2dInterface> drawable_copy(drawable.clone());
+        ARIADNE_TESTING_EXPECT_EQUAL(drawable_copy->dimension(),storage.dimension());
 
         ARIADNE_TESTING_NOTE(storage);
 
@@ -209,12 +212,14 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
 
         ls1.adjoin_outer_approximation(box, 2u);
         std::unique_ptr<LabelledAugmentedPaving> copy(ls1.clone());
-        std::unique_ptr<LabelledAugmentedPaving> lcopy(ls1.labelled_clone());
+        LabelledAugmentedPavingDrawable drawable(ls1);
+        std::unique_ptr<LabelledDrawable2dInterface> lcopy(drawable.labelled_clone());
         ARIADNE_TESTING_PROVE(copy->size() == ls1.size());
         ARIADNE_TESTING_PROVE(lcopy->size() == ls1.size());
 
         NullCanvas canvas;
-        ls1.draw(canvas, Variables2d(x, y));
+        draw(canvas, Variables2d(x, y), ls1);
+        lcopy->draw(canvas, Variables2d(x, y));
 
         ARIADNE_TESTING_NOTE(ls1);
 

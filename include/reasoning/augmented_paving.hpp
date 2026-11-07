@@ -34,7 +34,6 @@
 #include "geometry/set_interface.hpp"
 #include "paving/paving_interface.hpp"
 #include "paving/grid_paving.hpp"
-#include "rendering/rendering_interface.hpp"
 
 namespace Ariadne {
 
@@ -43,11 +42,12 @@ typedef EffectiveVectorMultivariateFunction Mapping;
 //! \ingroup DynamicsModule
 //! \brief A grid-tree paving of states equipped with a function defining auxiliary variables.
 class AugmentedPaving
-    : public Drawable2dInterface
 {
     GridTreePaving _state_set;
     EffectiveVectorMultivariateFunction _auxiliary_mapping;
   public:
+    virtual ~AugmentedPaving() = default;
+
     typedef Grid GridType;
     typedef GridTreePaving PavingType;
 //    AugmentedPaving(Grid const& g) : _state_set(g), _auxiliary_mapping(0,g.dimension()) { }
@@ -99,9 +99,8 @@ class AugmentedPaving
     friend Bool intersect(AugmentedPaving const& set1, AugmentedPaving const& set2) {
         return intersect(set1._state_set,set2._state_set); }
 
-    virtual AugmentedPaving* clone() const override { return new AugmentedPaving(*this); }
-    virtual DimensionType dimension() const override { return this->_state_set.dimension(); }
-    virtual Void draw(CanvasInterface& c, const Projection2d& p) const override;
+    virtual AugmentedPaving* clone() const { return new AugmentedPaving(*this); }
+    DimensionType dimension() const { return this->_state_set.dimension(); }
 
     friend OutputStream& operator<<(OutputStream& os, AugmentedPaving const& set) {
         return os << "AugmentedPaving(" << set._state_set << "," << set._auxiliary_mapping << ")"; }

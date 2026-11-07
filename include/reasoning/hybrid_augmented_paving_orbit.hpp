@@ -8,7 +8,6 @@ namespace Ariadne {
 
 template<>
 class Orbit<HybridAugmentedPaving>
-    : public HybridDrawableInterface
 {
     struct Data;
   public:
@@ -22,8 +21,6 @@ class Orbit<HybridAugmentedPaving>
     HybridAugmentedPaving const& reach() const;
     HybridAugmentedPaving const& intermediate() const;
     HybridAugmentedPaving const& final() const;
-
-    Void draw(CanvasInterface& c, const Set<DiscreteLocation>& l, const Variables2d& v) const;
   private:
     SharedPointer<Data> _data;
 };

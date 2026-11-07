@@ -14,8 +14,8 @@
 using namespace Ariadne;
 
 Void export_augmented_paving(pybind11::module& module) {
-    pybind11::class_<AugmentedPaving,pybind11::bases<Drawable2dInterface>> storage_class(module,"AugmentedPaving");
-    pybind11::class_<LabelledAugmentedPaving,pybind11::bases<LabelledDrawable2dInterface>> labelled_storage_class(module,"LabelledAugmentedPaving");
+    pybind11::class_<AugmentedPaving> storage_class(module,"AugmentedPaving");
+    pybind11::class_<LabelledAugmentedPaving,pybind11::bases<AugmentedPaving>> labelled_storage_class(module,"LabelledAugmentedPaving");
 }
 
 

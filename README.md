@@ -75,12 +75,15 @@ in `src/labelled_augmented_paving.cpp`; the enclosure adapters no longer own
 those methods. This remains an intra-repository split before any cross-module
 migration.
 
-### Drawing dependency isolation
+### Drawing separation (staged in reasoning)
 
-`AugmentedPaving` now includes only the `rendering` interface rather than the
-`drawing` implementation headers. Its `draw` override is implemented in
-`src/augmented_paving_draw.cpp`, where the actual drawing adapter is
-included. This preserves existing `Drawable2dInterface` and Python API
-compatibility while isolating the remaining drawing-dependent code.
-The inheritance from the rendering interface must still be addressed before
-moving `AugmentedPaving` to the lower-level `paving` repository.
+`AugmentedPaving`, `LabelledAugmentedPaving`, and `HybridAugmentedPaving`
+no longer inherit drawable interfaces or implement drawing operations.
+As in `drawing/paving_draw.hpp`, separate free `draw` functions and
+value-owning adapters are provided temporarily by
+`reasoning/augmented_paving_draw.hpp`,
+`reasoning/labelled_augmented_paving_draw.hpp`, and
+`reasoning/hybrid_augmented_paving_draw.hpp`.
+These adapters are staging code; their intended final destination is
+`drawing`, **after** the mathematical types are moved to lower modules.
+The Python registrations now reflect the mathematical class hierarchy.
