@@ -2,8 +2,8 @@
 #include "function-utilities.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/neural_symbolic.hpp"
-#include "reasoning/storage.hpp"
-#include "reasoning/hybrid_storage.hpp"
+#include "reasoning/augmented_paving.hpp"
+#include "reasoning/hybrid_augmented_paving.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "evolution/hybrid_evolver.hpp"
@@ -12,9 +12,9 @@
 
 using namespace Ariadne;
 
-Void export_storage(pybind11::module& module) {
-    pybind11::class_<Storage,pybind11::bases<Drawable2dInterface>> storage_class(module,"Storage");
-    pybind11::class_<LabelledStorage,pybind11::bases<LabelledDrawable2dInterface>> labelled_storage_class(module,"LabelledStorage");
+Void export_augmented_paving(pybind11::module& module) {
+    pybind11::class_<AugmentedPaving,pybind11::bases<Drawable2dInterface>> storage_class(module,"AugmentedPaving");
+    pybind11::class_<LabelledAugmentedPaving,pybind11::bases<LabelledDrawable2dInterface>> labelled_storage_class(module,"LabelledAugmentedPaving");
 }
 
 
@@ -111,12 +111,12 @@ Void export_hybrid_reasoning(pybind11::module& module) {
     evolver_configuration_class.def("__repr__",&__cstr__<EvolverConfiguration>);
 
     // The returned storage and certificate must be inspectable from Python.
-    auto hybrid_storage_class = pybind11::reinterpret_borrow<pybind11::class_<HybridStorage>>(
-        module.attr("HybridStorage"));
-    hybrid_storage_class.def("size",&HybridStorage::size);
-    hybrid_storage_class.def("__len__",&HybridStorage::size);
-    hybrid_storage_class.def("is_empty",&HybridStorage::is_empty);
-    hybrid_storage_class.def("__str__",&__cstr__<HybridStorage>);
+    auto hybrid_augmented_paving_class = pybind11::reinterpret_borrow<pybind11::class_<HybridAugmentedPaving>>(
+        module.attr("HybridAugmentedPaving"));
+    hybrid_augmented_paving_class.def("size",&HybridAugmentedPaving::size);
+    hybrid_augmented_paving_class.def("__len__",&HybridAugmentedPaving::size);
+    hybrid_augmented_paving_class.def("is_empty",&HybridAugmentedPaving::is_empty);
+    hybrid_augmented_paving_class.def("__str__",&__cstr__<HybridAugmentedPaving>);
 
     export_safety_certificate<Analyser>(module,"HybridSafetyCertificate");
 
@@ -176,8 +176,8 @@ void reasoning_submodule(pybind11::module& module) {
             return make_expression(snapshot,space);
         },
         pybind11::arg("snapshot"),pybind11::arg("space"));
-    export_storage(module);
-    pybind11::class_<HybridStorage>(module,"HybridStorage");
+    export_augmented_paving(module);
+    pybind11::class_<HybridAugmentedPaving>(module,"HybridAugmentedPaving");
     export_hybrid_reasoning(module);
     export_safety_certificate<ContinuousReachabilityAnalyser>(module,"SafetyCertificate");
     export_reachability_analyser<ContinuousReachabilityAnalyser,VectorFieldEvolver>(module,"ContinuousReachabilityAnalyser");

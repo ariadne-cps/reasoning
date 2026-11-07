@@ -41,8 +41,8 @@
 #include "hybrid/hybrid_grid.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
-#include "reasoning/hybrid_storage.hpp"
-#include "reasoning/hybrid_storage_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving.hpp"
+#include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
 #include "logging/logging.hpp"
 
@@ -57,7 +57,7 @@ class HybridAutomatonInterface;
 class HybridGrid;
 class HybridGridCell;
 class HybridGridTreePaving;
-class HybridStorage;
+class HybridAugmentedPaving;
 
 template<class ES> class HybridListSet;
 
@@ -67,8 +67,8 @@ class HybridAutomaton;
 
 template<> struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
-    HybridStorage chain_reach_set;
-    HybridStorage safe_set;
+    HybridAugmentedPaving chain_reach_set;
+    HybridAugmentedPaving safe_set;
 };
 
 using HybridSafetyCertificate = SafetyCertificate<HybridSpace>;

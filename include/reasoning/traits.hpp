@@ -5,32 +5,32 @@
 #include "geometry/set_interface.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
 
-// Storage and set-interface associations are reasoning-level concerns.
+// AugmentedPaving and set-interface associations are reasoning-level concerns.
 // The generic space traits preserve the EuclideanSpace API during staging;
 // hybrid specialisation moves those aliases out of the system-level HybridSpace.
 namespace Ariadne {
 
 class HybridSpace;
-class LabelledStorage;
-class HybridStorage;
+class LabelledAugmentedPaving;
+class HybridAugmentedPaving;
 class GridTreePaving;
 
 template<class SYS> struct AnalysisTraits;
 
 template<> struct AnalysisTraits<IteratedMap> {
-    using StorageType = LabelledStorage;
+    using StorageType = LabelledAugmentedPaving;
 };
 
 template<> struct AnalysisTraits<VectorField> {
-    using StorageType = LabelledStorage;
+    using StorageType = LabelledAugmentedPaving;
 };
 
 template<> struct AnalysisTraits<DifferentialInclusion> {
-    using StorageType = LabelledStorage;
+    using StorageType = LabelledAugmentedPaving;
 };
 
 template<> struct AnalysisTraits<HybridAutomatonInterface> {
-    using StorageType = HybridStorage;
+    using StorageType = HybridAugmentedPaving;
 };
 
 template<class SPACE> struct SpaceAnalysisTraits {
