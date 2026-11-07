@@ -31,7 +31,7 @@
 
 #include "evolution/configuration_interface.hpp"
 #include "geometry/set.hpp"
-#include "paving/grid_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "set/function_set.hpp"
 
 #include "evolution/enclosure.hpp"
@@ -52,7 +52,7 @@ class AutomatonInterface;
 
 class Grid;
 class GridCell;
-class GridTreePaving;
+class BinaryTreePaving;
 class AugmentedPaving;
 
 template<class ES> class ListSet;

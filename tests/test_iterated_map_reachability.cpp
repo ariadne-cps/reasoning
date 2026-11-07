@@ -28,7 +28,7 @@
 #include "function/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "set/function_set.hpp"
-#include "paving/grid_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/iterated_map_evolver.hpp"
 #include "expression-set/expression_set.hpp"
@@ -139,7 +139,7 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
 
         // Labelled views of an iterated-map system.
         LabelledGrid lgrid(system);
-        LabelledGridTreePaving lgtp(lgrid);
+        LabelledBinaryTreePaving lgtp(lgrid);
         LabelledAugmentedPaving ls1(lgrid, system);
         LabelledAugmentedPaving ls2(lgtp, system);
         ARIADNE_TESTING_PROVE(ls1.state_space() == system.state_space());

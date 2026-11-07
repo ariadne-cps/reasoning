@@ -30,7 +30,7 @@
 #include "function/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "set/function_set.hpp"
-#include "paving/grid_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"

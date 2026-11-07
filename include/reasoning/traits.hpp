@@ -13,7 +13,7 @@ namespace Ariadne {
 class HybridSpace;
 class LabelledAugmentedPaving;
 class HybridAugmentedPaving;
-class GridTreePaving;
+class BinaryTreePaving;
 
 template<class SYS> struct AnalysisTraits;
 
@@ -57,7 +57,7 @@ template<> struct SpaceAnalysisTraits<EuclideanSpace> {
     using LocatedSetInterfaceType = EuclideanSpace::LocatedSetInterfaceType;
     using RegularSetInterfaceType = EuclideanSpace::RegularSetInterfaceType;
     using RegularLocatedSetInterfaceType = EuclideanSpace::RegularLocatedSetInterfaceType;
-    using SetApproximationType = GridTreePaving;
+    using SetApproximationType = BinaryTreePaving;
 };
 
 template<> struct SpaceAnalysisTraits<HybridSpace> {
@@ -69,7 +69,7 @@ template<> struct SpaceAnalysisTraits<HybridSpace> {
     using LocatedSetInterfaceType = EffectiveHybridLocatedSetInterface;
     using RegularSetInterfaceType = EffectiveHybridRegularSetInterface;
     using RegularLocatedSetInterfaceType = EffectiveHybridRegularLocatedSetInterface;
-    using SetApproximationType = HybridGridTreePaving;
+    using SetApproximationType = HybridBinaryTreePaving;
 };
 
 } // namespace Ariadne

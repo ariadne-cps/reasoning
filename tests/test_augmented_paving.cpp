@@ -32,7 +32,7 @@
 #include "geometry/box.hpp"
 #include "set/list_set.hpp"
 #include "set/function_set.hpp"
-#include "paving/grid_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "expression-set/expression_set.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
@@ -113,16 +113,16 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         storage.recombine();
         ARIADNE_TESTING_PROVE(storage.size() > 0u);
 
-        GridTreePaving& paving = storage.state_paving();
+        BinaryTreePaving& paving = storage.state_paving();
         const AugmentedPaving& const_storage = storage;
-        const GridTreePaving& const_paving = const_storage.state_paving();
+        const BinaryTreePaving& const_paving = const_storage.state_paving();
         ARIADNE_TESTING_PROVE(&storage.state_set()==&storage.state_paving());
         ARIADNE_TESTING_PROVE(&const_storage.state_set()==&const_storage.state_paving());
         ARIADNE_TESTING_PROVE(paving.size() == const_paving.size());
         ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
 
-        GridTreePaving auxiliary = storage.state_auxiliary_paving();
-        GridTreePaving legacy_auxiliary = storage.state_auxiliary_set();
+        BinaryTreePaving auxiliary = storage.state_auxiliary_paving();
+        BinaryTreePaving legacy_auxiliary = storage.state_auxiliary_set();
         ARIADNE_TESTING_PROVE(subset(auxiliary,legacy_auxiliary));
         ARIADNE_TESTING_PROVE(subset(legacy_auxiliary,auxiliary));
         ARIADNE_TESTING_EXPECT_EQUAL(auxiliary.dimension(), 3u);
@@ -157,12 +157,12 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(lgrid.space() == state_space);
         ARIADNE_TESTING_NOTE(lgrid);
 
-        LabelledGridTreePaving lgtp(grid, state_space);
-        LabelledGridTreePaving lgtp_from_paving(GridTreePaving(grid), state_space);
-        LabelledGridTreePaving lgtp_from_lgrid(lgrid);
+        LabelledBinaryTreePaving lgtp(grid, state_space);
+        LabelledBinaryTreePaving lgtp_from_paving(BinaryTreePaving(grid), state_space);
+        LabelledBinaryTreePaving lgtp_from_lgrid(lgrid);
         ARIADNE_TESTING_PROVE(lgtp.euclidean_set().grid() == grid);
         ARIADNE_TESTING_PROVE(lgtp.space() == state_space);
-        const LabelledGridTreePaving& const_lgtp = lgtp;
+        const LabelledBinaryTreePaving& const_lgtp = lgtp;
         ARIADNE_TESTING_PROVE(const_lgtp.euclidean_set().grid() == grid);
 
         LabelledStateAuxiliaryGrid lsag(grid, state_space, mapping, auxiliary_space);
@@ -181,13 +181,13 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(lmapping.result_space() == auxiliary_space);
 
         LabelledAugmentedPaving ls1(grid, state_space, mapping, auxiliary_space);
-        LabelledAugmentedPaving ls2(GridTreePaving(grid), state_space, mapping, auxiliary_space);
+        LabelledAugmentedPaving ls2(BinaryTreePaving(grid), state_space, mapping, auxiliary_space);
         LabelledAugmentedPaving ls3(grid, lmapping);
-        LabelledAugmentedPaving ls4(GridTreePaving(grid), lmapping);
+        LabelledAugmentedPaving ls4(BinaryTreePaving(grid), lmapping);
         LabelledAugmentedPaving ls5(lgrid, lmapping);
         LabelledAugmentedPaving ls6(lgtp_from_lgrid, lmapping);
         LabelledAugmentedPaving ls7(grid, system);
-        LabelledAugmentedPaving ls8(GridTreePaving(grid), system);
+        LabelledAugmentedPaving ls8(BinaryTreePaving(grid), system);
         LabelledAugmentedPaving ls9(lgrid, system);
         LabelledAugmentedPaving ls10(lgtp_from_lgrid, system);
 
@@ -230,7 +230,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
 
         RealExpressionBoundedConstraintSet symbolic_set({-1_dec<=x<=1_dec, -2_dec<=y<=2_dec});
         BoundedConstraintSet set = symbolic_set.euclidean_set(state_space);
-        LabelledGridTreePaving inner = inner_approximation(set, lgrid, 2u);
+        LabelledBinaryTreePaving inner = inner_approximation(set, lgrid, 2u);
         ARIADNE_TESTING_PROVE(inner.euclidean_set().size() > 0u);
     }
 
@@ -244,16 +244,16 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
 
         // Grid/mapping dimension mismatch.
         ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(Grid(3), lmapping));
-        ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(GridTreePaving(Grid(3)), lmapping));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(BinaryTreePaving(Grid(3)), lmapping));
         // Labelled grid/paving whose space differs from the mapping argument space.
         LabelledGrid other_lgrid(grid, other_state_space);
-        LabelledGridTreePaving other_lgtp(other_lgrid);
+        LabelledBinaryTreePaving other_lgtp(other_lgrid);
         ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(other_lgrid, lmapping));
         ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(other_lgtp, lmapping));
         // System whose state space differs from the labelled grid/paving.
         VectorField other_system(List<DottedRealAssignment>{dot(u)=-u, dot(v)=-v});
         LabelledGrid lgrid(grid, state_space);
-        LabelledGridTreePaving lgtp(lgrid);
+        LabelledBinaryTreePaving lgtp(lgrid);
         ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(lgrid, other_system));
         ARIADNE_TESTING_EXPECT_EXCEPTION(LabelledAugmentedPaving(lgtp, other_system));
 

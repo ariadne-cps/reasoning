@@ -57,7 +57,7 @@ class HybridAutomatonInterface;
 
 class HybridGrid;
 class HybridGridCell;
-class HybridGridTreePaving;
+class HybridBinaryTreePaving;
 class HybridAugmentedPaving;
 
 template<class ES> class HybridListSet;
