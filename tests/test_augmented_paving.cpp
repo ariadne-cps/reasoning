@@ -128,6 +128,10 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
 
         NullCanvas canvas;
         storage.draw(canvas, Projection2d(2, 0, 1));
+        // Drawing is dispatched through the rendering interface even though
+        // no drawing header is pulled into augmented_paving.hpp.
+        Drawable2dInterface const& drawable=storage;
+        drawable.draw(canvas, Projection2d(2, 0, 1));
 
         ARIADNE_TESTING_NOTE(storage);
 

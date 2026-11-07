@@ -74,3 +74,13 @@ supporting value types separately. The labelled implementation is contained
 in `src/labelled_augmented_paving.cpp`; the enclosure adapters no longer own
 those methods. This remains an intra-repository split before any cross-module
 migration.
+
+### Drawing dependency isolation
+
+`AugmentedPaving` now includes only the `rendering` interface rather than the
+`drawing` implementation headers. Its `draw` override is implemented in
+`src/augmented_paving_draw.cpp`, where the actual drawing adapter is
+included. This preserves existing `Drawable2dInterface` and Python API
+compatibility while isolating the remaining drawing-dependent code.
+The inheritance from the rendering interface must still be addressed before
+moving `AugmentedPaving` to the lower-level `paving` repository.

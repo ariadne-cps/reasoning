@@ -34,9 +34,7 @@
 #include "geometry/set_interface.hpp"
 #include "paving/paving_interface.hpp"
 #include "paving/grid_paving.hpp"
-#include "symbolic/identifier.hpp"
-#include "symbolic/space.hpp"
-#include "drawing/grid_paving_draw.hpp"
+#include "rendering/rendering_interface.hpp"
 
 namespace Ariadne {
 
@@ -103,8 +101,7 @@ class AugmentedPaving
 
     virtual AugmentedPaving* clone() const override { return new AugmentedPaving(*this); }
     virtual DimensionType dimension() const override { return this->_state_set.dimension(); }
-    virtual Void draw(CanvasInterface& c, const Projection2d& p) const override {
-        Ariadne::draw(c,p,this->state_auxiliary_set()); }
+    virtual Void draw(CanvasInterface& c, const Projection2d& p) const override;
 
     friend OutputStream& operator<<(OutputStream& os, AugmentedPaving const& set) {
         return os << "AugmentedPaving(" << set._state_set << "," << set._auxiliary_mapping << ")"; }
