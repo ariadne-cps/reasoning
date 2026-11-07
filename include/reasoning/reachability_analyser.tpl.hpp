@@ -49,7 +49,7 @@
 #include "equation-solving/equation_solver.hpp"
 #include "set/function_set.hpp"
 
-#include "reasoning/enclosure_augmented_paving.hpp"
+#include "evolution/enclosure_augmented_paving.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/reachability_analyser.hpp"
 

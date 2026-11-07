@@ -35,7 +35,7 @@
 #include "set/function_set.hpp"
 
 #include "evolution/enclosure.hpp"
-#include "reasoning/labelled_augmented_paving.hpp"
+#include "labelled/labelled_augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"

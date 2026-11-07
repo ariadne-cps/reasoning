@@ -36,7 +36,7 @@
 #include "logging/logging.hpp"
 
 #include "reasoning/reachability_analyser.hpp"
-#include "reasoning/augmented_paving.hpp"
+#include "paving/augmented_paving.hpp"
 
 #include "ariadne-testing.hpp"
 

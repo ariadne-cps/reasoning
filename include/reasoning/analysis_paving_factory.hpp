@@ -1,7 +1,7 @@
 #ifndef ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP
 #define ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP
 
-#include "reasoning/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
 
 namespace Ariadne {
 class HybridAutomatonInterface;

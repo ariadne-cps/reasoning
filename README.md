@@ -55,45 +55,15 @@ See [the tutorial](tutorial/README.md) for a small C++ safety-verification examp
 The standalone build composes upstream Python bindings with Reasoning in
 `pyariadne_reasoning`. Python smoke tests run through CTest with the `python` label.
 
-## Augmented pavings
+## Augmented paving migration
 
-Reachability results are represented using `AugmentedPaving`,
-`LabelledAugmentedPaving`, and `HybridAugmentedPaving`. The latter stores a
-lazy, location-indexed `HybridAuxiliaryMapping` independently of the originating
-automaton. The `make_hybrid_auxiliary_mapping` adapter in reasoning bridges
-between system specifications and these data objects. No functionality has
-been moved to the paving, labelled, or hybrid repositories yet. The former
-storage headers and C++ aliases remain available temporarily.
+The canonical `AugmentedPaving` is defined in `paving` and its rendering adapter
+in `drawing`. `LabelledGrid`, `LabelledMapping`, `LabelledAugmentedPaving`
+and the labelled rendering adapter are defined in `labelled`. The hybrid
+paving, lazy auxiliary mapping, and hybrid drawing adapter live in `hybrid`.
+Enclosure-to-augmented-paving conversions are implemented in `evolution`.
 
-### Header-level separation
-
-The Euclidean, labelled, and hybrid augmented paving definitions now live in
-independent reasoning headers. `labelled_grid.hpp`, `labelled_mapping.hpp`,
-`labelled_augmented_paving.hpp`, and `hybrid_auxiliary_mapping.hpp` expose
-supporting value types separately. The labelled implementation is contained
-in `src/labelled_augmented_paving.cpp`; the enclosure adapters no longer own
-those methods. This remains an intra-repository split before any cross-module
-migration.
-
-### Drawing separation (staged in reasoning)
-
-`AugmentedPaving`, `LabelledAugmentedPaving`, and `HybridAugmentedPaving`
-no longer inherit drawable interfaces or implement drawing operations.
-As in `drawing/paving_draw.hpp`, separate free `draw` functions and
-value-owning adapters are provided temporarily by
-`reasoning/augmented_paving_draw.hpp`,
-`reasoning/labelled_augmented_paving_draw.hpp`, and
-`reasoning/hybrid_augmented_paving_draw.hpp`.
-These adapters are staging code; their intended final destination is
-`drawing`, **after** the mathematical types are moved to lower modules.
-The Python registrations now reflect the mathematical class hierarchy.
-
-### State/auxiliary paving API
-
-Mathematical augmented pavings consistently expose `state_paving()` for the
-underlying state cells and `state_auxiliary_paving()` for the outer approximation
-of their auxiliary function graph. The previous `state_set()` aliases remain
-available in both the continuous and hybrid classes, and the continuous
-`state_auxiliary_set()` remains a forwarding alias. Analysis adapters use the
-canonical paving-oriented names; equivalence of the old and new entry points
-is regression-tested.
+Reasoning now contains only analysis-related components: analyser traits,
+reachability analysers, system-to-auxiliary-mapping adapters, and orbit
+specializations. Callers should directly include the appropriate module
+header. No legacy forwarding headers or `Storage` aliases are provided.

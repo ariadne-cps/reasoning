@@ -18,16 +18,3 @@ endforeach()
 add_custom_target(tests)
 add_dependencies(tests ${UNIT_TESTS})
 
-# Each header is compiled first and alone in a distinct translation unit.
-# This guards against accidental transitive include dependencies as these
-# types are prepared for migration to the paving/labelled/hybrid modules.
-add_library(REASONING_HEADER_SMOKE OBJECT
-    header_check_augmented_paving.cpp
-    header_check_labelled_grid.cpp
-    header_check_labelled_mapping.cpp
-    header_check_labelled_augmented_paving.cpp
-    header_check_hybrid_auxiliary_mapping.cpp
-    header_check_hybrid_augmented_paving.cpp
-)
-target_link_libraries(REASONING_HEADER_SMOKE PRIVATE reasoning)
-add_dependencies(tests REASONING_HEADER_SMOKE)

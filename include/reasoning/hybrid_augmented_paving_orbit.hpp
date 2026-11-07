@@ -1,7 +1,7 @@
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_HPP
 
-#include "reasoning/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
 #include "evolution/hybrid_orbit.hpp"
 
 namespace Ariadne {

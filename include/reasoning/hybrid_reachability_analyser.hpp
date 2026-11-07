@@ -42,7 +42,7 @@
 #include "hybrid/hybrid_grid.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
-#include "reasoning/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
 #include "logging/logging.hpp"

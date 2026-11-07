@@ -3,7 +3,7 @@
 #define ARIADNE_REASONING_AUGMENTED_PAVING_ORBIT_HPP
 
 #include "evolution/orbit.hpp"
-#include "reasoning/augmented_paving.hpp"
+#include "paving/augmented_paving.hpp"
 
 namespace Ariadne {
 

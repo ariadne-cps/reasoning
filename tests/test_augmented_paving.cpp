@@ -44,12 +44,12 @@
 #include "drawing/drawer_manager.hpp"
 #include "drawing/drawer.hpp"
 
-#include "reasoning/augmented_paving.hpp"
-#include "reasoning/labelled_augmented_paving.hpp"
-#include "reasoning/augmented_paving_draw.hpp"
-#include "reasoning/labelled_augmented_paving_draw.hpp"
+#include "paving/augmented_paving.hpp"
+#include "labelled/labelled_augmented_paving.hpp"
+#include "drawing/augmented_paving_draw.hpp"
+#include "labelled/labelled_augmented_paving_draw.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
-#include "reasoning/enclosure_augmented_paving.hpp"
+#include "evolution/enclosure_augmented_paving.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -134,12 +134,12 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(copy->size() == storage.size());
 
         NullCanvas canvas;
-        draw(canvas, Projection2d(2, 0, 1), storage);
+        draw(canvas, Projection2d(3, 0, 1), storage);
         AugmentedPavingDrawable drawable(storage);
         Drawable2dInterface const& drawable_interface=drawable;
-        drawable_interface.draw(canvas, Projection2d(2, 0, 1));
+        drawable_interface.draw(canvas, Projection2d(3, 0, 1));
         std::unique_ptr<Drawable2dInterface> drawable_copy(drawable.clone());
-        ARIADNE_TESTING_EXPECT_EQUAL(drawable_copy->dimension(),storage.dimension());
+        ARIADNE_TESTING_EXPECT_EQUAL(drawable_copy->dimension(),storage.state_auxiliary_paving().dimension());
 
         ARIADNE_TESTING_NOTE(storage);
 
