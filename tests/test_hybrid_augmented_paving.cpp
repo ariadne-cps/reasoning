@@ -39,6 +39,7 @@
 #include "drawing/drawer_manager.hpp"
 #include "drawing/drawer.hpp"
 
+#include "reasoning/hybrid_auxiliary_mapping.hpp"
 #include "reasoning/hybrid_augmented_paving.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"

@@ -3,6 +3,7 @@
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/neural_symbolic.hpp"
 #include "reasoning/augmented_paving.hpp"
+#include "reasoning/labelled_augmented_paving.hpp"
 #include "reasoning/hybrid_augmented_paving.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "evolution/vector_field_evolver.hpp"

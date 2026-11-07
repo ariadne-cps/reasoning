@@ -33,8 +33,6 @@
 #include <vector>
 #include <list>
 #include <iostream>
-#include <functional>
-#include <utility>
 
 #include "logging/logging.hpp"
 #include "numeric/declarations.hpp"
@@ -51,7 +49,8 @@
 #include "geometry/box.hpp"
 // HybridAugmentedPaving owns a HybridGridTreePaving by value, so the type must be complete.
 #include "hybrid/hybrid_paving.hpp"
-#include "reasoning/augmented_paving.hpp"
+#include "reasoning/labelled_augmented_paving.hpp"
+#include "reasoning/hybrid_auxiliary_mapping.hpp"
 
 
 namespace Ariadne {
@@ -61,19 +60,6 @@ template<class X> class Vector;
 class AugmentedPaving;
 class GridTreePaving;
 class HybridAugmentedPaving;
-
-//! Location-indexed auxiliary functions, evaluated lazily and independent of an automaton.
-class HybridAuxiliaryMapping {
-    // Destroy the hybrid space before the provider, which may own its backing system.
-    std::function<LabelledMapping(DiscreteLocation const&)> _mapping;
-    HybridSpace _state_auxiliary_space;
-  public:
-    HybridAuxiliaryMapping(HybridSpace const& space,
-                           std::function<LabelledMapping(DiscreteLocation const&)> mapping)
-        : _mapping(std::move(mapping)), _state_auxiliary_space(space) { }
-    LabelledMapping operator()(DiscreteLocation const& q) const { return _mapping(q); }
-    HybridSpace state_auxiliary_space() const { return _state_auxiliary_space; }
-};
 
 // FIXME: Replace this proxy with a direct mutable view of a labelled augmented paving.
 class HybridAugmentedPavingElementReference {

@@ -45,6 +45,7 @@
 #include "drawing/drawer.hpp"
 
 #include "reasoning/augmented_paving.hpp"
+#include "reasoning/labelled_augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
 #include "reasoning/enclosure_augmented_paving.hpp"
 
@@ -134,7 +135,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(storage.is_empty());
     }
 
-    Void test_labelled_storage() {
+    Void test_labelled_augmented_paving() {
         RealSpace state_space = system.state_space();
         RealSpace auxiliary_space = system.auxiliary_space();
         Mapping mapping = system.auxiliary_mapping();
@@ -219,7 +220,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(inner.euclidean_set().size() > 0u);
     }
 
-    Void test_labelled_storage_preconditions() {
+    Void test_labelled_augmented_paving_preconditions() {
         RealVariable u("u"), v("v");
         RealSpace other_state_space({u, v});
         RealSpace state_space = system.state_space();
@@ -310,8 +311,8 @@ int main(int argc, char** argv)
 
     ARIADNE_TESTING_SUITE("test_augmented_paving");
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_augmented_paving_interface);
-    ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_storage);
-    ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_storage_preconditions);
+    ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_augmented_paving);
+    ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_augmented_paving_preconditions);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_augmented_paving_orbit);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_enclosure_augmented_paving);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
