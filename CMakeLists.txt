@@ -6,8 +6,12 @@ option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
 
 if(NOT TARGET ariadne-build)
     find_package(Git REQUIRED)
-    execute_process(COMMAND "${GIT_EXECUTABLE}" -C "${CMAKE_CURRENT_SOURCE_DIR}"
-                    submodule update --init -- ss/bui RESULT_VARIABLE _result)
+    # Keep initial Build checkout messages in English.
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E env "LC_ALL=C"
+                "${GIT_EXECUTABLE}" -C "${CMAKE_CURRENT_SOURCE_DIR}"
+                submodule update --init -- ss/bui
+        RESULT_VARIABLE _result)
     if(_result)
         message(FATAL_ERROR "Cannot initialize Build submodule")
     endif()
@@ -15,16 +19,17 @@ if(NOT TARGET ariadne-build)
 endif()
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    # Pinned child commits guarantee their internal consistency.
+    # Keep comparisons of shared dependencies across independent branches.
     require_same_dependency_commit(Build CHAINS
-        "build" "evolution|build"
-        "evolution|system|build" "evolution|system|neural-set|build" "evolution|integration|build"
-        "evolution|equation-solving|build"
-        "smt|build" "sat|build")
+        "build" "evolution|build" "smt|build" "sat|build")
     require_same_dependency_commit(Symbolic CHAINS
-        "evolution|system|hybrid|labelled|expression-set|symbolic" "smt|symbolic")
+        "evolution|system|hybrid|labelled|expression-set|symbolic"
+        "smt|symbolic")
     require_same_dependency_commit(EquationSolving CHAINS
         "evolution|equation-solving" "smt|equation-solving")
-    require_same_dependency_commit(Cdcl CHAINS "smt|cdcl" "sat|cdcl")
+    require_same_dependency_commit(Cdcl CHAINS
+        "smt|cdcl" "sat|cdcl")
     require_same_dependency_commit(Bdd CHAINS
         "sat|bdd" "evolution|system|hybrid|labelled|drawing|paving|bdd")
 endif()
