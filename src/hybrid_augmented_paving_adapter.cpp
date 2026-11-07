@@ -21,7 +21,8 @@ class OwnedSystemAuxiliarySpace : public HybridSpaceInterface {
     ValidatedKleenean operator==(HybridSpaceInterface const& other) const override {
         auto const* rhs=dynamic_cast<OwnedSystemAuxiliarySpace const*>(&other);
         if (!rhs) return indeterminate;
-        return (_system.get()==rhs->_system.get()) ? true : indeterminate;
+        if (_system.get()==rhs->_system.get()) return true;
+        return indeterminate;
     }
 };
 } // namespace
