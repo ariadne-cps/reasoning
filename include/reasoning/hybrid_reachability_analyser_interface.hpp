@@ -30,6 +30,7 @@
 #define ARIADNE_HYBRID_REACHABILITY_ANALYSER_INTERFACE_HPP
 
 
+#include "system/hybrid_automaton_interface.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
 #include "evolution/evolver_interface.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
