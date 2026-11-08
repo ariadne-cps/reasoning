@@ -57,7 +57,7 @@ setup_project_library(
     OBJECTS REASONING_SRC
     LINK_LIBRARIES reasoning)
 
-setup_standalone_project_tests(
+setup_standalone_project(
     TARGET ariadne-reasoning
     TEST_DIRECTORY tests
     TEST_TARGET tests
