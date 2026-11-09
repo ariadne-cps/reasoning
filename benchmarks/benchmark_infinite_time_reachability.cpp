@@ -1,6 +1,6 @@
 // Whole-analysis infinite-time LOWER reachability benchmark.
 // Workload matches tests/test_infinite_time_reachability.cpp.
-// Current reachability storage is BinaryTreePaving, NOT generic Paving.
+// The analyser selects the backend for every intermediate Paving.
 #include "ariadne-benchmarking.hpp"
 #include "threading/thread_manager.hpp"
 #include "threading/threading_command_line_interface.hpp"
@@ -11,10 +11,13 @@
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "integration/integrator.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "paving/robdd_paving.hpp"
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace Ariadne;
 namespace Bench=Ariadne::Benchmarking;
@@ -39,8 +42,10 @@ int main(int argc,char const* argv[]) {
             "Maximum grid-relative fineness",{3u});
         Bench::Parameter<unsigned> samples("samples",
             "Whole-analysis measured samples",{3u});
+        Bench::Parameter<std::string> backend("backend",
+            "Actual storage backend (tree or robdd)",{"tree","robdd"});
         Bench::Matrix matrix;
-        matrix.add(fineness).add(samples);
+        matrix.add(fineness).add(backend).add(samples);
         Bench::CommandLine cli;
         ThreadManager::instance();
         cli.add(threading_command_line_contribution());
@@ -64,15 +69,31 @@ int main(int argc,char const* argv[]) {
         matrix.for_each([&](Bench::Configuration const& config) {
             runner.configuration_started(config);
             unsigned f=config.value(fineness),n=config.value(samples);
+            std::string const implementation=config.value(backend);
+            if(implementation!="tree" and implementation!="robdd")
+                throw std::invalid_argument(
+                    "Unsupported backend: tree or robdd. CachedTree lacks mutable PavingInterface");
             if(n==0u || f>16u)
                 throw std::invalid_argument("samples must be >0; fineness <=16");
             std::unique_ptr<Analyser> analyser;
             std::unique_ptr<Storage> result;
+            std::shared_ptr<RobddManager> manager;
             auto timings=runner.run("lower_reach",n,
                 [&] {
                     GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
                     Evolver evolver(system,integrator);
                     analyser=std::make_unique<Analyser>(evolver);
+                    manager.reset();
+                    if(implementation=="robdd") {
+                        manager=std::make_shared<RobddManager>();
+                        analyser->set_paving_factory([owner=manager](Grid const& grid_value) {
+                            return Paving(new RobddPaving(owner,grid_value));
+                        });
+                    } else {
+                        analyser->set_paving_factory([](Grid const& grid_value) {
+                            return Paving(new BinaryTreePaving(grid_value));
+                        });
+                    }
                     analyser->configuration().set_maximum_grid_fineness(f);
                     analyser->configuration().set_transient_time(4.0_dec);
                     analyser->configuration().set_bounding_domain_ptr(
@@ -88,7 +109,7 @@ int main(int argc,char const* argv[]) {
                         throw std::runtime_error("Empty reachable set");
                 });
             report.add_row({
-                "binary-tree",std::to_string(f),
+                implementation,std::to_string(f),
                 std::to_string(ThreadManager::instance().concurrency()),
                 "lower_reach"
             },Bench::summarize(timings));

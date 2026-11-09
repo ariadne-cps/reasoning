@@ -61,7 +61,7 @@ a fresh analyser and verifying its result are outside the timed region.
 
 ```bash
 cmake --build build --target benchmark_infinite_time_reachability
-./build/benchmarks/benchmark_infinite_time_reachability --maximum-grid-fineness 2,3 --samples 3 --concurrency 0
+./build/benchmarks/benchmark_infinite_time_reachability --maximum-grid-fineness 2,3 --backend tree,robdd --samples 3 --concurrency 0
 ```
 
 Concurrency is set by Threading (`0` denotes sequential execution);
@@ -69,14 +69,15 @@ warm-ups and report formatting come from Ariadne Benchmarking.
 The benchmark is not a CTest case. The Benchmarking submodule is used
 only by development executables and is not linked to production Reasoning.
 
-**Current limitation:** only the actual BinaryTree analyser backend is
-measured. `ReachabilityAnalyser<VectorField>` still uses
-`LabelledAugmentedPaving` with a concrete `BinaryTreePaving`.
-`CachedBinaryTreePaving` is currently a query-cache wrapper and does
-not implement the mutable `PavingInterface` contract. ROBDD and
-CachedTree cannot yet run the same end-to-end analyser. Converting
-the Tree result afterwards would make a misleading comparison; the
-storage migration must precede any three-backend performance claim.
+**Backend selection:** `--backend tree,robdd` runs the same analyser
+with either a BinaryTree backend or a shared-manager ROBDD backend for
+every intermediate `Paving`. The ROBDD manager is new for each complete
+analysis and shared by all its pavings and clones.
+
+`CachedBinaryTreePaving` is a query-cache wrapper, not a mutable
+`PavingInterface` backend. It is explicitly rejected rather than
+silently substituted with BinaryTree; a genuine CachedTree analysis
+requires implementing that backend's mutation contract first.
 
 ## Python
 

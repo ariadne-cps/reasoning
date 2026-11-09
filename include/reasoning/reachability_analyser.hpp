@@ -41,6 +41,11 @@
 #include "reasoning/reachability_analyser_interface.hpp"
 
 #include "logging/logging.hpp"
+#include "paving/paving_interface.hpp"
+#include <functional>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 
 namespace Ariadne {
@@ -101,6 +106,7 @@ template<class SYS> class ReachabilityAnalyser
     SharedPointer<SystemType> _system;
     SharedPointer<EvolverType> _evolver;
     SharedPointer<ConfigurationType> _configuration;
+    std::function<StorageType(GridType const&,SystemType const&)> _storage_factory;
   public:
     //!@{
     //! \name Constructors and destructors
@@ -124,6 +130,20 @@ template<class SYS> class ReachabilityAnalyser
 
     //! \brief A reference to the analyser's evolver parameter.
     const EvolverType& evolver() const { return *this->_evolver; }
+
+    //! Construct all intermediate continuous reachability sets with one backend.
+    //! For ROBDD pavings the factory must capture a shared RobddManager.
+    Void set_paving_factory(std::function<Paving(Grid const&)> factory) {
+        if(not factory) throw std::invalid_argument("Empty paving factory");
+        if constexpr (std::is_same_v<StorageType,LabelledAugmentedPaving>) {
+            _storage_factory=[factory=std::move(factory)](
+                    GridType const& grid,SystemType const& system) -> StorageType {
+                return StorageType(factory(grid),system);
+            };
+        } else {
+            throw std::logic_error("Paving factory requires continuous labelled storage");
+        }
+    }
 
     //! \brief Get the system associated with the analyser.
     virtual const SystemType& system() const override { return *this->_system; }
