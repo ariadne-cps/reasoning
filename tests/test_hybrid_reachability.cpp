@@ -308,19 +308,19 @@ Void TestHybridReachability::test_selected_robdd_backend() {
     DiscreteLocation q;
     GeneralHybridEvolver evolver(system);
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
-    ExposedHybridAnalyser analyser(evolver);
-    analyser.configuration().set_maximum_grid_fineness(1u);
+    ExposedHybridAnalyser exposed_analyser(evolver);
+    exposed_analyser.configuration().set_maximum_grid_fineness(1u);
     auto initial=_initial_set(q);
     HybridTime time(Decimal(0.25),1u);
 
-    auto tree=analyser.upper_reach(initial,time);
+    auto tree=exposed_analyser.upper_reach(initial,time);
     ARIADNE_TESTING_PROVE(tree.size()>0u);
 
     auto manager=std::make_shared<RobddManager>();
-    analyser.set_paving_factory([manager](Grid const& grid) {
+    exposed_analyser.set_paving_factory([manager](Grid const& grid) {
         return Paving(new RobddPaving(manager,grid));
     });
-    auto robdd=analyser.upper_reach(initial,time);
+    auto robdd=exposed_analyser.upper_reach(initial,time);
     ARIADNE_TESTING_PROVE(robdd.size()>0u);
     ARIADNE_TESTING_PROVE(
         dynamic_cast<RobddPaving const*>(
@@ -346,8 +346,8 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     DiscreteLocation q;
     GeneralHybridEvolver evolver(system);
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
-    ExposedHybridAnalyser analyser(evolver);
-    auto const grid=analyser.configuration().grid();
+    ExposedHybridAnalyser exposed_analyser(evolver);
+    auto const grid=exposed_analyser.configuration().grid();
     auto fresh=[&] {
         return make_analysis_paving<HybridAugmentedPaving>(grid,system);
     };
@@ -369,7 +369,7 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
         // The reach destination already contains a cell; the evolve
         // destination is empty and must create its location during adjoin.
         reach.state_paving().adjoin(first);
-        analyser._adjoin_upper_reach_evolve(reach,evolved,input,
+        exposed_analyser._adjoin_upper_reach_evolve(reach,evolved,input,
             HybridTime(Decimal(0.25),1u),1u,evolver);
         return std::make_pair(std::move(reach),std::move(evolved));
     };

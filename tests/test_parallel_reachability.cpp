@@ -3,6 +3,8 @@
 #include <utility>
 
 #include "ariadne-testing.hpp"
+#include "evolution/enclosure.hpp"
+#include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "integration/integrator.hpp"
 #include "paving/binary_tree_paving.hpp"
