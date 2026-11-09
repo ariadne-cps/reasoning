@@ -113,9 +113,9 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture
         storage.recombine();
         ARIADNE_TESTING_PROVE(storage.size() > 0u);
 
-        BinaryTreePaving& paving = storage.state_paving();
+        Paving& paving = storage.state_paving();
         const AugmentedPaving& const_storage = storage;
-        const BinaryTreePaving& const_paving = const_storage.state_paving();
+        const Paving& const_paving = const_storage.state_paving();
         ARIADNE_TESTING_PROVE(&storage.state_set()==&storage.state_paving());
         ARIADNE_TESTING_PROVE(&const_storage.state_set()==&const_storage.state_paving());
         ARIADNE_TESTING_PROVE(paving.size() == const_paving.size());
