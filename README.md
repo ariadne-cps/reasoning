@@ -71,16 +71,17 @@ Construction, validation and progress reporting happen outside timed regions.
 
 The summary statistics are displayed **in seconds** (variance in seconds
 squared). Benchmarking's stored samples retain their native nanosecond
-representation. Progress uses one global Ariadne Logging ProgressIndicator (level 1),
-not separate progress bars for individual configurations. It shows the current
-operation/backend while running and advances after each completed configuration.
-With two default operations and two backends at one fineness there are four
-steps (25% per completed step); while the first long-running step executes,
-the correct completed-step percentage remains 0%. Level 2 groups the
-warm-up/sample log messages for the active configuration, without a nested
-indicator. The final summary is printed at level 1 after releasing the
-global progress line. Additional fineness or sample-count values increase
-the matrix step count.
+representation. Progress uses exactly one global Ariadne Logging ProgressIndicator at level 1.
+Its percentage counts completed warm-up and measured executions across the
+entire configuration matrix, so progress advances after each completed round,
+not just after each backend/operation. The current operation/backend/fineness
+and step ordinal are shown on that same line. At level 2, individual steps
+and their rounds are logged with contextual labels; there are no nested
+progress indicators. With default parameters there are four configuration
+steps, each with three measured rounds (12 executions total). The final
+summary is printed at level 1 after releasing the global progress line.
+The indicator advances only upon completion of an execution: a long first
+execution therefore legitimately starts at 0%.
 
 `--backend tree,robdd` executes the same analyser with BinaryTree or a
 shared-manager ROBDD backend for every intermediate `Paving`. Tree and ROBDD
