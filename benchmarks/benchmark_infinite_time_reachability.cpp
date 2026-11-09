@@ -15,6 +15,7 @@
 #include "paving/robdd_paving.hpp"
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -65,11 +66,19 @@ int main(int argc,char const* argv[]) {
         BoundedConstraintSet initial(
             symbolic_initial.euclidean_set(system.state_space()));
         BoundingDomain bounding({{-4,4},{-4,4}});
+        // Tree and ROBDD must compute precisely the same dyadic region.
+        // The reference is materialized only after measurement.
+        std::optional<BinaryTreePaving> tree_reference;
+        std::optional<unsigned> reference_fineness;
 
         matrix.for_each([&](Bench::Configuration const& config) {
             runner.configuration_started(config);
             unsigned f=config.value(fineness),n=config.value(samples);
             std::string const implementation=config.value(backend);
+            if(not reference_fineness or *reference_fineness!=f) {
+                tree_reference.reset();
+                reference_fineness=f;
+            }
             if(implementation!="tree" and implementation!="robdd")
                 throw std::invalid_argument(
                     "Unsupported backend: tree or robdd. CachedTree lacks mutable PavingInterface");
@@ -102,12 +111,28 @@ int main(int argc,char const* argv[]) {
                 },
                 [&] {
                     result=std::make_unique<Storage>(analyser->lower_reach(initial));
-                    Bench::keep_alive(result->size());
                 },
                 [&] {
                     if(result==nullptr || result->is_empty())
                         throw std::runtime_error("Empty reachable set");
+                    Bench::keep_alive(result->size());
                 });
+
+            // Compare the final reached geometry, not the backend-specific
+            // enabled-leaf counts. This conversion is OUTSIDE timed work.
+            BinaryTreePaving materialized(result->state_paving().grid());
+            auto const& state=result->state_paving();
+            for(auto it=state.begin(),end=state.end();it!=end;++it)
+                materialized.adjoin(*it);
+            if(implementation=="tree") {
+                tree_reference=materialized;
+            } else {
+                if(not tree_reference)
+                    throw std::runtime_error("Tree reference must precede ROBDD");
+                if(not subset(materialized,*tree_reference)
+                   or not subset(*tree_reference,materialized))
+                    throw std::runtime_error("ROBDD reached a different geometric set");
+            }
             report.add_row({
                 implementation,std::to_string(f),
                 std::to_string(ThreadManager::instance().concurrency()),
