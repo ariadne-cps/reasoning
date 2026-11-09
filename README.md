@@ -117,25 +117,31 @@ reachability analysers, system-to-auxiliary-mapping adapters, and orbit
 specializations. Callers should directly include the appropriate module
 header. No legacy forwarding headers or `Storage` aliases are provided.
 
-### Experimental parallel cell evolution in continuous reachability
+### Experimental parallel cell evolution in reachability
 
-The continuous reachability analyser can evaluate distinct input grid cells
-concurrently inside `_adjoin_upper_reach_evolve`. It is opt-in through the
-shared `ThreadManager` concurrency setting (zero retains the serial path);
-the analyser uses at most eight lanes, with the calling thread participating.
-Reach and evolved enclosures are adjoined **incrementally** to the two shared
-destination pavings. This preserves their covered-region pruning and avoids
-intermediate per-worker pavings. Input cells are snapshotted before scheduling
-to accommodate the existing input/output aliasing patterns. Tasks are joined
-before the next time step; the caller's floating-point rounding is installed
-per lane, and exceptions propagate after join.
+The continuous and hybrid reachability analyser template instantiations can
+evaluate distinct input cells concurrently inside
+`_adjoin_upper_reach_evolve`. It is opt-in through the shared
+`ThreadManager` concurrency setting (zero retains the serial path); the
+analyser uses at most eight lanes, with the calling thread participating.
+Reach and evolved enclosures are adjoined **incrementally** to the shared
+destination pavings. This preserves covered-region pruning and avoids
+intermediate per-worker pavings. Input cells are snapshotted before scheduling,
+so the set can alias an output. Tasks join before the next time step;
+the caller's floating-point rounding is installed per lane, and exceptions
+propagate after join.
 
-The parallel path currently applies to continuous labelled storage only.
-Hybrid storage's location-indexed map is not protected by the per-location
-paving locks and stays serial. Each lane uses an evolver clone; integrator and
-configuration handles held through shared pointers must remain read-only
-throughout the analysis. Both Tree and ROBDD backends have a dedicated serial
-geometry oracle in `test_parallel_reachability`. For whole-analysis timing,
+Continuous storage delegates concurrent mutation to the backend's paving
+locks. Hybrid storage additionally owns a location-indexed map whose lazy
+insertion is not protected by the per-location paving locks. A shared mutex
+therefore serialises complete hybrid adjoin operations (including location
+lookup and insertion) while separate cell orbits can still evolve in parallel.
+This is a correctness-first choice; hybrid paving itself is not made globally
+thread-safe by the analyser's private mutex. Each lane uses an evolver clone;
+its shared internals must not be reconfigured during an analysis.
+Continuous Tree/ROBDD geometry is checked by `test_parallel_reachability`;
+hybrid serial/parallel geometry is checked by
+`test_hybrid_reachability`. For whole-analysis continuous timing,
 `benchmark_infinite_time_reachability` already accepts `--concurrency`.
-The shared-destination approach may have backend-specific lock contention;
-no performance speedup is claimed without measurements.
+Lock contention can differ by backend, and no speedup is claimed without
+measurement.

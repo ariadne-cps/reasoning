@@ -43,6 +43,8 @@
 #include "labelled/figure.hpp"
 #include "hybrid/hybrid_graphics.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
+#include "reasoning/analysis_paving_factory.hpp"
+#include "threading/thread_manager.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "drawing/drawer.hpp"
 
@@ -68,6 +70,7 @@ Colour guard_set_colour(0.75,0.75,0.75);
 struct ExposedHybridAnalyser : public ReachabilityAnalyser<HybridAutomatonInterface> {
     using ReachabilityAnalyser<HybridAutomatonInterface>::ReachabilityAnalyser;
     using ReachabilityAnalyser<HybridAutomatonInterface>::_upper_reach;
+    using ReachabilityAnalyser<HybridAutomatonInterface>::_adjoin_upper_reach_evolve;
 };
 
 // Test evolution of realistic hybrid systems
@@ -87,6 +90,7 @@ class TestHybridReachability : public Ariadne::Testing::ContextFixture
     Void test_outer_chain_reach();
     Void test_verify_safety();
     Void test_upper_reach_helper();
+    Void test_parallel_upper_reach_evolve();
 };
 
 HybridAutomaton TestHybridReachability::_build_simple_system()
@@ -297,6 +301,63 @@ Void TestHybridReachability::test_verify_safety() {
     ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
 }
 
+
+Void TestHybridReachability::test_parallel_upper_reach_evolve() {
+    // Verify the same templated cell scheduler on hybrid storage, including
+    // concurrent first insertion of a location in the destination map.
+    auto& threads=ThreadManager::instance();
+    auto const previous=threads.concurrency();
+    struct Restore {
+        ThreadManager& manager;
+        std::size_t saved;
+        ~Restore() { try { manager.set_concurrency(saved); } catch(...) { } }
+    } restore{threads,previous};
+    if(threads.maximum_concurrency()<2u) return;
+
+    HybridAutomaton system=_build_simple_system();
+    DiscreteLocation q;
+    GeneralHybridEvolver evolver(system);
+    evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
+    ExposedHybridAnalyser analyser(evolver);
+    auto const grid=analyser.configuration().grid();
+    auto fresh=[&] {
+        return make_analysis_paving<HybridAugmentedPaving>(grid,system);
+    };
+
+    HybridAugmentedPaving input=fresh();
+    GridCell root(grid[q],0u,BinaryWord{});
+    HybridGridCell first(q,system.continuous_state_space(q),
+                         root.split(false).split(false));
+    HybridGridCell second(q,system.continuous_state_space(q),
+                          root.split(true).split(true));
+    input.state_paving().adjoin(first);
+    input.state_paving().adjoin(second);
+    ARIADNE_TESTING_PROVE(input.size()>=2u);
+
+    auto compute=[&](std::size_t concurrency) {
+        threads.set_concurrency(concurrency);
+        HybridAugmentedPaving reach=fresh();
+        HybridAugmentedPaving evolved=fresh();
+        // The reach destination already contains a cell; the evolve
+        // destination is empty and must create its location during adjoin.
+        reach.state_paving().adjoin(first);
+        analyser._adjoin_upper_reach_evolve(reach,evolved,input,
+            HybridTime(Decimal(0.25),1u),1u,evolver);
+        return std::make_pair(std::move(reach),std::move(evolved));
+    };
+    auto serial=compute(0u);
+    ARIADNE_TESTING_PROVE(serial.first.size()>0u);
+    ARIADNE_TESTING_PROVE(serial.second.size()>0u);
+    for(std::size_t workers : {2u,4u}) {
+        if(workers>threads.maximum_concurrency()) continue;
+        auto parallel=compute(workers);
+        ARIADNE_TESTING_PROVE(subset(serial.first,parallel.first));
+        ARIADNE_TESTING_PROVE(subset(parallel.first,serial.first));
+        ARIADNE_TESTING_PROVE(subset(serial.second,parallel.second));
+        ARIADNE_TESTING_PROVE(subset(parallel.second,serial.second));
+    }
+}
+
 Void TestHybridReachability::test_upper_reach_helper() {
     HybridAutomaton system = _build_simple_system();
     DiscreteLocation q;
@@ -330,5 +391,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_outer_chain_reach);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_verify_safety);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_upper_reach_helper);
+    ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_parallel_upper_reach_evolve);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }

@@ -36,6 +36,7 @@
 #include <cfenv>
 #include <exception>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -199,6 +200,20 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
     LOGGING_PRINTLN("Evolving "<<cells.size()<<" cells");
     ProgressIndicator indicator(static_cast<double>(cells.size()));
 
+    // Each continuous destination owns a synchronised Paving. Hybrid
+    // destinations additionally own a location map without a map-level lock:
+    // serialise the complete lookup/insertion/approximation operation for
+    // hybrid writes, leaving costly orbit evolution concurrent.
+    std::mutex hybrid_adjoin_mutex;
+    auto adjoin_incrementally=[&](auto const& enclosure,StorageType& target) {
+        if constexpr (std::is_same_v<StorageType,HybridAugmentedPaving>) {
+            std::lock_guard<std::mutex> lock(hybrid_adjoin_mutex);
+            adjoin_outer_approximation_to(enclosure,target,accuracy);
+        } else {
+            adjoin_outer_approximation_to(enclosure,target,accuracy);
+        }
+    };
+
     auto process_cell=[&](auto const& cell, EvolverType const& local_evolver) {
         LOGGING_PRINTLN_AT(1,"evolving cell = "<<cell);
         EnclosureType initial_enclosure=local_evolver.enclosure(cell.box());
@@ -207,20 +222,21 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
 
         // Preserve the existing covered-region pruning with incremental writes.
         for (auto enclosure : orbit.reach())
-            adjoin_outer_approximation_to(enclosure,reach_cells,accuracy);
+            adjoin_incrementally(enclosure,reach_cells);
         for (auto enclosure : orbit.final())
-            adjoin_outer_approximation_to(enclosure,evolve_cells,accuracy);
+            adjoin_incrementally(enclosure,evolve_cells);
     };
 
     bool ran_parallel=false;
-    // Hybrid storage has an unprotected location map in addition to the
-    // individually locked pavings. It still uses the serial path.
-    if constexpr (std::is_same_v<StorageType,LabelledAugmentedPaving>) {
+    // The same bounded cell-level scheduler serves continuous and hybrid
+    // template instantiations. Only hybrid publication needs a map lock.
+    {
         ThreadManager& threads=ThreadManager::instance();
         if(threads.concurrency()>=2u and cells.size()>=2u) {
-            // This is a detached input snapshot, even if set aliases a
-            // destination. No per-worker output paving is allocated.
-            std::vector<GridCell> work;
+            // Detached input snapshot, even if set aliases a destination.
+            // Preserve GridCell or HybridGridCell without output pavings.
+            using CellType=std::decay_t<decltype(*cells.begin())>;
+            std::vector<CellType> work;
             work.reserve(cells.size());
             for(auto const& cell:cells) work.push_back(cell);
             std::size_t const lanes=std::min<std::size_t>(
@@ -229,8 +245,9 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
             if(rounding==-1)
                 throw std::runtime_error("Cannot read caller rounding mode");
 
-            // Evolver clones keep shared, read-only integrator/configuration
-            // handles. Clients must not reconfigure them during the call.
+            // The evolver is cloned per lane. Continuous clones retain
+            // read-only integrator/configuration handles; hybrid evolvers
+            // may supply deeper clones. No reconfiguration during a call.
             std::vector<std::unique_ptr<EvolverType>> local_evolvers;
             local_evolvers.reserve(lanes);
             for(std::size_t i=0u;i<lanes;++i)
