@@ -91,6 +91,7 @@ class TestHybridReachability : public Ariadne::Testing::ContextFixture
     Void test_verify_safety();
     Void test_upper_reach_helper();
     Void test_parallel_upper_reach_evolve();
+    Void test_selected_robdd_backend();
 };
 
 HybridAutomaton TestHybridReachability::_build_simple_system()
@@ -302,6 +303,33 @@ Void TestHybridReachability::test_verify_safety() {
 }
 
 
+Void TestHybridReachability::test_selected_robdd_backend() {
+    HybridAutomaton system=_build_simple_system();
+    DiscreteLocation q;
+    GeneralHybridEvolver evolver(system);
+    evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
+    ExposedHybridAnalyser analyser(evolver);
+    analyser.configuration().set_maximum_grid_fineness(1u);
+    auto initial=_initial_set(q);
+    HybridTime time(Decimal(0.25),1u);
+
+    auto tree=analyser.upper_reach(initial,time);
+    ARIADNE_TESTING_PROVE(tree.size()>0u);
+
+    auto manager=std::make_shared<RobddManager>();
+    analyser.set_paving_factory([manager](Grid const& grid) {
+        return Paving(new RobddPaving(manager,grid));
+    });
+    auto robdd=analyser.upper_reach(initial,time);
+    ARIADNE_TESTING_PROVE(robdd.size()>0u);
+    ARIADNE_TESTING_PROVE(
+        dynamic_cast<RobddPaving const*>(
+            &static_cast<PavingInterface const&>(robdd.state_paving()[q]))!=nullptr);
+    // Full analysis, not merely a directly constructed paving.
+    ARIADNE_TESTING_PROVE(subset(tree,robdd));
+    ARIADNE_TESTING_PROVE(subset(robdd,tree));
+}
+
 Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     // Verify the same templated cell scheduler on hybrid storage, including
     // concurrent first insertion of a location in the destination map.
@@ -392,5 +420,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_verify_safety);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_upper_reach_helper);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_parallel_upper_reach_evolve);
+    ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_selected_robdd_backend);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
