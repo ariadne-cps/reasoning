@@ -71,9 +71,13 @@ Construction, validation and progress reporting happen outside timed regions.
 
 The summary statistics are displayed **in seconds** (variance in seconds
 squared). Benchmarking's stored samples retain their native nanosecond
-representation. Progress is printed to standard error for every configuration
-and every warm-up/sample round, including the operation, backend, fineness and
-concurrency; this works without enabling verbose logging.
+representation. Progress uses Ariadne Logging and ProgressIndicator rather than direct output.
+At logging level 1, the overall held progress indicator shows completion of
+configuration steps and the final summary is printed. Logging level 2 groups
+each configuration's individual warm-up/sample rounds (operation, backend,
+fineness, concurrency) with a nested held indicator. With two default
+operations and two backends at one fineness there are four steps; additional
+fineness or sample-count values increase the matrix step count.
 
 `--backend tree,robdd` executes the same analyser with BinaryTree or a
 shared-manager ROBDD backend for every intermediate `Paving`. Tree and ROBDD

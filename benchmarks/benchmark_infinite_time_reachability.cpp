@@ -15,8 +15,7 @@
 #include "integration/integrator.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
-#include <iostream>
-#include <iomanip>
+#include "logging/progress_indicator.hpp"
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -67,6 +66,14 @@ int main(int argc,char const* argv[]) {
             {"Backend"},{"Maximum grid fineness"},{"Concurrency"},{"Operation"}});
         report.set_parameter_header(matrix.header());
         Bench::Runner runner(cli,matrix.combinations());
+        ProgressIndicator overall_progress(static_cast<double>(matrix.combinations()));
+        // Each held progress line has its own RAII-managed logging scope.
+        // Level 1: overall progress and final report.
+        LogScopeManager total_scope("reachability-benchmark-total",0u);
+        if(not Logger::instance().is_muted_at(0))
+            Logger::instance().hold(total_scope.scope(),
+                "[ " + std::string(1u,overall_progress.symbol()) +
+                " ] 0% of benchmark configurations completed");
 
         System system=make_system();
         RealVariable x("x"),y("y");
@@ -82,6 +89,10 @@ int main(int argc,char const* argv[]) {
         std::optional<std::string> reference_operation;
 
         matrix.for_each([&](Bench::Configuration const& config) {
+            // Every message in this configuration belongs to logging level 2.
+            LogScopeManager configuration_scope(
+                "reachability-benchmark-configuration-" +
+                std::to_string(config.ordinal()),1u);
             runner.configuration_started(config);
             unsigned f=config.value(fineness),n=config.value(samples);
             std::string const implementation=config.value(backend);
@@ -113,8 +124,13 @@ int main(int argc,char const* argv[]) {
                 " fineness=" + std::to_string(f) +
                 " concurrency=" +
                 std::to_string(ThreadManager::instance().concurrency());
-            std::cerr << context << " starting, warmups=" << warmups
-                      << ", samples=" << n << std::endl;
+            ProgressIndicator round_progress(static_cast<double>(total_rounds));
+            LOGGING_PRINTLN(context << " starting, warmups=" << warmups
+                << ", samples=" << n)
+            if(not Logger::instance().is_muted_at(0))
+                Logger::instance().hold(configuration_scope.scope(),
+                    "[ " + std::string(1u,round_progress.symbol()) +
+                    " ] 0% of " + context + " rounds completed");
             auto timings=runner.run(selected_operation,n,
                 [&] {
                     GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
@@ -144,9 +160,9 @@ int main(int argc,char const* argv[]) {
                     // Preparation and progress output are outside timing.
                     std::size_t const next=completed_rounds+1u;
                     bool const warmup=next<=warmups;
-                    std::cerr << context << " round " << next << "/"
-                              << total_rounds << (warmup ? " [warmup]" : " [sample]")
-                              << " running..." << std::endl;
+                    LOGGING_PRINTLN(context << " round " << next << "/"
+                        << total_rounds << (warmup ? " [warmup]" : " [sample]")
+                        << " running...")
                 },
                 [&] {
                     result=std::make_unique<Storage>(
@@ -159,8 +175,15 @@ int main(int argc,char const* argv[]) {
                         throw std::runtime_error("Empty reachable set");
                     Bench::keep_alive(result->size());
                     ++completed_rounds;
-                    std::cerr << context << " round " << completed_rounds
-                              << "/" << total_rounds << " completed" << std::endl;
+                    round_progress.update_current(
+                        static_cast<double>(completed_rounds));
+                    if(not Logger::instance().is_muted_at(0))
+                        Logger::instance().hold(configuration_scope.scope(),
+                            "[ " + std::string(1u,round_progress.symbol()) +
+                            " ] " + std::to_string(round_progress.percentage()) +
+                            "% of " + context + " rounds completed");
+                    LOGGING_PRINTLN(context << " round " << completed_rounds
+                        << "/" << total_rounds << " completed")
                 });
 
             // Compare the final reached geometry, not the backend-specific
@@ -184,12 +207,21 @@ int main(int argc,char const* argv[]) {
                 selected_operation
             },Bench::summarize(timings));
             runner.configuration_completed(config);
-            std::cerr << context << " completed" << std::endl;
+            LOGGING_PRINTLN(context << " completed")
+            // Release the level-2 held line before advancing level-1 progress.
+            Logger::instance().release(configuration_scope.scope());
+            overall_progress.update_current(static_cast<double>(config.ordinal()));
+            if(not Logger::instance().is_muted_at(1u))
+                Logger::instance().hold(total_scope.scope(),
+                    "[ " + std::string(1u,overall_progress.symbol()) +
+                    " ] " + std::to_string(overall_progress.percentage()) +
+                    "% of benchmark configurations completed");
         });
+        Logger::instance().release(total_scope.scope());
         report.print();
         return 0;
     }catch(std::exception const& e) {
-        std::cerr<<"benchmark_infinite_time_reachability: "<<e.what()<<'\n';
+        LOGGING_PRINTLN("benchmark_infinite_time_reachability: "<<e.what())
         return 1;
     }
 }
