@@ -50,6 +50,34 @@ ctest --test-dir build --output-on-failure
 
 See [the tutorial](tutorial/README.md) for a small C++ safety-verification example.
 
+## Infinite-time reachability benchmark
+
+The development-only `benchmark_infinite_time_reachability` executable
+measures the infinite-time **lower** reachability workload from
+`tests/test_infinite_time_reachability.cpp`, without plotting.
+Each measured sample executes `ReachabilityAnalyser::lower_reach` in full.
+The system and initial set are shared across runs; constructing and configuring
+a fresh analyser and verifying its result are outside the timed region.
+
+```bash
+cmake --build build --target benchmark_infinite_time_reachability
+./build/benchmarks/benchmark_infinite_time_reachability --maximum-grid-fineness 2,3 --samples 3 --concurrency 0
+```
+
+Concurrency is set by Threading (`0` denotes sequential execution);
+warm-ups and report formatting come from Ariadne Benchmarking.
+The benchmark is not a CTest case. The Benchmarking submodule is used
+only by development executables and is not linked to production Reasoning.
+
+**Current limitation:** only the actual BinaryTree analyser backend is
+measured. `ReachabilityAnalyser<VectorField>` still uses
+`LabelledAugmentedPaving` with a concrete `BinaryTreePaving`.
+`CachedBinaryTreePaving` is currently a query-cache wrapper and does
+not implement the mutable `PavingInterface` contract. ROBDD and
+CachedTree cannot yet run the same end-to-end analyser. Converting
+the Tree result afterwards would make a misleading comparison; the
+storage migration must precede any three-backend performance claim.
+
 ## Python
 
 The standalone build composes upstream Python bindings with Reasoning in
