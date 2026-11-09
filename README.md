@@ -71,17 +71,21 @@ Construction, validation and progress reporting happen outside timed regions.
 
 The summary statistics are displayed **in seconds** (variance in seconds
 squared). Benchmarking's stored samples retain their native nanosecond
-representation. Progress uses exactly one global Ariadne Logging ProgressIndicator at level 1.
-Its percentage counts completed warm-up and measured executions across the
-entire configuration matrix, so progress advances after each completed round,
-not just after each backend/operation. The current operation/backend/fineness
-and step ordinal are shown on that same line. At level 2, individual steps
-and their rounds are logged with contextual labels; there are no nested
-progress indicators. With default parameters there are four configuration
-steps, each with three measured rounds (12 executions total). The final
-summary is printed at level 1 after releasing the global progress line.
-The indicator advances only upon completion of an execution: a long first
-execution therefore legitimately starts at 0%.
+representation. Two nested Ariadne Logging progress indicators are displayed when
+`--verbosity 2` is enabled. The level-1 indicator tracks completed
+warm-ups and measured executions globally across all configurations.
+The level-2 held indicator tracks the warm-ups and samples of the currently
+running operation/backend/fineness; it is released before the next case.
+The analyser call is executed with `LOGGING_RUN_AT(2,...)`, so its
+internal diagnostics begin at level 3 (or deeper) rather than mixing with
+the level-2 benchmark messages. Both indicators update outside the
+timed operation callback.
+
+With default parameters there are four configurations, each with three
+measured rounds (12 executions total). Progress advances when a round
+finishes, not continuously *within* a long-running analyser call.
+The final report is printed at level 1 after releasing the global
+progress line.
 
 `--backend tree,robdd` executes the same analyser with BinaryTree or a
 shared-manager ROBDD backend for every intermediate `Paving`. Tree and ROBDD

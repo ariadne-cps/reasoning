@@ -80,8 +80,9 @@ int main(int argc,char const* argv[]) {
         });
         std::size_t completed_executions=0u;
         ProgressIndicator overall_progress(static_cast<double>(total_executions));
-        // A single held line at level 1; level 2 logs every case.
-        // No nested progress indicators or scope-dependent global updates.
+        // Keep the overall indicator at level 1. Each configuration gets
+        // one nested held progress indicator at level 2, released before
+        // entering the next configuration.
         LogScopeManager total_scope("reachability-benchmark-total",0u);
         if(not Logger::instance().is_muted_at(0))
             Logger::instance().hold(total_scope.scope(),
@@ -141,14 +142,31 @@ int main(int argc,char const* argv[]) {
             std::size_t completed_rounds=0u;
             std::size_t const warmups=cli.warmups();
             std::size_t const total_rounds=warmups+static_cast<std::size_t>(n);
+            ProgressIndicator round_progress(static_cast<double>(total_rounds));
+            LogScopeManager round_scope(
+                "reachability-benchmark-rounds-" + std::to_string(config.ordinal()),0u);
             std::string const context="[" + std::to_string(config.ordinal()) +
                 "/" + std::to_string(config.count()) + "] " +
                 selected_operation + " backend=" + implementation +
                 " fineness=" + std::to_string(f) +
                 " concurrency=" +
                 std::to_string(ThreadManager::instance().concurrency());
+            // Hold a second progress line *at* level 2, but do not
+            // increase the ambient logging level for the whole callback:
+            // the outer indicator must continue to update at level 1.
+            auto update_round_progress=[&] {
+                if(not Logger::instance().is_muted_at(1u)) {
+                    LOGGING_RUN_AT(1,
+                        Logger::instance().hold(round_scope.scope(),
+                            "[ " + std::string(1u,round_progress.symbol()) +
+                            " ] " + std::to_string(round_progress.percentage()) +
+                            "% (" + std::to_string(completed_rounds) + "/" +
+                            std::to_string(total_rounds) + ") " + context))
+                }
+            };
             LOGGING_PRINTLN_AT(1,context << " starting, warmups=" << warmups
                 << ", samples=" << n)
+            update_round_progress();
             auto timings=runner.run(selected_operation,n,
                 [&] {
                     GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
@@ -183,10 +201,20 @@ int main(int argc,char const* argv[]) {
                         << " running...")
                 },
                 [&] {
-                    result=std::make_unique<Storage>(
-                        selected_operation=="lower_reach"
-                            ? analyser->lower_reach(initial)
-                            : analyser->outer_chain_reach(initial));
+                    // The algorithm and its own nested logs start at
+                    // level 3: level 1 is global progress, level 2 is
+                    // this benchmark configuration. RUN_AT does not restore
+                    // the level on exception, so restore it explicitly.
+                    try {
+                        LOGGING_RUN_AT(2,
+                            result=std::make_unique<Storage>(
+                                selected_operation=="lower_reach"
+                                    ? analyser->lower_reach(initial)
+                                    : analyser->outer_chain_reach(initial)))
+                    } catch(...) {
+                        Logger::instance().decrease_level(2u);
+                        throw;
+                    }
                 },
                 [&] {
                     if(result==nullptr || result->is_empty())
@@ -194,6 +222,7 @@ int main(int argc,char const* argv[]) {
                     Bench::keep_alive(result->size());
                     ++completed_rounds;
                     ++completed_executions;
+                    round_progress.update_current(static_cast<double>(completed_rounds));
                     overall_progress.update_current(
                         static_cast<double>(completed_executions));
                     if(not Logger::instance().is_muted_at(0))
@@ -204,6 +233,7 @@ int main(int argc,char const* argv[]) {
                             std::to_string(total_executions) + "); step " +
                             std::to_string(config.ordinal()) + "/" +
                             std::to_string(config.count()) + ": " + step_label);
+                    update_round_progress();
                     LOGGING_PRINTLN_AT(1,context << " round " << completed_rounds
                         << "/" << total_rounds << " completed")
                 });
