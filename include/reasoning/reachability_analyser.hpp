@@ -37,6 +37,7 @@
 #include "evolution/enclosure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/analysis_paving_factory.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 
@@ -131,7 +132,7 @@ template<class SYS> class ReachabilityAnalyser
     //! \brief A reference to the analyser's evolver parameter.
     const EvolverType& evolver() const { return *this->_evolver; }
 
-    //! Construct all intermediate continuous reachability sets with one backend.
+    //! Select one backend for all continuous cells or all hybrid locations.
     //! For ROBDD pavings the factory must capture a shared RobddManager.
     Void set_paving_factory(std::function<Paving(Grid const&)> factory) {
         if(not factory) throw std::invalid_argument("Empty paving factory");
@@ -140,8 +141,16 @@ template<class SYS> class ReachabilityAnalyser
                     GridType const& grid,SystemType const& system) -> StorageType {
                 return StorageType(factory(grid.euclidean_grid()),system);
             };
+        } else if constexpr (std::is_same_v<StorageType,HybridAugmentedPaving>) {
+            // The same factory creates the continuous paving on demand in
+            // every hybrid location. Captured managers survive all copies.
+            _storage_factory=[factory=std::move(factory)](
+                    GridType const& grid,SystemType const& system) -> StorageType {
+                return StorageType(HybridPaving(grid,factory),
+                    make_hybrid_auxiliary_mapping(system));
+            };
         } else {
-            throw std::logic_error("Paving factory requires continuous labelled storage");
+            throw std::logic_error("Unsupported storage for paving factory");
         }
     }
 

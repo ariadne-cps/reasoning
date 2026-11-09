@@ -71,7 +71,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
 
     Void test_hybrid_augmented_paving_interface() {
         HybridGrid grid(system.state_space());
-        HybridBinaryTreePaving hgtp(grid);
+        HybridPaving hgtp(grid);
         HybridAugmentedPaving from_grid = make_analysis_paving<HybridAugmentedPaving>(grid,system);
         // Construct independently from the originating automaton.
         LabelledMapping explicit_mapping(system.continuous_state_space(q),
@@ -83,6 +83,18 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(independent.auxiliary_mapping(q).argument_space() ==
                               system.continuous_state_space(q));
         HybridAugmentedPaving from_paving = make_analysis_paving<HybridAugmentedPaving>(hgtp,system);
+        // Backend selection survives the augmented wrapper and copies.
+        auto manager=std::make_shared<RobddManager>();
+        HybridPaving robdd_grid(grid,manager);
+        HybridAugmentedPaving robdd_storage(
+            robdd_grid,make_hybrid_auxiliary_mapping(system));
+        robdd_storage.adjoin_outer_approximation(
+            HybridBoundedConstraintSet(q,{0.9_dec<=x<=1.1_dec,
+                                          0.9_dec<=y<=1.1_dec}),2u);
+        ARIADNE_TESTING_PROVE(robdd_storage.size()>0u);
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<RobddPaving const*>(&static_cast<PavingInterface const&>(
+                robdd_storage.state_paving()[q]))!=nullptr);
 
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
         ARIADNE_TESTING_EXPECT_EQUAL(from_grid.size(), 0u);
@@ -101,15 +113,15 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         from_grid.adjoin_lower_approximation(initial, 4u, 3u);
         ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
 
-        HybridBinaryTreePaving& state_set = from_grid.state_paving();
+        HybridPaving& state_set = from_grid.state_paving();
         ARIADNE_TESTING_PROVE(&state_set==&from_grid.state_set());
         const HybridAugmentedPaving& const_storage = from_grid;
-        const HybridBinaryTreePaving& const_state_set = const_storage.state_paving();
+        const HybridPaving& const_state_set = const_storage.state_paving();
         ARIADNE_TESTING_PROVE(&const_state_set==&const_storage.state_set());
         ARIADNE_TESTING_PROVE(state_set.size() == const_state_set.size());
         ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
 
-        HybridBinaryTreePaving auxiliary_set = from_grid.state_auxiliary_paving();
+        HybridPaving auxiliary_set = from_grid.state_auxiliary_paving();
         ARIADNE_TESTING_PROVE(auxiliary_set.size() > 0u);
         independent.adjoin_outer_approximation(initial,2u);
         ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().size() > 0u);
