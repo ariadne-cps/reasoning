@@ -52,32 +52,40 @@ See [the tutorial](tutorial/README.md) for a small C++ safety-verification examp
 
 ## Infinite-time reachability benchmark
 
-The development-only `benchmark_infinite_time_reachability` executable
-measures the infinite-time **outer chain** reachability workload from
-`tests/test_infinite_time_reachability.cpp`, without plotting.
-Each measured sample executes `ReachabilityAnalyser::outer_chain_reach` in full.
-The system, initial set and bounding domain match the reference test; `transient_time` is 12.0 and `lock_to_grid_time` is 6.0. Constructing and configuring
-a fresh analyser and verifying its result are outside the timed region.
+The development-only `benchmark_infinite_time_reachability` executable runs
+**both** infinite-time reachability workloads from
+`tests/test_infinite_time_reachability.cpp` by default. Select either
+`--operation lower_reach`, `--operation outer_chain_reach`, or a comma-separated
+list of both. `maximum_grid_fineness` and concurrency remain configurable.
 
 ```bash
 cmake --build build --target benchmark_infinite_time_reachability
-./build/benchmarks/benchmark_infinite_time_reachability --maximum-grid-fineness 2,3 --backend tree,robdd --samples 3 --concurrency 0
+./build/benchmarks/benchmark_infinite_time_reachability --maximum-grid-fineness 2,3 --operation lower_reach,outer_chain_reach --backend tree,robdd --samples 3 --concurrency 0
 ```
 
-Concurrency is set by Threading (`0` denotes sequential execution);
-warm-ups and report formatting come from Ariadne Benchmarking.
-The benchmark is not a CTest case. The Benchmarking submodule is used
-only by development executables and is not linked to production Reasoning.
+Each sample measures only the complete selected analyser call. For
+`lower_reach`, `transient_time=4.0`. For `outer_chain_reach`,
+`transient_time=12.0` and `lock_to_grid_time=6.0`, matching the respective
+test cases. The system, initial set and bounding domain also match those tests.
+Construction, validation and progress reporting happen outside timed regions.
 
-**Backend selection:** `--backend tree,robdd` runs the same analyser
-with either a BinaryTree backend or a shared-manager ROBDD backend for
-every intermediate `Paving`. The ROBDD manager is new for each complete
-analysis and shared by all its pavings and clones.
+The summary statistics are displayed **in seconds** (variance in seconds
+squared). Benchmarking's stored samples retain their native nanosecond
+representation. Progress is printed to standard error for every configuration
+and every warm-up/sample round, including the operation, backend, fineness and
+concurrency; this works without enabling verbose logging.
 
-`CachedBinaryTreePaving` is a query-cache wrapper, not a mutable
-`PavingInterface` backend. It is explicitly rejected rather than
-silently substituted with BinaryTree; a genuine CachedTree analysis
-requires implementing that backend's mutation contract first.
+`--backend tree,robdd` executes the same analyser with BinaryTree or a
+shared-manager ROBDD backend for every intermediate `Paving`. Tree and ROBDD
+results are compared geometrically outside timing for each fineness/operation.
+
+`CachedBinaryTreePaving` is still a query-cache wrapper, not a mutable
+`PavingInterface` backend. It cannot yet be included in genuine end-to-end
+reachability measurements and is not silently replaced by BinaryTree.
+
+Release CI **compiles** benchmarks between the library build and installation;
+benchmarks are not CTest cases and are not automatically executed. The
+Benchmarking submodule is a development-only dependency.
 
 ## Python
 

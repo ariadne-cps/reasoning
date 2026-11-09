@@ -1,4 +1,4 @@
-// Whole-analysis infinite-time OUTER CHAIN reachability benchmark.
+// Whole-analysis infinite-time lower and outer-chain reachability benchmark.
 // Workload matches tests/test_infinite_time_reachability.cpp.
 // The analyser selects the backend for every intermediate Paving.
 #include "ariadne-benchmarking.hpp"
@@ -16,6 +16,7 @@
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -47,15 +48,21 @@ int main(int argc,char const* argv[]) {
             "Whole-analysis measured samples",{3u});
         Bench::Parameter<std::string> backend("backend",
             "Actual storage backend (tree or robdd)",{"tree","robdd"});
+        Bench::Parameter<std::string> operation("operation",
+            "Reachability operation (lower_reach or outer_chain_reach)",
+            {"lower_reach","outer_chain_reach"});
         Bench::Matrix matrix;
-        matrix.add(fineness).add(backend).add(samples);
+        // Backend varies fastest for each operation, so the tree reference
+        // is available before the ROBDD geometry check.
+        matrix.add(fineness).add(operation).add(backend).add(samples);
         Bench::CommandLine cli;
         ThreadManager::instance();
         cli.add(threading_command_line_contribution());
         cli.add_parameters(matrix);
         if(!cli.acquire(argc,argv)) return 0;
 
-        Bench::Report report("Infinite-time outer chain reachability",cli.summary_fields());
+        Bench::Report report("Infinite-time reachability",cli.summary_fields());
+        report.set_time_unit(Bench::ReportTimeUnit::Seconds);
         report.set_dimension_columns({
             {"Backend"},{"Maximum grid fineness"},{"Concurrency"},{"Operation"}});
         report.set_parameter_header(matrix.header());
@@ -72,14 +79,22 @@ int main(int argc,char const* argv[]) {
         // The reference is materialized only after measurement.
         std::optional<BinaryTreePaving> tree_reference;
         std::optional<unsigned> reference_fineness;
+        std::optional<std::string> reference_operation;
 
         matrix.for_each([&](Bench::Configuration const& config) {
             runner.configuration_started(config);
             unsigned f=config.value(fineness),n=config.value(samples);
             std::string const implementation=config.value(backend);
-            if(not reference_fineness or *reference_fineness!=f) {
+            std::string const selected_operation=config.value(operation);
+            if(selected_operation!="lower_reach" and
+               selected_operation!="outer_chain_reach")
+                throw std::invalid_argument(
+                    "Unsupported operation: lower_reach or outer_chain_reach");
+            if(not reference_fineness or *reference_fineness!=f or
+               not reference_operation or *reference_operation!=selected_operation) {
                 tree_reference.reset();
                 reference_fineness=f;
+                reference_operation=selected_operation;
             }
             if(implementation!="tree" and implementation!="robdd")
                 throw std::invalid_argument(
@@ -89,7 +104,18 @@ int main(int argc,char const* argv[]) {
             std::unique_ptr<Analyser> analyser;
             std::unique_ptr<Storage> result;
             std::shared_ptr<RobddManager> manager;
-            auto timings=runner.run("outer_chain_reach",n,
+            std::size_t completed_rounds=0u;
+            std::size_t const warmups=cli.warmups();
+            std::size_t const total_rounds=warmups+static_cast<std::size_t>(n);
+            std::string const context="[" + std::to_string(config.ordinal()) +
+                "/" + std::to_string(config.count()) + "] " +
+                selected_operation + " backend=" + implementation +
+                " fineness=" + std::to_string(f) +
+                " concurrency=" +
+                std::to_string(ThreadManager::instance().concurrency());
+            std::cerr << context << " starting, warmups=" << warmups
+                      << ", samples=" << n << std::endl;
+            auto timings=runner.run(selected_operation,n,
                 [&] {
                     GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
                     Evolver evolver(system,integrator);
@@ -106,19 +132,35 @@ int main(int argc,char const* argv[]) {
                         });
                     }
                     analyser->configuration().set_maximum_grid_fineness(f);
-                    analyser->configuration().set_transient_time(12.0_dec);
-                    analyser->configuration().set_lock_to_grid_time(6.0_dec);
+                    if(selected_operation=="outer_chain_reach") {
+                        analyser->configuration().set_transient_time(12.0_dec);
+                        analyser->configuration().set_lock_to_grid_time(6.0_dec);
+                    } else {
+                        analyser->configuration().set_transient_time(4.0_dec);
+                    }
                     analyser->configuration().set_bounding_domain_ptr(
                         std::make_shared<BoundingDomain>(bounding));
                     result.reset();
+                    // Preparation and progress output are outside timing.
+                    std::size_t const next=completed_rounds+1u;
+                    bool const warmup=next<=warmups;
+                    std::cerr << context << " round " << next << "/"
+                              << total_rounds << (warmup ? " [warmup]" : " [sample]")
+                              << " running..." << std::endl;
                 },
                 [&] {
-                    result=std::make_unique<Storage>(analyser->outer_chain_reach(initial));
+                    result=std::make_unique<Storage>(
+                        selected_operation=="lower_reach"
+                            ? analyser->lower_reach(initial)
+                            : analyser->outer_chain_reach(initial));
                 },
                 [&] {
                     if(result==nullptr || result->is_empty())
-                        throw std::runtime_error("Empty outer chain reachable set");
+                        throw std::runtime_error("Empty reachable set");
                     Bench::keep_alive(result->size());
+                    ++completed_rounds;
+                    std::cerr << context << " round " << completed_rounds
+                              << "/" << total_rounds << " completed" << std::endl;
                 });
 
             // Compare the final reached geometry, not the backend-specific
@@ -131,7 +173,7 @@ int main(int argc,char const* argv[]) {
                 tree_reference=materialized;
             } else {
                 if(not tree_reference)
-                    throw std::runtime_error("Tree reference must precede ROBDD");
+                    throw std::runtime_error("Tree reference must precede ROBDD for each operation/fineness");
                 if(not subset(materialized,*tree_reference)
                    or not subset(*tree_reference,materialized))
                     throw std::runtime_error("ROBDD reached a different geometric set");
@@ -139,9 +181,10 @@ int main(int argc,char const* argv[]) {
             report.add_row({
                 implementation,std::to_string(f),
                 std::to_string(ThreadManager::instance().concurrency()),
-                "outer_chain_reach"
+                selected_operation
             },Bench::summarize(timings));
             runner.configuration_completed(config);
+            std::cerr << context << " completed" << std::endl;
         });
         report.print();
         return 0;
