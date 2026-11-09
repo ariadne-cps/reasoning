@@ -325,9 +325,21 @@ Void TestHybridReachability::test_selected_robdd_backend() {
     ARIADNE_TESTING_PROVE(
         dynamic_cast<RobddPaving const*>(
             &static_cast<PavingInterface const&>(robdd.state_paving()[q]))!=nullptr);
-    // Full analysis, not merely a directly constructed paving.
-    ARIADNE_TESTING_PROVE(subset(tree,robdd));
-    ARIADNE_TESTING_PROVE(subset(robdd,tree));
+    // Compare complete analysis results geometrically. Algebra between
+    // different backends is intentionally unsupported; GridCell coverage
+    // is independent of both the representation and its ROBDD manager.
+    auto geometrically_contained=[](HybridAugmentedPaving const& candidate,
+                                   HybridAugmentedPaving const& container) {
+        for(auto it=candidate.begin();it!=candidate.end();++it) {
+            auto const cell=*it;
+            if(!container.state_paving().nontrivial_location(cell.location()) ||
+               !container.state_paving()[cell.location()].superset(cell.euclidean_set()))
+                return false;
+        }
+        return true;
+    };
+    ARIADNE_TESTING_PROVE(geometrically_contained(tree,robdd));
+    ARIADNE_TESTING_PROVE(geometrically_contained(robdd,tree));
 }
 
 Void TestHybridReachability::test_parallel_upper_reach_evolve() {
