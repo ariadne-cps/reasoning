@@ -8,6 +8,8 @@
 #include "function/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "set/function_set.hpp"
+#include "evolution/enclosure.hpp"
+#include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "integration/integrator.hpp"
