@@ -138,7 +138,7 @@ template<class SYS> class ReachabilityAnalyser
         if constexpr (std::is_same_v<StorageType,LabelledAugmentedPaving>) {
             _storage_factory=[factory=std::move(factory)](
                     GridType const& grid,SystemType const& system) -> StorageType {
-                return StorageType(factory(grid),system);
+                return StorageType(factory(grid.euclidean_grid()),system);
             };
         } else {
             throw std::logic_error("Paving factory requires continuous labelled storage");
