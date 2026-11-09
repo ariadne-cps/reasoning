@@ -1,4 +1,4 @@
-// Whole-analysis infinite-time LOWER reachability benchmark.
+// Whole-analysis infinite-time OUTER CHAIN reachability benchmark.
 // Workload matches tests/test_infinite_time_reachability.cpp.
 // The analyser selects the backend for every intermediate Paving.
 #include "ariadne-benchmarking.hpp"
@@ -55,7 +55,7 @@ int main(int argc,char const* argv[]) {
         cli.add_parameters(matrix);
         if(!cli.acquire(argc,argv)) return 0;
 
-        Bench::Report report("Infinite-time lower reachability",cli.summary_fields());
+        Bench::Report report("Infinite-time outer chain reachability",cli.summary_fields());
         report.set_dimension_columns({
             {"Backend"},{"Maximum grid fineness"},{"Concurrency"},{"Operation"}});
         report.set_parameter_header(matrix.header());
@@ -89,7 +89,7 @@ int main(int argc,char const* argv[]) {
             std::unique_ptr<Analyser> analyser;
             std::unique_ptr<Storage> result;
             std::shared_ptr<RobddManager> manager;
-            auto timings=runner.run("lower_reach",n,
+            auto timings=runner.run("outer_chain_reach",n,
                 [&] {
                     GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
                     Evolver evolver(system,integrator);
@@ -106,17 +106,18 @@ int main(int argc,char const* argv[]) {
                         });
                     }
                     analyser->configuration().set_maximum_grid_fineness(f);
-                    analyser->configuration().set_transient_time(4.0_dec);
+                    analyser->configuration().set_transient_time(12.0_dec);
+                    analyser->configuration().set_lock_to_grid_time(6.0_dec);
                     analyser->configuration().set_bounding_domain_ptr(
                         std::make_shared<BoundingDomain>(bounding));
                     result.reset();
                 },
                 [&] {
-                    result=std::make_unique<Storage>(analyser->lower_reach(initial));
+                    result=std::make_unique<Storage>(analyser->outer_chain_reach(initial));
                 },
                 [&] {
                     if(result==nullptr || result->is_empty())
-                        throw std::runtime_error("Empty reachable set");
+                        throw std::runtime_error("Empty outer chain reachable set");
                     Bench::keep_alive(result->size());
                 });
 
@@ -138,7 +139,7 @@ int main(int argc,char const* argv[]) {
             report.add_row({
                 implementation,std::to_string(f),
                 std::to_string(ThreadManager::instance().concurrency()),
-                "lower_reach"
+                "outer_chain_reach"
             },Bench::summarize(timings));
             runner.configuration_completed(config);
         });

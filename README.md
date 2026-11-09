@@ -53,10 +53,10 @@ See [the tutorial](tutorial/README.md) for a small C++ safety-verification examp
 ## Infinite-time reachability benchmark
 
 The development-only `benchmark_infinite_time_reachability` executable
-measures the infinite-time **lower** reachability workload from
+measures the infinite-time **outer chain** reachability workload from
 `tests/test_infinite_time_reachability.cpp`, without plotting.
-Each measured sample executes `ReachabilityAnalyser::lower_reach` in full.
-The system and initial set are shared across runs; constructing and configuring
+Each measured sample executes `ReachabilityAnalyser::outer_chain_reach` in full.
+The system, initial set and bounding domain match the reference test; `transient_time` is 12.0 and `lock_to_grid_time` is 6.0. Constructing and configuring
 a fresh analyser and verifying its result are outside the timed region.
 
 ```bash
