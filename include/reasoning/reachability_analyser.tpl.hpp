@@ -32,6 +32,17 @@
 #include <set>
 #include <vector>
 #include <valarray>
+#include <algorithm>
+#include <cfenv>
+#include <exception>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <type_traits>
+
+#include "threading/floating_point_environment.hpp"
+#include "threading/task_group.hpp"
+#include "threading/thread_manager.hpp"
 
 
 #include "utility/exceptions.hpp"
@@ -187,15 +198,80 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
 
     LOGGING_PRINTLN("Evolving "<<cells.size()<<" cells");
     ProgressIndicator indicator(static_cast<double>(cells.size()));
-    for (auto const& cell : cells) {
+
+    auto process_cell=[&](auto const& cell, EvolverType const& local_evolver) {
         LOGGING_PRINTLN_AT(1,"evolving cell = "<<cell);
-        EnclosureType initial_enclosure = evolver.enclosure(cell.box());
-        auto orbit = evolver.orbit(initial_enclosure,time,Semantics::UPPER);
+        EnclosureType initial_enclosure=local_evolver.enclosure(cell.box());
+        auto orbit=local_evolver.orbit(initial_enclosure,time,Semantics::UPPER);
         LOGGING_PRINTLN_AT(1,"computed "<<orbit.reach().size()<<" reach enclosures and "<<orbit.final().size()<<" final enclosures.");
 
-        for (auto enclosure : orbit.reach()) adjoin_outer_approximation_to(enclosure,reach_cells,accuracy);
-        for (auto enclosure : orbit.final()) adjoin_outer_approximation_to(enclosure,evolve_cells,accuracy);
-        LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] " << indicator.percentage() << "% of cells evolved.");
+        // Preserve the existing covered-region pruning with incremental writes.
+        for (auto enclosure : orbit.reach())
+            adjoin_outer_approximation_to(enclosure,reach_cells,accuracy);
+        for (auto enclosure : orbit.final())
+            adjoin_outer_approximation_to(enclosure,evolve_cells,accuracy);
+    };
+
+    bool ran_parallel=false;
+    // Hybrid storage has an unprotected location map in addition to the
+    // individually locked pavings. It still uses the serial path.
+    if constexpr (std::is_same_v<StorageType,LabelledAugmentedPaving>) {
+        ThreadManager& threads=ThreadManager::instance();
+        if(threads.concurrency()>=2u and cells.size()>=2u) {
+            // This is a detached input snapshot, even if set aliases a
+            // destination. No per-worker output paving is allocated.
+            std::vector<GridCell> work;
+            work.reserve(cells.size());
+            for(auto const& cell:cells) work.push_back(cell);
+            std::size_t const lanes=std::min<std::size_t>(
+                {threads.concurrency(),work.size(),8u});
+            int const rounding=std::fegetround();
+            if(rounding==-1)
+                throw std::runtime_error("Cannot read caller rounding mode");
+
+            // Evolver clones keep shared, read-only integrator/configuration
+            // handles. Clients must not reconfigure them during the call.
+            std::vector<std::unique_ptr<EvolverType>> local_evolvers;
+            local_evolvers.reserve(lanes);
+            for(std::size_t i=0u;i<lanes;++i)
+                local_evolvers.emplace_back(evolver.clone());
+
+            auto process_lane=[&](std::size_t lane) {
+                ScopedRoundingMode restore_rounding(
+                    std::optional<int>{rounding});
+                std::size_t const base=work.size()/lanes;
+                std::size_t const extra=work.size()%lanes;
+                std::size_t const first=lane*base+std::min(lane,extra);
+                std::size_t const last=first+base+(lane<extra ? 1u : 0u);
+                for(std::size_t i=first;i<last;++i)
+                    process_cell(work[i],*local_evolvers[lane]);
+            };
+
+            TaskGroup<ThreadManager> tasks(threads);
+            for(std::size_t lane=1u;lane<lanes;++lane)
+                tasks.fork([&,lane] { process_lane(lane); });
+            std::exception_ptr failure;
+            try { process_lane(0u); }
+            catch(...) { failure=std::current_exception(); }
+            try { tasks.join(); }
+            catch(...) {
+                if(not failure) failure=std::current_exception();
+            }
+            if(failure) std::rethrow_exception(failure);
+            indicator.update_current(static_cast<double>(work.size()));
+            LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
+                << indicator.percentage() << "% of cells evolved.");
+            ran_parallel=true;
+        }
+    }
+    if(not ran_parallel) {
+        std::size_t processed=0u;
+        for(auto const& cell:cells) {
+            process_cell(cell,evolver);
+            indicator.update_current(static_cast<double>(++processed));
+            LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
+                << indicator.percentage() << "% of cells evolved.");
+        }
     }
 
     LOGGING_PRINTLN("final reach size = "<<reach_cells.size());

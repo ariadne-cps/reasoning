@@ -116,3 +116,26 @@ Reasoning now contains only analysis-related components: analyser traits,
 reachability analysers, system-to-auxiliary-mapping adapters, and orbit
 specializations. Callers should directly include the appropriate module
 header. No legacy forwarding headers or `Storage` aliases are provided.
+
+### Experimental parallel cell evolution in continuous reachability
+
+The continuous reachability analyser can evaluate distinct input grid cells
+concurrently inside `_adjoin_upper_reach_evolve`. It is opt-in through the
+shared `ThreadManager` concurrency setting (zero retains the serial path);
+the analyser uses at most eight lanes, with the calling thread participating.
+Reach and evolved enclosures are adjoined **incrementally** to the two shared
+destination pavings. This preserves their covered-region pruning and avoids
+intermediate per-worker pavings. Input cells are snapshotted before scheduling
+to accommodate the existing input/output aliasing patterns. Tasks are joined
+before the next time step; the caller's floating-point rounding is installed
+per lane, and exceptions propagate after join.
+
+The parallel path currently applies to continuous labelled storage only.
+Hybrid storage's location-indexed map is not protected by the per-location
+paving locks and stays serial. Each lane uses an evolver clone; integrator and
+configuration handles held through shared pointers must remain read-only
+throughout the analysis. Both Tree and ROBDD backends have a dedicated serial
+geometry oracle in `test_parallel_reachability`. For whole-analysis timing,
+`benchmark_infinite_time_reachability` already accepts `--concurrency`.
+The shared-destination approach may have backend-specific lock contention;
+no performance speedup is claimed without measurements.

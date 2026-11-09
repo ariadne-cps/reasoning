@@ -2,6 +2,7 @@ include(CTest)
 set(UNIT_TESTS
     test_hybrid_reachability
     test_finite_time_reachability
+    test_parallel_reachability
     test_infinite_time_reachability
     test_verify_safety
     test_iterated_map_reachability
