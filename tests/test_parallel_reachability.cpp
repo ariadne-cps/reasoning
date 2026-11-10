@@ -132,6 +132,7 @@ class TestParallelReachability : public Testing::ContextFixture {
             GridCell second=root.split(true).split(true);
             input.state_paving().adjoin(first);
             input.state_paving().adjoin(second);
+            input.state_paving().adjoin(root.split(false).split(true));
             ARIADNE_TESTING_PROVE(input.size()>=2u);
 
             threading.set_concurrency(2u);

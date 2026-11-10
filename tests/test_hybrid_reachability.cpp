@@ -372,13 +372,15 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
                           root.split(true).split(true));
     input.state_paving().adjoin(first);
     input.state_paving().adjoin(second);
+    input.state_paving().adjoin(HybridGridCell(q,system.continuous_state_space(q),
+        root.split(false).split(true)));
     ARIADNE_TESTING_PROVE(input.size()>=2u);
 
     threads.set_concurrency(2u);
     auto singleton=fresh(),single_reach=fresh(),single_evolved=fresh();
     singleton.state_paving().adjoin(first);
     exposed_analyser._adjoin_upper_reach_evolve(single_reach,single_evolved,
-        singleton,HybridTime(Decimal(0.25),1u),1u,evolver);
+        singleton,HybridTime(Decimal(0.25),1u),2u,evolver);
     ARIADNE_TESTING_PROVE(not single_evolved.is_empty());
 
     auto compute=[&](std::size_t concurrency) {
@@ -389,7 +391,7 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
         // destination is empty and must create its location during adjoin.
         reach.state_paving().adjoin(first);
         exposed_analyser._adjoin_upper_reach_evolve(reach,evolved,input,
-            HybridTime(Decimal(0.25),1u),1u,evolver);
+            HybridTime(Decimal(0.25),1u),2u,evolver);
         return std::make_pair(std::move(reach),std::move(evolved));
     };
     auto serial=compute(0u);
