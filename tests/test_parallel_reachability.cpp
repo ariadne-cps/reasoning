@@ -6,6 +6,7 @@
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
+#include "evolution/iterated_map_evolver.hpp"
 #include "integration/integrator.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
@@ -25,6 +26,11 @@ struct ExposedAnalyser : ReachabilityAnalyser<VectorField> {
     using ReachabilityAnalyser<VectorField>::_adjoin_upper_reach_evolve;
 };
 
+struct ExposedMapAnalyser : ReachabilityAnalyser<IteratedMap> {
+    using ReachabilityAnalyser<IteratedMap>::ReachabilityAnalyser;
+    using ReachabilityAnalyser<IteratedMap>::_adjoin_upper_reach_evolve;
+};
+
 struct RestoreConcurrency {
     ThreadManager& manager;
     std::size_t previous;
@@ -36,6 +42,40 @@ struct RestoreConcurrency {
 class TestParallelReachability : public Testing::ContextFixture {
   public:
     using Testing::ContextFixture::ContextFixture;
+
+    Void test_discrete_three_cells_and_single_cell_fallback() {
+        auto& threads=ThreadManager::instance();
+        RestoreConcurrency restore{threads,threads.concurrency()};
+        RealVariable x("x");
+        IteratedMap system(List<PrimedRealAssignment>{next(x)=x/2});
+        IteratedMapEvolver evolver(system);
+        ExposedMapAnalyser analyser(evolver);
+        Grid grid(1u);
+        GridCell root(grid,2u,BinaryWord{});
+        auto fresh=[&] { return LabelledAugmentedPaving(
+            Paving(new BinaryTreePaving(grid)),system); };
+        for(bool singleton:{true,false}) {
+            auto input=fresh();
+            input.state_paving().adjoin(root.split(false).split(false));
+            if(not singleton) {
+                input.state_paving().adjoin(root.split(false).split(true));
+                input.state_paving().adjoin(root.split(true).split(false));
+            }
+            auto compute=[&](std::size_t workers) {
+                threads.set_concurrency(workers);
+                auto reach=fresh(),evolved=fresh();
+                analyser._adjoin_upper_reach_evolve(reach,evolved,input,Integer(1),0u,evolver);
+                return std::make_pair(reach,evolved);
+            };
+            auto serial=compute(0u);
+            auto parallel=compute(std::min<std::size_t>(2u,threads.maximum_concurrency()));
+            ARIADNE_TESTING_PROVE(not serial.first.is_empty());
+            ARIADNE_TESTING_PROVE(subset(serial.first,parallel.first));
+            ARIADNE_TESTING_PROVE(subset(parallel.first,serial.first));
+            ARIADNE_TESTING_PROVE(subset(serial.second,parallel.second));
+            ARIADNE_TESTING_PROVE(subset(parallel.second,serial.second));
+        }
+    }
 
     Void test_failure_precedence_and_complete_join() {
         auto& threading=ThreadManager::instance();
@@ -94,6 +134,13 @@ class TestParallelReachability : public Testing::ContextFixture {
             input.state_paving().adjoin(second);
             ARIADNE_TESTING_PROVE(input.size()>=2u);
 
+            threading.set_concurrency(2u);
+            auto singleton=fresh(),single_reach=fresh(),single_evolved=fresh();
+            singleton.state_paving().adjoin(first);
+            analyser._adjoin_upper_reach_evolve(single_reach,single_evolved,
+                singleton,0.125_x,1u,evolver);
+            ARIADNE_TESTING_PROVE(not single_evolved.is_empty());
+
             auto compute=[&](std::size_t concurrency) {
                 threading.set_concurrency(concurrency);
                 auto reach=fresh();
@@ -124,6 +171,7 @@ class TestParallelReachability : public Testing::ContextFixture {
 int main(int argc,char** argv) {
     ARIADNE_TESTING_SUITE("test_parallel_reachability");
     ARIADNE_TESTING_ADD_TEST(TestParallelReachability,test_failure_precedence_and_complete_join);
+    ARIADNE_TESTING_ADD_TEST(TestParallelReachability,test_discrete_three_cells_and_single_cell_fallback);
     ARIADNE_TESTING_ADD_TEST(
         TestParallelReachability,test_shared_incremental_upper_reach_evolve);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc,argv);

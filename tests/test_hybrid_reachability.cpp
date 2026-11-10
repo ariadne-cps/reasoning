@@ -374,6 +374,13 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     input.state_paving().adjoin(second);
     ARIADNE_TESTING_PROVE(input.size()>=2u);
 
+    threads.set_concurrency(2u);
+    auto singleton=fresh(),single_reach=fresh(),single_evolved=fresh();
+    singleton.state_paving().adjoin(first);
+    exposed_analyser._adjoin_upper_reach_evolve(single_reach,single_evolved,
+        singleton,HybridTime(Decimal(0.25),1u),1u,evolver);
+    ARIADNE_TESTING_PROVE(not single_evolved.is_empty());
+
     auto compute=[&](std::size_t concurrency) {
         threads.set_concurrency(concurrency);
         HybridAugmentedPaving reach=fresh();
