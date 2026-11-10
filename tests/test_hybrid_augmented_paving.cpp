@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include "utility/tuple.hpp"
 #include "numeric/numeric.hpp"
@@ -190,6 +191,30 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture
         NullCanvas canvas;
         draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit);
     }
+
+    Void test_owned_auxiliary_space_lifetime_and_identity() {
+        auto mapping=[&]() {
+            HybridAutomaton temporary("temporary");
+            temporary.new_mode(q,{dot(x)=-x,dot(y)=-y});
+            return make_hybrid_auxiliary_mapping(temporary);
+        }();
+        HybridSpace space=mapping.state_auxiliary_space();
+        HybridSpace cloned(static_cast<HybridSpaceInterface const&>(space));
+        ARIADNE_TESTING_PROVE(space.has_location(q));
+        ARIADNE_TESTING_PROVE(not space.has_location(DiscreteLocation(1)));
+        ARIADNE_TESTING_PROVE(space[q]==system.state_auxiliary_space()[q]);
+        ARIADNE_TESTING_PROVE(definitely(space==cloned));
+        auto independent=make_hybrid_auxiliary_mapping(system).state_auxiliary_space();
+        ARIADNE_TESTING_PROVE(not definitely(space==independent));
+        ARIADNE_TESTING_PROVE(not definitely(not (space==independent)));
+        MonolithicHybridSpace ordinary;
+        ordinary.new_location(q,space[q]);
+        ARIADNE_TESTING_PROVE(not definitely(space==HybridSpace(ordinary)));
+        std::ostringstream output;
+        output << space;
+        ARIADNE_TESTING_PROVE(output.str().find("temporary")!=std::string::npos);
+        ARIADNE_TESTING_PROVE(mapping(q).argument_space()==system.continuous_state_space(q));
+    }
 };
 
 
@@ -200,5 +225,6 @@ int main(int argc, char** argv)
     ARIADNE_TESTING_SUITE("test_hybrid_augmented_paving");
     ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_interface);
     ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_orbit);
+    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_owned_auxiliary_space_lifetime_and_identity);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }

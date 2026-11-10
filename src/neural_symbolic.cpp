@@ -41,12 +41,13 @@ RealExpression exact_real(double x) {
 
 RealExpression activate(RealExpression value, NeuralActivation activation) {
     switch (activation) {
-        case NeuralActivation::Identity: return value;
         case NeuralActivation::Relu: return max(value, RealExpression(0));
         case NeuralActivation::Tanh: return tanh(value);
         case NeuralActivation::Sigmoid: return sigmoid(value);
         case NeuralActivation::Softplus: return softplus(value);
-        default: throw std::invalid_argument("Unsupported neural activation");
+        // NeuralNetwork validates activations at construction and exposes
+        // immutable layouts, so Identity is the only remaining activation.
+        default: return value;
     }
 }
 
