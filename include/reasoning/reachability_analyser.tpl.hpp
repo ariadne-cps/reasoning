@@ -65,6 +65,7 @@
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/parallel_reachability.hpp"
+#include "reasoning/time_partition.hpp"
 
 #include "logging/logging.hpp"
 #include "rendering/figure.hpp"
@@ -461,7 +462,7 @@ lower_reach(const OvertSetInterfaceType& initial_set) const
 
 
 inline Natural compute_time_steps(Real time, Real lock_to_grid_time) {
-    return cast_positive(round(time/lock_to_grid_time));
+    return ReasoningDetail::whole_time_steps(time,lock_to_grid_time);
 }
 
 

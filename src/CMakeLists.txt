@@ -6,5 +6,6 @@ add_library(REASONING_SRC OBJECT
     augmented_paving_orbit.cpp
     neural_symbolic.cpp
     parallel_reachability.cpp
+    time_partition.cpp
 )
 target_include_directories(REASONING_SRC PRIVATE "${PROJECT_SOURCE_DIR}/include/reasoning")

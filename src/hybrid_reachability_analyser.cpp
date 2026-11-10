@@ -71,7 +71,7 @@
 namespace Ariadne {
 
 inline Natural compute_time_steps(HybridTime time, HybridTime lock_to_grid_time) {
-    return cast_positive(round(time.continuous_time()/lock_to_grid_time.continuous_time()));
+    return ReasoningDetail::whole_time_steps(time.continuous_time(),lock_to_grid_time.continuous_time());
 }
 
 } // namespace Ariadne

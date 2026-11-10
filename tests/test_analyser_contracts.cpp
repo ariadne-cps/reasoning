@@ -1,6 +1,7 @@
 #include "ariadne-reasoning.hpp"
 #include "ariadne-testing.hpp"
 #include "paving/robdd_paving.hpp"
+#include "reasoning/time_partition.hpp"
 #include <memory>
 #include <type_traits>
 
@@ -10,6 +11,7 @@ template<class SYS> struct ContractAnalyser : ReachabilityAnalyser<SYS> {
     using Base=ReachabilityAnalyser<SYS>;
     using Base::Base;
     using Base::_checked_restriction;
+    using Base::_adjoin_upper_reach_evolve;
     auto storage() const {
         return this->_storage_factory(this->configuration().grid(),this->system());
     }
@@ -18,6 +20,17 @@ template<class SYS> struct ContractAnalyser : ReachabilityAnalyser<SYS> {
 class TestAnalyserContracts : public Testing::ContextFixture {
 public:
     using ContextFixture::ContextFixture;
+
+    Void test_whole_steps_never_round_past_target() {
+        for(auto target:{0_q,1/16_q,3/16_q,1/4_q,5/16_q,7/16_q}) {
+            auto steps=ReasoningDetail::whole_time_steps(Real(target),Real(1/4_q));
+            Rational consumed=Rational(steps)*Rational(1/4_q);
+            ARIADNE_TESTING_PROVE(consumed<=target);
+            ARIADNE_TESTING_PROVE(target-consumed<1/4_q);
+        }
+        ARIADNE_TESTING_EXPECT_EQUAL(ReasoningDetail::whole_time_steps(Real(3/16_q),Real(1/4_q)),Natural(0u));
+        ARIADNE_TESTING_EXPECT_EQUAL(ReasoningDetail::whole_time_steps(Real(7/16_q),Real(1/4_q)),Natural(1u));
+    }
 
     template<class SYS,class SET> Void check_finite_times(
             ContractAnalyser<SYS>& analyser,SET const& initial,SET const& empty,
@@ -147,6 +160,7 @@ public:
 
 int main(int argc,char** argv) {
     ARIADNE_TESTING_SUITE("test_analyser_contracts");
+    ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_whole_steps_never_round_past_target);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_hybrid_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_time_boundaries);
