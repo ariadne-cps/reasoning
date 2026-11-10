@@ -21,6 +21,46 @@ class TestAnalyserContracts : public Testing::ContextFixture {
 public:
     using ContextFixture::ContextFixture;
 
+    template<class SYS,class SET> void check_safety_escape(
+            ContractAnalyser<SYS>& analyser,SET const& initial,SET const& safe) {
+        analyser.configuration().set_maximum_grid_fineness(3u);
+        analyser.configuration().set_maximum_grid_extent(4u);
+        auto certificate=analyser.verify_safety(initial,safe);
+        auto initial_cells=analyser.storage();
+        initial_cells.adjoin_outer_approximation(initial,3u);
+        ARIADNE_TESTING_PROVE(subset(initial_cells,certificate.safe_set));
+        ARIADNE_TESTING_PROVE(is_indeterminate(certificate.is_safe));
+        ARIADNE_TESTING_PROVE(not subset(certificate.chain_reach_set,certificate.safe_set));
+    }
+
+    Void test_safety_becomes_unknown_after_initial_containment() {
+        RealVariable x("x");
+        BoundedConstraintSet initial(RealBox({{-1,-0.75_dec}}));
+        BoundedConstraintSet safe(RealBox({{-2,0}}));
+        VectorField system(List<DottedRealAssignment>{dot(x)=1});
+        GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-3_pr));
+        VectorFieldEvolver evolver(system,integrator);
+        ContractAnalyser<VectorField> continuous(evolver);
+        continuous.configuration().set_bounding_domain(ContractAnalyser<VectorField>::BoundingDomainType({{-4,4}}));
+        check_safety_escape(continuous,initial,safe);
+        IteratedMap map(List<PrimedRealAssignment>{next(x)=x+1});
+        IteratedMapEvolver map_evolver(map);
+        ContractAnalyser<IteratedMap> discrete(map_evolver);
+        discrete.configuration().set_bounding_domain(ContractAnalyser<IteratedMap>::BoundingDomainType({{-4,4}}));
+        check_safety_escape(discrete,initial,safe);
+
+        DiscreteLocation q;
+        HybridAutomaton hybrid;
+        hybrid.new_mode(q,{dot(x)=1});
+        GeneralHybridEvolver hybrid_evolver(hybrid);
+        ContractAnalyser<HybridAutomatonInterface> analyser(hybrid_evolver);
+        HybridExactBoxes bounding;
+        bounding.insert(q,hybrid.continuous_state_space(q),ExactBoxType({{-4,4}}));
+        analyser.configuration().set_bounding_domain(bounding);
+        check_safety_escape(analyser,HybridBoundedConstraintSet(q,{-1<=x<=-0.75_dec}),
+            HybridBoundedConstraintSet(q,{-2<=x<=0}));
+    }
+
     Void test_whole_steps_never_round_past_target() {
         for(auto target:{0_q,1/16_q,3/16_q,1/4_q,5/16_q,7/16_q}) {
             auto steps=ReasoningDetail::whole_time_steps(Real(target),Real(1/4_q));
@@ -161,6 +201,7 @@ public:
 int main(int argc,char** argv) {
     ARIADNE_TESTING_SUITE("test_analyser_contracts");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_whole_steps_never_round_past_target);
+    ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_safety_becomes_unknown_after_initial_containment);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_hybrid_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_time_boundaries);

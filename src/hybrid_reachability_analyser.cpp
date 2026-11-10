@@ -129,6 +129,12 @@ HybridReachabilityAnalyserConfiguration::_write(OutputStream& os) const
 
 
 Void
+HybridReachabilityAnalyserConfiguration::set_bounding_domain(const HybridExactBoxes& bounding_domain)
+{
+    set_bounding_domain_ptr(std::make_shared<HybridExactBoxes>(bounding_domain));
+}
+
+Void
 HybridReachabilityAnalyserConfiguration::set_bounding_domain_ptr(const std::shared_ptr<HybridExactBoxes> value)
 {
  //   ARIADNE_ASSERT_MSG(possibly(value_ptr->space() == _analyser.system().state_space()),
