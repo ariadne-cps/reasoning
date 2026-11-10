@@ -93,7 +93,7 @@ public:
         HybridBoundedConstraintSet initial(q,{0.25_dec<=x<=0.5_dec});
         HybridBoundedConstraintSet empty(q,{0<=x<=1},{x>=2});
         HybridBoundedConstraintSet far_safe(q,{4<=x<=5});
-        check_finite_times(analyser,initial,empty,far_safe,HybridTime(Real(1/8_q)),HybridTime(Real(1/4_q)));
+        check_finite_times(analyser,initial,empty,far_safe,HybridTime(Real(1/8_q),Integer(1)),HybridTime(Real(1/4_q),Integer(1)));
     }
 
     template<class SYS> Void check(ContractAnalyser<SYS>& analyser) {

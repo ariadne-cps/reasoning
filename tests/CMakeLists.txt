@@ -1,6 +1,7 @@
 include(CTest)
 set(UNIT_TESTS
     test_analyser_contracts
+    test_analyser_logging
     test_hybrid_reachability
     test_finite_time_reachability
     test_parallel_reachability
