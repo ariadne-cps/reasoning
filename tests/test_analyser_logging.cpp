@@ -46,6 +46,17 @@ public:
         ARIADNE_TESTING_PROVE(not reached.is_empty());
         auto upper_pair=analyser.upper_reach_evolve(initial,horizon);
         ARIADNE_TESTING_PROVE(not upper_pair.second.is_empty());
+        // Repeat with a positive remainder while diagnostics are enabled.
+        if constexpr(std::is_same_v<SYS,HybridAutomatonInterface>)
+            config.set_lock_to_grid_time(2.0*horizon.continuous_time().get_d());
+        else config.set_lock_to_grid_time(Natural(2u)*horizon);
+        ARIADNE_TESTING_PROVE(not analyser.upper_evolve(initial,horizon).is_empty());
+        ARIADNE_TESTING_PROVE(not analyser.upper_reach(initial,horizon).is_empty());
+        auto remainder_pair=analyser.upper_reach_evolve(initial,horizon);
+        ARIADNE_TESTING_PROVE(not remainder_pair.second.is_empty());
+        if constexpr(std::is_same_v<SYS,HybridAutomatonInterface>)
+            config.set_lock_to_grid_time(horizon.continuous_time().get_d());
+        else config.set_lock_to_grid_time(horizon);
         ARIADNE_TESTING_PROVE(not analyser._upper_reach(reached,horizon,0u,analyser.evolver()).is_empty());
         ARIADNE_TESTING_PROVE(not analyser.outer_chain_reach(initial).is_empty());
         config.set_maximum_grid_extent(4u);
@@ -105,7 +116,7 @@ public:
 
 int main(int argc,char** argv) {
     Logger::instance().redirect_to_file("test_analyser_logging.log");
-    Logger::instance().configuration().set_verbosity(4u);
+    Logger::instance().configuration().set_verbosity(6u);
     ARIADNE_TESTING_SUITE("test_analyser_logging");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging,test_continuous_and_discrete_diagnostics);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging,test_hybrid_diagnostics);
