@@ -64,6 +64,7 @@
 #include "evolution/enclosure_augmented_paving.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/reachability_analyser.hpp"
+#include "reasoning/parallel_reachability.hpp"
 
 #include "logging/logging.hpp"
 #include "rendering/figure.hpp"
@@ -241,9 +242,7 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
             for(auto const& cell:cells) work.push_back(cell);
             std::size_t const lanes=std::min<std::size_t>(
                 {threads.concurrency(),work.size(),8u});
-            int const rounding=std::fegetround();
-            if(rounding==-1)
-                throw std::runtime_error("Cannot read caller rounding mode");
+            int const rounding=ReasoningDetail::require_caller_rounding_mode(std::fegetround());
 
             // The evolver is cloned per lane. Continuous clones retain
             // read-only integrator/configuration handles; hybrid evolvers
@@ -264,17 +263,7 @@ _adjoin_upper_reach_evolve(StorageType& reach_cells,
                     process_cell(work[i],*local_evolvers[lane]);
             };
 
-            TaskGroup<ThreadManager> tasks(threads);
-            for(std::size_t lane=1u;lane<lanes;++lane)
-                tasks.fork([&,lane] { process_lane(lane); });
-            std::exception_ptr failure;
-            try { process_lane(0u); }
-            catch(...) { failure=std::current_exception(); }
-            try { tasks.join(); }
-            catch(...) {
-                if(not failure) failure=std::current_exception();
-            }
-            if(failure) std::rethrow_exception(failure);
+            ReasoningDetail::run_reachability_lanes(lanes,process_lane,threads);
             indicator.update_current(static_cast<double>(work.size()));
             LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
                 << indicator.percentage() << "% of cells evolved.");

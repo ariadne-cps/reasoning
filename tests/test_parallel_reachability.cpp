@@ -10,6 +10,10 @@
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
+#include "reasoning/parallel_reachability.hpp"
+#include <array>
+#include <cfenv>
+#include <string>
 #include "threading/thread_manager.hpp"
 
 using namespace Ariadne;
@@ -32,6 +36,33 @@ struct RestoreConcurrency {
 class TestParallelReachability : public Testing::ContextFixture {
   public:
     using Testing::ContextFixture::ContextFixture;
+
+    Void test_failure_precedence_and_complete_join() {
+        auto& threading=ThreadManager::instance();
+        for(unsigned failures:{0u,1u,2u,3u}) {
+            std::array<unsigned,3> completed{};
+            std::string error;
+            try {
+                ReasoningDetail::run_reachability_lanes(3u,[&](std::size_t lane) {
+                    ++completed[lane];
+                    if(lane==0u && (failures&1u)!=0u) throw std::runtime_error("caller");
+                    if(lane==1u && (failures&2u)!=0u) throw std::runtime_error("worker");
+                },threading);
+            } catch(std::runtime_error const& failure) { error=failure.what(); }
+            for(auto count:completed) ARIADNE_TESTING_EXPECT_EQUAL(count,1u);
+            std::string expected=(failures&1u)!=0u ? "caller" : ((failures&2u)!=0u ? "worker" : "");
+            ARIADNE_TESTING_EXPECT_EQUAL(error,expected);
+        }
+        unsigned calls=0u;
+        ReasoningDetail::run_reachability_lanes(0u,[&](std::size_t) { ++calls; },threading);
+        ARIADNE_TESTING_EXPECT_EQUAL(calls,0u);
+        ReasoningDetail::run_reachability_lanes(1u,[&](std::size_t) { ++calls; },threading);
+        ARIADNE_TESTING_EXPECT_EQUAL(calls,1u);
+        for(int mode:{FE_TONEAREST,FE_DOWNWARD,FE_UPWARD,FE_TOWARDZERO})
+            ARIADNE_TESTING_EXPECT_EQUAL(ReasoningDetail::require_caller_rounding_mode(mode),mode);
+        ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error,ReasoningDetail::require_caller_rounding_mode(-1));
+        ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error,ReasoningDetail::require_caller_rounding_mode(-2));
+    }
 
     Void test_shared_incremental_upper_reach_evolve() {
         auto& threading=ThreadManager::instance();
@@ -92,6 +123,7 @@ class TestParallelReachability : public Testing::ContextFixture {
 
 int main(int argc,char** argv) {
     ARIADNE_TESTING_SUITE("test_parallel_reachability");
+    ARIADNE_TESTING_ADD_TEST(TestParallelReachability,test_failure_precedence_and_complete_join);
     ARIADNE_TESTING_ADD_TEST(
         TestParallelReachability,test_shared_incremental_upper_reach_evolve);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc,argv);

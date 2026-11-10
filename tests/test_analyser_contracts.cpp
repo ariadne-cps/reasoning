@@ -19,6 +19,70 @@ class TestAnalyserContracts : public Testing::ContextFixture {
 public:
     using ContextFixture::ContextFixture;
 
+    template<class SYS,class SET> Void check_finite_times(
+            ContractAnalyser<SYS>& analyser,SET const& initial,SET const& empty,
+            SET const& far_safe,typename ContractAnalyser<SYS>::TimeType partial,
+            typename ContractAnalyser<SYS>::TimeType exact) {
+        using AnalyserTime=typename ContractAnalyser<SYS>::TimeType;
+        analyser.configuration().set_maximum_grid_fineness(0u);
+        if constexpr(std::is_same_v<SYS,HybridAutomatonInterface>)
+            analyser.configuration().set_lock_to_grid_time(exact.continuous_time().get_d());
+        else analyser.configuration().set_lock_to_grid_time(exact);
+        for(AnalyserTime const& time:{AnalyserTime(0),partial,exact}) {
+            ARIADNE_TESTING_PROVE(not analyser.upper_evolve(initial,time).is_empty());
+            ARIADNE_TESTING_PROVE(not analyser.upper_reach(initial,time).is_empty());
+            auto pair=analyser.upper_reach_evolve(initial,time);
+            ARIADNE_TESTING_PROVE(not pair.first.is_empty());
+            ARIADNE_TESTING_PROVE(not pair.second.is_empty());
+            ARIADNE_TESTING_PROVE(analyser.upper_evolve(empty,time).is_empty());
+            ARIADNE_TESTING_PROVE(analyser.upper_reach(empty,time).is_empty());
+            auto empty_pair=analyser.upper_reach_evolve(empty,time);
+            ARIADNE_TESTING_PROVE(empty_pair.first.is_empty());
+            ARIADNE_TESTING_PROVE(empty_pair.second.is_empty());
+        }
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        auto certificate=analyser.verify_safety(initial,far_safe);
+        ARIADNE_TESTING_PROVE(not definitely(certificate.is_safe));
+        ARIADNE_TESTING_PROVE(not certificate.chain_reach_set.is_empty());
+        ARIADNE_TESTING_PROVE(definitely(analyser.verify_safety(empty,far_safe).is_safe));
+    }
+
+    Void test_continuous_and_discrete_time_boundaries() {
+        RealVariable x("x");
+        BoundedConstraintSet initial(RealBox({{0.25_dec,0.5_dec}}));
+        auto coordinate=EffectiveScalarMultivariateFunction::coordinate(1u,0u);
+        BoundedConstraintSet empty(RealBox({{0,1}}),{coordinate>=2});
+        BoundedConstraintSet far_safe(RealBox({{4,5}}));
+        VectorField flow(List<DottedRealAssignment>{dot(x)=0});
+        GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-3_pr));
+        VectorFieldEvolver flow_evolver(flow,integrator);
+        ContractAnalyser<VectorField> continuous(flow_evolver);
+        check_finite_times(continuous,initial,empty,far_safe,Real(1/8_q),Real(1/4_q));
+        continuous.configuration().set_transient_time(Real(1/8_q));
+        continuous.configuration().set_maximum_grid_extent(0u);
+        continuous.configuration().set_outer_overspill_policy(ChainOverspillPolicy::IGNORE);
+        ARIADNE_TESTING_PROVE(not continuous.lower_reach(initial).is_empty());
+        ARIADNE_TESTING_PROVE(not continuous.outer_chain_reach(initial).is_empty());
+
+        IteratedMap map(List<PrimedRealAssignment>{next(x)=x/2});
+        IteratedMapEvolver map_evolver(map);
+        ContractAnalyser<IteratedMap> discrete(map_evolver);
+        check_finite_times(discrete,initial,empty,far_safe,Integer(1),Integer(2));
+    }
+
+    Void test_hybrid_time_boundaries() {
+        RealVariable x("x");
+        DiscreteLocation q;
+        HybridAutomaton system;
+        system.new_mode(q,{dot(x)=0});
+        GeneralHybridEvolver evolver(system);
+        ContractAnalyser<HybridAutomatonInterface> analyser(evolver);
+        HybridBoundedConstraintSet initial(q,{0.25_dec<=x<=0.5_dec});
+        HybridBoundedConstraintSet empty(q,{0<=x<=1},{x>=2});
+        HybridBoundedConstraintSet far_safe(q,{4<=x<=5});
+        check_finite_times(analyser,initial,empty,far_safe,HybridTime(Real(1/8_q)),HybridTime(Real(1/4_q)));
+    }
+
     template<class SYS> Void check(ContractAnalyser<SYS>& analyser) {
         auto manager=std::make_shared<RobddManager>();
         ARIADNE_TESTING_EXPECT_THROWS(std::invalid_argument,analyser.set_paving_factory({}));
@@ -85,5 +149,7 @@ int main(int argc,char** argv) {
     ARIADNE_TESTING_SUITE("test_analyser_contracts");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_hybrid_restriction);
+    ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_continuous_and_discrete_time_boundaries);
+    ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts,test_hybrid_time_boundaries);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc,argv);
 }
