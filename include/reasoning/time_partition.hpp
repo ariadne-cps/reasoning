@@ -28,11 +28,11 @@
 
 #ifndef ARIADNE_REASONING_TIME_PARTITION_HPP
 #define ARIADNE_REASONING_TIME_PARTITION_HPP
-#include "numeric/real.hpp"
 #include "numeric/integer.hpp"
+#include "numeric/real.hpp"
 
 namespace Ariadne::ReasoningDetail {
 /** @brief Choose whole grid steps without exceeding the continuous time horizon. */
-Natural whole_time_steps(Real const& time,Real const& grid_time);
-}
+Natural whole_time_steps(const Real& time, const Real& grid_time);
+} // namespace Ariadne::ReasoningDetail
 #endif

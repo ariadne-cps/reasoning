@@ -31,8 +31,8 @@
 namespace Ariadne {
 
 struct Orbit<HybridAugmentedPaving>::Data {
-    Data(const HybridGrid& grid, HybridAuxiliaryMapping const& aux)
-        : initial(grid,aux), reach(grid,aux), intermediate(grid,aux), final(grid,aux) { }
+    Data(const HybridGrid& grid, const HybridAuxiliaryMapping& aux)
+        : initial(grid, aux), reach(grid, aux), intermediate(grid, aux), final(grid, aux) {}
     HybridAugmentedPaving initial;
     HybridAugmentedPaving reach;
     HybridAugmentedPaving intermediate;
@@ -40,52 +40,45 @@ struct Orbit<HybridAugmentedPaving>::Data {
 };
 
 Orbit<HybridAugmentedPaving>::
-Orbit(const HybridAugmentedPaving& initial_set)
-    : _data(new Data(initial_set.grid(),initial_set.auxiliary_data()))
-{
-    this->_data->initial=initial_set;
+    Orbit(const HybridAugmentedPaving& initial_set)
+    : _data(new Data(initial_set.grid(), initial_set.auxiliary_data())) {
+    this->_data->initial = initial_set;
 }
 
 Orbit<HybridAugmentedPaving>::
-Orbit(const HybridAugmentedPaving& initial_set,
-      const HybridAugmentedPaving& reach_set,
-      const HybridAugmentedPaving& intermediate_set,
-      const HybridAugmentedPaving& final_set)
-    : _data(new Data(initial_set.grid(),initial_set.auxiliary_data()))
-{
-    this->_data->initial=initial_set;
-    this->_data->reach=reach_set;
-    this->_data->intermediate=intermediate_set;
-    this->_data->final=final_set;
+    Orbit(const HybridAugmentedPaving& initial_set,
+          const HybridAugmentedPaving& reach_set,
+          const HybridAugmentedPaving& intermediate_set,
+          const HybridAugmentedPaving& final_set)
+    : _data(new Data(initial_set.grid(), initial_set.auxiliary_data())) {
+    this->_data->initial = initial_set;
+    this->_data->reach = reach_set;
+    this->_data->intermediate = intermediate_set;
+    this->_data->final = final_set;
 }
 
-HybridAugmentedPaving const&
-Orbit<HybridAugmentedPaving>::
-initial() const
-{
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
+        initial() const {
     return this->_data->initial;
 }
 
-HybridAugmentedPaving const&
-Orbit<HybridAugmentedPaving>::
-reach() const
-{
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
+        reach() const {
     return this->_data->reach;
 }
 
-HybridAugmentedPaving const&
-Orbit<HybridAugmentedPaving>::
-intermediate() const
-{
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
+        intermediate() const {
     return this->_data->intermediate;
 }
 
-HybridAugmentedPaving const&
-Orbit<HybridAugmentedPaving>::
-final() const
-{
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
+        final() const {
     return this->_data->final;
 }
-
 
 } // namespace Ariadne

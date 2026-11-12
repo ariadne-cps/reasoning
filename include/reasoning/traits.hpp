@@ -44,30 +44,36 @@ class HybridAugmentedPaving;
 class BinaryTreePaving;
 
 /** @brief Associate a dynamical system type with its reachability storage type. */
-template<class SYS> struct AnalysisTraits;
+template<class SYS>
+struct AnalysisTraits;
 
 /** @brief Use labelled augmented pavings for iterated maps. */
-template<> struct AnalysisTraits<IteratedMap> {
+template<>
+struct AnalysisTraits<IteratedMap> {
     using StorageType = LabelledAugmentedPaving;
 };
 
 /** @brief Use labelled augmented pavings for vector fields. */
-template<> struct AnalysisTraits<VectorField> {
+template<>
+struct AnalysisTraits<VectorField> {
     using StorageType = LabelledAugmentedPaving;
 };
 
 /** @brief Use labelled augmented pavings for differential inclusions. */
-template<> struct AnalysisTraits<DifferentialInclusion> {
+template<>
+struct AnalysisTraits<DifferentialInclusion> {
     using StorageType = LabelledAugmentedPaving;
 };
 
 /** @brief Use hybrid augmented pavings for hybrid automata. */
-template<> struct AnalysisTraits<HybridAutomatonInterface> {
+template<>
+struct AnalysisTraits<HybridAutomatonInterface> {
     using StorageType = HybridAugmentedPaving;
 };
 
 /** @brief Select set and approximation interfaces for a state space. */
-template<class SPACE> struct SpaceAnalysisTraits {
+template<class SPACE>
+struct SpaceAnalysisTraits {
     using BoundingDomainType = typename SPACE::BoundingDomainType;
     using BoundedSetInterfaceType = typename SPACE::BoundedSetInterfaceType;
     using OvertSetInterfaceType = typename SPACE::OvertSetInterfaceType;
@@ -83,7 +89,8 @@ template<class SPACE> struct SpaceAnalysisTraits {
 // discretisation used by reachability analysis is a reasoning concern.
 // Do not add SetApproximationType back to EuclideanSpace.
 /** @brief Specialize analysis interfaces for Euclidean state spaces. */
-template<> struct SpaceAnalysisTraits<EuclideanSpace> {
+template<>
+struct SpaceAnalysisTraits<EuclideanSpace> {
     using BoundingDomainType = EuclideanSpace::BoundingDomainType;
     using BoundedSetInterfaceType = EuclideanSpace::BoundedSetInterfaceType;
     using OvertSetInterfaceType = EuclideanSpace::OvertSetInterfaceType;
@@ -96,7 +103,8 @@ template<> struct SpaceAnalysisTraits<EuclideanSpace> {
 };
 
 /** @brief Specialize analysis interfaces for hybrid state spaces. */
-template<> struct SpaceAnalysisTraits<HybridSpace> {
+template<>
+struct SpaceAnalysisTraits<HybridSpace> {
     using BoundingDomainType = HybridExactBoxes;
     using BoundedSetInterfaceType = EffectiveHybridBoundedSetInterface;
     using OvertSetInterfaceType = EffectiveHybridOvertSetInterface;

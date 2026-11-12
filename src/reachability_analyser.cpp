@@ -26,46 +26,36 @@
  *  @brief Implement continuous and discrete reachability analysis.
  */
 
-#include "function/functional.hpp"
-
-#include <string>
-#include <sstream>
-#include <algorithm>
-
-#include <list>
-#include <set>
-#include <vector>
-#include <valarray>
-
-
-#include "utility/exceptions.hpp"
-
-#include "numeric/numeric.hpp"
-
-#include "algebra/vector.hpp"
-#include "algebra/matrix.hpp"
-
-#include "geometry/box.hpp"
-#include "set/list_set.hpp"
-#include "paving/binary_tree_paving.hpp"
-
-#include "integration/integrator.hpp"
-#include "equation-solving/equation_solver.hpp"
-#include "set/function_set.hpp"
-
-#include "system/vector_field.hpp"
-
-#include "evolution/orbit.hpp"
-#include "evolution/iterated_map_evolver.hpp"
-#include "evolution/vector_field_evolver.hpp"
 #include "reasoning/reachability_analyser.hpp"
 
+#include <algorithm>
+#include <list>
+#include <set>
+#include <sstream>
+#include <string>
+#include <valarray>
+#include <vector>
+
+#include "algebra/matrix.hpp"
+#include "algebra/vector.hpp"
+#include "evolution/iterated_map_evolver.hpp"
+#include "evolution/orbit.hpp"
+#include "evolution/vector_field_evolver.hpp"
+#include "function/functional.hpp"
+#include "geometry/box.hpp"
+#include "integration/integrator.hpp"
 #include "logging/logging.hpp"
-#include "rendering/figure.hpp"
-#include "linear-programming/linear_programming.hpp"
-
+#include "numeric/numeric.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.tpl.hpp"
+#include "rendering/figure.hpp"
+#include "set/function_set.hpp"
+#include "set/list_set.hpp"
+#include "system/vector_field.hpp"
+#include "utility/exceptions.hpp"
 
+#include "equation-solving/equation_solver.hpp"
+#include "linear-programming/linear_programming.hpp"
 
 namespace Ariadne {
 
@@ -75,14 +65,22 @@ template class ReachabilityAnalyserConfiguration<IteratedMap>;
 template class ReachabilityAnalyser<VectorField>;
 template class ReachabilityAnalyserConfiguration<VectorField>;
 
-OutputStream& operator<<(OutputStream& os, const ChainOverspillPolicy& policy)
-{
-    switch(policy) {
-        case ChainOverspillPolicy::IGNORE: os<<"ignore"; break;
-        case ChainOverspillPolicy::WARNING: os<<"warning"; break;
-        case ChainOverspillPolicy::ERROR: os<<"error"; break;
-        default: os<<"unknown"; break;
-    } return os;
+OutputStream& operator<<(OutputStream& os, const ChainOverspillPolicy& policy) {
+    switch (policy) {
+        case ChainOverspillPolicy::IGNORE:
+            os << "ignore";
+            break;
+        case ChainOverspillPolicy::WARNING:
+            os << "warning";
+            break;
+        case ChainOverspillPolicy::ERROR:
+            os << "error";
+            break;
+        default:
+            os << "unknown";
+            break;
+    }
+    return os;
 }
 
 } // namespace Ariadne

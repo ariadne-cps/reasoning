@@ -29,18 +29,19 @@
 #ifndef ARIADNE_REACHABILITY_ANALYSER_INTERFACE_HPP
 #define ARIADNE_REACHABILITY_ANALYSER_INTERFACE_HPP
 
-
 #include "reasoning/traits.hpp"
 
 namespace Ariadne {
 
-template<class SPC> struct SafetyCertificate;
+template<class SPC>
+struct SafetyCertificate;
 
 //! \ingroup DynamicsModule
 //! \brief Interface for computing (chain) reachable sets of a dynamic system.
 //!
 //! \sa \link Ariadne::EvolverInterface \c EvolverInterface<SYS,ES> \endlink
-template<class SYS> class ReachabilityAnalyserInterface {
+template<class SYS>
+class ReachabilityAnalyserInterface {
   public:
     //! \brief The type of the internal system.
     typedef SYS SystemType;
@@ -74,6 +75,7 @@ template<class SYS> class ReachabilityAnalyserInterface {
     typedef typename SpaceAnalysisTraits<StateSpaceType>::SetApproximationType SetApproximationType;
     //! \brief The type used to represent a certificate of safety.
     typedef SafetyCertificate<StateSpaceType> SafetyCertificateType;
+
   public:
     //! \brief Virtual destructor.
     virtual ~ReachabilityAnalyserInterface() = default;
@@ -86,67 +88,61 @@ template<class SYS> class ReachabilityAnalyserInterface {
 
     //! \brief Compute an approximation to the set obtained by iterating \a steps times the system starting in \a initial_set.
     virtual StorageType
-    lower_evolve(const OvertSetInterfaceType& initial_set,
-                 const TimeType& steps) const = 0;
+        lower_evolve(const OvertSetInterfaceType& initial_set,
+                     const TimeType& steps) const = 0;
 
     //! \brief Compute a lower-approximation to the reachable and evolved sets of the system starting in \a initial_set up to \a time.
-    virtual Pair<StorageType,StorageType>
-    lower_reach_evolve(const OvertSetInterfaceType& initial_set,
-                       const TimeType& time) const = 0;
+    virtual Pair<StorageType, StorageType>
+        lower_reach_evolve(const OvertSetInterfaceType& initial_set,
+                           const TimeType& time) const = 0;
 
     //! \brief Compute an approximation to the reachable set of the system starting in \a initial_set iterating at most \a steps times.
     virtual StorageType
-    lower_reach(const OvertSetInterfaceType& initial_set,
-                const TimeType& steps) const = 0;
+        lower_reach(const OvertSetInterfaceType& initial_set,
+                    const TimeType& steps) const = 0;
 
     //! \brief Compute an infinite-time lower-approximation to the reachable set of the system starting in \a initial_set.
     //! of the system starting in \a initial_set.
     virtual StorageType
-    lower_reach(const OvertSetInterfaceType& initial_set) const = 0;
+        lower_reach(const OvertSetInterfaceType& initial_set) const = 0;
 
     //! \brief Compute an approximation to the set obtained by iterating \a steps times the system starting in \a initial_set.
     virtual StorageType
-    upper_evolve(const CompactSetInterfaceType& initial_set,
-                 const TimeType& steps) const = 0;
+        upper_evolve(const CompactSetInterfaceType& initial_set,
+                     const TimeType& steps) const = 0;
 
     //! \brief Compute an upper-approximation to the reachable and evolved sets of the system starting in \a initial_set iterating at most \a time times.
-    virtual Pair<StorageType,StorageType>
-    upper_reach_evolve(const CompactSetInterfaceType& initial_set,
-                       const TimeType& time) const = 0;
+    virtual Pair<StorageType, StorageType>
+        upper_reach_evolve(const CompactSetInterfaceType& initial_set,
+                           const TimeType& time) const = 0;
 
     //! \brief Compute an approximation to the reachable set
     //! of the system starting in \a initial_set iterating at most \a steps times.
     virtual StorageType
-    upper_reach(const CompactSetInterfaceType& initial_set,
-                const TimeType& steps) const = 0;
+        upper_reach(const CompactSetInterfaceType& initial_set,
+                    const TimeType& steps) const = 0;
 
     //! \brief Compute an outer-approximation to the chain-reachable set of the system starting in \a initial_set.
     virtual StorageType
-    outer_chain_reach(const CompactSetInterfaceType& initial_set) const = 0;
+        outer_chain_reach(const CompactSetInterfaceType& initial_set) const = 0;
 
     //! \brief Test if the system is safe.
     virtual SafetyCertificateType
-    verify_safety(const CompactSetInterfaceType& initial_set, const OpenSetInterfaceType& safe_set) const = 0;
+        verify_safety(const CompactSetInterfaceType& initial_set, const OpenSetInterfaceType& safe_set) const = 0;
 
     //!@}
-
 };
-
 
 //! \brief Factory for reachability analyser interface classes.
 template<class SYS>
-class ReachabilityAnalyserFactoryInterface
-{
+class ReachabilityAnalyserFactoryInterface {
   public:
-
     //! \brief Create a copy of the factory.
     virtual ReachabilityAnalyserFactoryInterface* clone() const = 0;
     //! \brief Create a reachability analyser interface object around a \a system.
     virtual ReachabilityAnalyserInterface<SYS>* create(const SYS& system) const = 0;
 };
 
-
 } // namespace Ariadne
-
 
 #endif // ARIADNE_ANALYSER_INTERFACE_HPP

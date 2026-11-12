@@ -37,9 +37,9 @@ namespace Ariadne {
 
 /** @brief Store initial, reachable, intermediate and final continuous paving sets. */
 template<>
-class Orbit<AugmentedPaving>
-{
+class Orbit<AugmentedPaving> {
     struct Data;
+
   public:
     typedef AugmentedPaving EnclosureListType;
 
@@ -50,13 +50,14 @@ class Orbit<AugmentedPaving>
           const AugmentedPaving& intermediate, const AugmentedPaving& final);
 
     /** @brief Return the initial paving. */
-    AugmentedPaving const& initial() const;
+    const AugmentedPaving& initial() const;
     /** @brief Return the reachable paving. */
-    AugmentedPaving const& reach() const;
+    const AugmentedPaving& reach() const;
     /** @brief Return the intermediate paving. */
-    AugmentedPaving const& intermediate() const;
+    const AugmentedPaving& intermediate() const;
     /** @brief Return the final paving. */
-    AugmentedPaving const& final() const;
+    const AugmentedPaving& final() const;
+
   private:
     std::shared_ptr<Data> _data;
 };
@@ -65,7 +66,7 @@ class Orbit<AugmentedPaving>
 struct Orbit<AugmentedPaving>::Data {
     /** @brief Construct empty orbit phases over the supplied grid and mapping. */
     Data(const Grid& grid, const EffectiveVectorMultivariateFunction& auxiliary_mapping)
-            : initial(grid,auxiliary_mapping), reach(initial), intermediate(initial), final(initial) { }
+        : initial(grid, auxiliary_mapping), reach(initial), intermediate(initial), final(initial) {}
     AugmentedPaving initial;
     AugmentedPaving reach;
     AugmentedPaving intermediate;

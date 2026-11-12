@@ -35,30 +35,32 @@ namespace Ariadne {
 class HybridAutomatonInterface;
 
 /** @brief Adapt an automaton into a lazy, location-indexed auxiliary mapping. */
-HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(HybridAutomatonInterface const& system);
+HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterface& system);
 
 /** @brief Construct the storage representation selected by a reachability analyser. */
-template<class STORAGE> struct AnalysisPavingFactory {
+template<class STORAGE>
+struct AnalysisPavingFactory {
     /** @brief Construct a storage object using the supplied grid and system. */
     template<class GRID, class SYS>
     static STORAGE make(GRID const& grid, SYS const& system) {
-        return STORAGE(grid,system);
+        return STORAGE(grid, system);
     }
 };
 
 /** @brief Construct hybrid pavings with location-dependent auxiliary mappings. */
-template<> struct AnalysisPavingFactory<HybridAugmentedPaving> {
+template<>
+struct AnalysisPavingFactory<HybridAugmentedPaving> {
     /** @brief Construct a hybrid paving using the automaton's auxiliary mapping. */
     template<class GRID>
-    static HybridAugmentedPaving make(GRID const& grid, HybridAutomatonInterface const& system) {
-        return HybridAugmentedPaving(grid,make_hybrid_auxiliary_mapping(system));
+    static HybridAugmentedPaving make(GRID const& grid, const HybridAutomatonInterface& system) {
+        return HybridAugmentedPaving(grid, make_hybrid_auxiliary_mapping(system));
     }
 };
 
 /** @brief Dispatch analysis paving construction to the matching storage factory. */
 template<class STORAGE, class GRID, class SYS>
 STORAGE make_analysis_paving(GRID const& grid, SYS const& system) {
-    return AnalysisPavingFactory<STORAGE>::make(grid,system);
+    return AnalysisPavingFactory<STORAGE>::make(grid, system);
 }
 } // namespace Ariadne
 #endif // ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP

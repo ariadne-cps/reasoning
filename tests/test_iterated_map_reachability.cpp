@@ -29,24 +29,22 @@
 #include <iostream>
 #include <memory>
 
-#include "function/formula.hpp"
 #include "algebra/algebra.hpp"
-#include "set/function_set.hpp"
-#include "paving/binary_tree_paving.hpp"
-#include "evolution/orbit.hpp"
 #include "evolution/iterated_map_evolver.hpp"
-#include "expression-set/expression_set.hpp"
-#include "system/iterated_map.hpp"
+#include "evolution/orbit.hpp"
+#include "function/formula.hpp"
 #include "logging/logging.hpp"
-
-#include "reasoning/reachability_analyser.hpp"
 #include "paving/augmented_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "reasoning/reachability_analyser.hpp"
+#include "set/function_set.hpp"
+#include "system/iterated_map.hpp"
 
 #include "ariadne-testing.hpp"
+#include "expression-set/expression_set.hpp"
 
 using namespace Ariadne;
 using namespace std;
-
 
 // Expose the protected helper so its behaviour can be verified directly.
 struct ExposedIteratedMapAnalyser : public ReachabilityAnalyser<IteratedMap> {
@@ -65,9 +63,7 @@ struct LogVerbosityScope {
     ~LogVerbosityScope() { Logger::instance().configuration().set_verbosity(_previous); }
 };
 
-
-class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
-{
+class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
   public:
     typedef IteratedMap SystemType;
     typedef IteratedMapEvolver EvolverType;
@@ -87,11 +83,10 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
     SymbolicSetType symbolic_safe_set;
     SetType safe_set;
 
-    static SystemType build_system()
-    {
+    static SystemType build_system() {
         RealVariable x("x"), y("y");
         // Contracting map, so chain-reachability computations terminate.
-        return SystemType({next(x)=x/2, next(y)=y/2});
+        return SystemType({next(x) = x / 2, next(y) = y / 2});
     }
 
     TestIteratedMapReachability(Ariadne::Testing::Context& context)
@@ -99,11 +94,10 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
           x("x"), y("y"),
           system(build_system()),
           analyser(EvolverType(system)),
-          symbolic_initial_set({0.9_dec<=x<=1.1_dec, 0.9_dec<=y<=1.1_dec}),
+          symbolic_initial_set({0.9_dec <= x <= 1.1_dec, 0.9_dec <= y <= 1.1_dec}),
           initial_set(symbolic_initial_set.euclidean_set(system.state_space())),
-          symbolic_safe_set({-2_dec<=x<=2_dec, -2_dec<=y<=2_dec}),
-          safe_set(symbolic_safe_set.euclidean_set(system.state_space()))
-    {
+          symbolic_safe_set({-2_dec <= x <= 2_dec, -2_dec <= y <= 2_dec}),
+          safe_set(symbolic_safe_set.euclidean_set(system.state_space())) {
         analyser.configuration().set_maximum_grid_fineness(2);
     }
 
@@ -123,9 +117,18 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_EXPECT_EQUAL(const_config.maximum_grid_fineness(), 3u);
         config.set_maximum_grid_extent(8);
         ARIADNE_TESTING_EXPECT_EQUAL(const_config.maximum_grid_extent(), 8u);
-        config.set_bounding_domain(BoundingDomainType({{-4,4},{-4,4}}));
-        ARIADNE_TESTING_PROVE(const_config.bounding_domain() == BoundingDomainType({{-4,4},{-4,4}}));
-        config.set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({{-4,4},{-4,4}})));
+        config.set_bounding_domain(BoundingDomainType({
+            {-4, 4},
+            {-4, 4}
+        }));
+        ARIADNE_TESTING_PROVE(const_config.bounding_domain() == BoundingDomainType({
+                                                                    {-4, 4},
+                                                                    {-4, 4}
+        }));
+        config.set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({
+            {-4, 4},
+            {-4, 4}
+        })));
         ARIADNE_TESTING_PROVE(const_config.bounding_domain_ptr() != nullptr);
         config.set_grid(LabelledGrid(Grid(2), system.state_space()));
         ARIADNE_TESTING_PROVE(const_config.grid().space() == system.state_space());
@@ -162,7 +165,10 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(reach_evolve.second.size() > 0u);
 
         analyser.configuration().set_transient_time(Integer(0));
-        analyser.configuration().set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({{-4,4},{-4,4}})));
+        analyser.configuration().set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({
+            {-4, 4},
+            {-4, 4}
+        })));
         // With zero transient time no infinite-time evolution is performed.
         auto infinite_lower_reach = analyser.lower_reach(initial_set);
         ARIADNE_TESTING_PROVE(infinite_lower_reach.is_empty());
@@ -178,7 +184,10 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
 
     Void test_upper_reachability() {
         analyser.configuration().set_transient_time(Integer(0));
-        analyser.configuration().set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({{-4,4},{-4,4}})));
+        analyser.configuration().set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({
+            {-4, 4},
+            {-4, 4}
+        })));
 
         auto upper_evolve = analyser.upper_evolve(initial_set, Integer(3));
         ARIADNE_TESTING_PROVE(upper_evolve.size() > 0u);
@@ -236,7 +245,7 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
         ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
 
-        SymbolicSetType outside_symbolic_safe_set({2_dec<=x<=3_dec, 2_dec<=y<=3_dec});
+        SymbolicSetType outside_symbolic_safe_set({2_dec <= x <= 3_dec, 2_dec <= y <= 3_dec});
         auto outside_safe_set = outside_symbolic_safe_set.euclidean_set(system.state_space());
         auto negative_certificate = analyser.verify_safety(initial_set, outside_safe_set);
         ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
@@ -263,16 +272,16 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
         // The initial set is inside the safe set, but the expanding map makes
         // the reachable set leave it during the recurrent stages.
         RealVariable ex("x"), ey("y");
-        IteratedMap expanding({next(ex)=2*ex, next(ey)=2*ey});
+        IteratedMap expanding({next(ex) = 2 * ex, next(ey) = 2 * ey});
         EvolverType evolver(expanding);
         ExposedIteratedMapAnalyser escaping_analyser(evolver);
         escaping_analyser.configuration().set_maximum_grid_fineness(2);
         escaping_analyser.configuration().set_transient_time(Integer(0));
         escaping_analyser.configuration().set_bounding_domain_ptr(nullptr);
 
-        SymbolicSetType symbolic_initial({0.1_dec<=ex<=0.2_dec, 0.1_dec<=ey<=0.2_dec});
+        SymbolicSetType symbolic_initial({0.1_dec <= ex <= 0.2_dec, 0.1_dec <= ey <= 0.2_dec});
         auto initial = symbolic_initial.euclidean_set(expanding.state_space());
-        SymbolicSetType symbolic_safe({-0.5_dec<=ex<=0.5_dec, -0.5_dec<=ey<=0.5_dec});
+        SymbolicSetType symbolic_safe({-0.5_dec <= ex <= 0.5_dec, -0.5_dec <= ey <= 0.5_dec});
         auto safe = symbolic_safe.euclidean_set(expanding.state_space());
 
         auto certificate = escaping_analyser.verify_safety(initial, safe);
@@ -280,9 +289,7 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture
     }
 };
 
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_iterated_map_reachability");
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_analyser_configuration);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_lower_reachability);

@@ -28,11 +28,11 @@
 #ifndef ARIADNE_REASONING_NEURAL_SYMBOLIC_HPP
 #define ARIADNE_REASONING_NEURAL_SYMBOLIC_HPP
 
+#include <vector>
+
 #include "ann/network.hpp"
 #include "symbolic/expression.hpp"
 #include "symbolic/space.hpp"
-
-#include <vector>
 
 namespace Ariadne {
 
@@ -53,8 +53,8 @@ namespace Ariadne {
  *  expression regions using Symbolic.
  */
 std::vector<Expression<Real>> make_expression(
-    NeuralParameterSnapshot const& snapshot,
-    Space<Real> const& space);
+    const NeuralParameterSnapshot& snapshot,
+    const Space<Real>& space);
 
 } // namespace Ariadne
 

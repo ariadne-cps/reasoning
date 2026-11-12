@@ -26,37 +26,37 @@
  *  @brief Test finite time reachability semantics and regressions.
  */
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
-#include "function/taylor_function.hpp"
-#include "function/formula.hpp"
 #include "algebra/algebra.hpp"
-#include "set/function_set.hpp"
-#include "paving/binary_tree_paving.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
-#include "reasoning/reachability_analyser.hpp"
-#include "labelled/labelled_augmented_paving_draw.hpp"
-#include "expression-set/expression_set.hpp"
+#include "function/formula.hpp"
+#include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
+#include "labelled/labelled_augmented_paving_draw.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "reasoning/reachability_analyser.hpp"
+#include "set/function_set.hpp"
 
 #include "ariadne-testing.hpp"
+#include "expression-set/expression_set.hpp"
 
 using namespace std;
 using namespace Ariadne;
 
-Colour reach_set_colour(0.25,0.25,0.50);
-Colour intermediate_set_colour(0.50,0.50,0.75);
-Colour final_set_colour(0.75,0.75,1.00);
-Colour evolve_set_colour(0.75,0.75,1.00);
-Colour initial_set_colour(0.75,0.75,1.00);
-Colour guard_set_colour(0.75,0.75,0.75);
-Colour bounding_box_colour(0.75,0.75,0.875);
-Colour safe_set_colour(0.50,1.00,0.50);
+Colour reach_set_colour(0.25, 0.25, 0.50);
+Colour intermediate_set_colour(0.50, 0.50, 0.75);
+Colour final_set_colour(0.75, 0.75, 1.00);
+Colour evolve_set_colour(0.75, 0.75, 1.00);
+Colour initial_set_colour(0.75, 0.75, 1.00);
+Colour guard_set_colour(0.75, 0.75, 0.75);
+Colour bounding_box_colour(0.75, 0.75, 0.875);
+Colour safe_set_colour(0.50, 1.00, 0.50);
 
 // Expose the protected helper so its behaviour can be verified directly.
 struct ExposedVectorFieldAnalyser : public ReachabilityAnalyser<VectorField> {
@@ -64,9 +64,7 @@ struct ExposedVectorFieldAnalyser : public ReachabilityAnalyser<VectorField> {
     using ReachabilityAnalyser<VectorField>::_upper_reach;
 };
 
-class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
-{
-
+class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
     typedef VectorFieldEvolver EvolverType;
     typedef EvolverType::SystemType SystemType;
     typedef SystemType::TimeType TimeType;
@@ -90,26 +88,25 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
     SymbolicSetType symbolic_safe_set;
     SetType safe_set;
     TimeType reach_time;
-  public:
 
-    static SystemType build_system()
-    {
-        std::cout<<std::setprecision(20);
-        std::cerr<<std::setprecision(20);
-        std::clog<<std::setprecision(20);
+  public:
+    static SystemType build_system() {
+        std::cout << std::setprecision(20);
+        std::cerr << std::setprecision(20);
+        std::clog << std::setprecision(20);
         RealVariable x("x");
         RealVariable y("y");
-        Real a(-0.5_x); Real b(1.0_x);
-        SystemType sys({dot(x)=-a*x-b*y,dot(y)=b*x+2*a*y});
+        Real a(-0.5_x);
+        Real b(1.0_x);
+        SystemType sys({dot(x) = -a * x - b * y, dot(y) = b * x + 2 * a * y});
         cout << "Done building system\n";
         return sys;
     }
 
-    static AnalyserType build_analyser(const SystemType& system)
-    {
+    static AnalyserType build_analyser(const SystemType& system) {
         GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
 
-        EvolverType evolver(system,integrator);
+        EvolverType evolver(system, integrator);
 
         AnalyserType analyser(evolver);
         analyser.configuration().set_maximum_grid_fineness(3);
@@ -124,15 +121,18 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
           grid(2),
           x("x"),
           y("y"),
-          graphics_box({{-3,3},{-3,3}}),
-          bounding({{-4,4},{-4,4}}),
-          symbolic_initial_set({1.98_dec<=x<=1.99_dec,0.01_dec<=y<=0.02_dec}),
+          graphics_box({
+              {-3, 3},
+              {-3, 3}
+    }),
+          bounding({{-4, 4}, {-4, 4}}),
+          symbolic_initial_set({1.98_dec <= x <= 1.99_dec, 0.01_dec <= y <= 0.02_dec}),
           initial_set(symbolic_initial_set.euclidean_set(system.state_space())),
-          symbolic_safe_set({-2_dec<=x<=3_dec,-2_dec<=y<=3_dec},{sqr(x)+sqr(y)<=sqr((Real)3)}),
+          symbolic_safe_set({-2_dec <= x <= 3_dec, -2_dec <= y <= 3_dec}, {sqr(x) + sqr(y) <= sqr((Real)3)}),
           safe_set(symbolic_safe_set.euclidean_set(system.state_space())),
-          reach_time(3.0_x)
-    {
-        cout << "Done creating initial and safe sets\n" << endl;
+          reach_time(3.0_x) {
+        cout << "Done creating initial and safe sets\n"
+             << endl;
 
         cout << "system=" << system << endl;
         cout << "initial_set=" << initial_set << endl;
@@ -141,63 +141,67 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
 
     Void test_lower_reach_lower_evolve() {
         cout << "Computing timed reachable set" << endl;
-        auto lower_reach=analyser.lower_reach(initial_set,reach_time);
+        auto lower_reach = analyser.lower_reach(initial_set, reach_time);
         ARIADNE_TESTING_PROVE(lower_reach.size() > 0);
 
         cout << "Computing timed evolve set" << endl;
-        auto lower_evolve=analyser.lower_evolve(initial_set,reach_time);
+        auto lower_evolve = analyser.lower_evolve(initial_set, reach_time);
         ARIADNE_TESTING_PROVE(lower_evolve.size() > 0);
 
         cout << "Reached " << lower_reach.size() << " cells " << endl;
-        cout << "Evolved to " << lower_evolve.size() << " cells " << endl << endl;
+        cout << "Evolved to " << lower_evolve.size() << " cells " << endl
+             << endl;
 
-        plot("test_reachability_analyser-lower_reach_lower_evolve.png",Projection2d(2,0,1),graphics_box,
-             reach_set_colour,lower_reach,evolve_set_colour,lower_evolve);
+        plot("test_reachability_analyser-lower_reach_lower_evolve.png", Projection2d(2, 0, 1), graphics_box,
+             reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
     Void test_lower_reach_evolve() {
         cout << "Computing timed reach-evolve set" << endl;
-        Pair<StorageType,StorageType> reach_evolve_set = analyser.lower_reach_evolve(initial_set,reach_time);
-        StorageType& lower_reach=reach_evolve_set.first;
-        StorageType& lower_evolve=reach_evolve_set.second;
+        Pair<StorageType, StorageType> reach_evolve_set = analyser.lower_reach_evolve(initial_set, reach_time);
+        StorageType& lower_reach = reach_evolve_set.first;
+        StorageType& lower_evolve = reach_evolve_set.second;
         cout << "Reached " << lower_reach.size() << " cells " << endl;
-        cout << "Evolved to " << lower_evolve.size() << " cells " << endl << endl;
+        cout << "Evolved to " << lower_evolve.size() << " cells " << endl
+             << endl;
 
         ARIADNE_TESTING_PROVE(lower_reach.size() > 0);
         ARIADNE_TESTING_PROVE(lower_evolve.size() > 0);
 
-        plot("test_reachability_analyser-map_lower_reach_evolve.png",Projection2d(2,0,1),graphics_box,
-             reach_set_colour,lower_reach,evolve_set_colour,lower_evolve);
+        plot("test_reachability_analyser-map_lower_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
+             reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
     Void test_upper_reach_upper_evolve() {
         cout << "Computing timed reachable set" << endl;
-        StorageType upper_reach_set=analyser.upper_reach(initial_set,reach_time);
+        StorageType upper_reach_set = analyser.upper_reach(initial_set, reach_time);
         ARIADNE_TESTING_PROVE(upper_reach_set.size() > 0);
 
         cout << "Computing timed evolve set" << endl;
-        StorageType upper_evolve_set=analyser.upper_evolve(initial_set,reach_time);
+        StorageType upper_evolve_set = analyser.upper_evolve(initial_set, reach_time);
         ARIADNE_TESTING_PROVE(upper_evolve_set.size() > 0);
 
         cout << "Reached " << upper_reach_set.size() << " cells " << endl;
-        cout << "Evolved to " << upper_evolve_set.size() << " cells " << endl << endl;
+        cout << "Evolved to " << upper_evolve_set.size() << " cells " << endl
+             << endl;
 
-        plot("test_reachability_analyser-map_upper_reach_upper_evolve.png",Projection2d(2,0,1),graphics_box,
-             reach_set_colour,upper_reach_set,evolve_set_colour,upper_evolve_set);
+        plot("test_reachability_analyser-map_upper_reach_upper_evolve.png", Projection2d(2, 0, 1), graphics_box,
+             reach_set_colour, upper_reach_set, evolve_set_colour, upper_evolve_set);
     }
 
     Void test_upper_reach_evolve() {
         cout << "Computing timed reach-evolve set" << endl;
-        Pair<StorageType,StorageType> reach_evolve_set = analyser.upper_reach_evolve(initial_set,reach_time);
+        Pair<StorageType, StorageType> reach_evolve_set = analyser.upper_reach_evolve(initial_set, reach_time);
 
         ARIADNE_TESTING_PROVE(reach_evolve_set.first.size() > 0);
         ARIADNE_TESTING_PROVE(reach_evolve_set.second.size() > 0);
 
         cout << "Reached " << reach_evolve_set.first.size() << " cells " << endl;
-        cout << "Evolved to " << reach_evolve_set.second.size() << " cells " << endl << endl;
+        cout << "Evolved to " << reach_evolve_set.second.size() << " cells " << endl
+             << endl;
 
-        plot("test_reachability_analyser-map_upper_reach_evolve.png",Projection2d(2,0,1),graphics_box,
-             reach_set_colour,reach_evolve_set.first,final_set_colour,reach_evolve_set.second);
+        plot("test_reachability_analyser-map_upper_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
+             reach_set_colour, reach_evolve_set.first, final_set_colour, reach_evolve_set.second);
     }
 
     Void test_analyser_accessors() {
@@ -226,12 +230,9 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture
         ARIADNE_TESTING_PROVE(reach_evolve.first.size() > 0u);
         ARIADNE_TESTING_PROVE(reach_evolve.second.size() > 0u);
     }
-
 };
 
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_finite_time_reachability");
     ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_lower_reach_lower_evolve);
     ARIADNE_TESTING_ADD_TEST(TestFiniteTimeReachability, test_lower_reach_evolve);

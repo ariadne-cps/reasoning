@@ -29,29 +29,28 @@
 #ifndef ARIADNE_REACHABILITY_ANALYSER_HPP
 #define ARIADNE_REACHABILITY_ANALYSER_HPP
 
-#include "evolution/configuration_interface.hpp"
-#include "geometry/set.hpp"
-#include "paving/binary_tree_paving.hpp"
-#include "set/function_set.hpp"
-
-#include "evolution/enclosure.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
-#include "reasoning/augmented_paving_orbit.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
-#include "evolution/vector_field_evolver.hpp"
-#include "reasoning/reachability_analyser_interface.hpp"
-
-#include "logging/logging.hpp"
-#include "paving/paving_interface.hpp"
 #include <functional>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
+#include "evolution/configuration_interface.hpp"
+#include "evolution/enclosure.hpp"
+#include "evolution/vector_field_evolver.hpp"
+#include "geometry/set.hpp"
+#include "labelled/labelled_augmented_paving.hpp"
+#include "logging/logging.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "paving/paving_interface.hpp"
+#include "reasoning/analysis_paving_factory.hpp"
+#include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/reachability_analyser_interface.hpp"
+#include "set/function_set.hpp"
 
 namespace Ariadne {
 
-template<class ES> class Orbit;
+template<class ES>
+class Orbit;
 
 class DiscreteLocation;
 class AutomatonInterface;
@@ -61,17 +60,23 @@ class GridCell;
 class BinaryTreePaving;
 class AugmentedPaving;
 
-template<class ES> class ListSet;
+template<class ES>
+class ListSet;
 
-template<class SYS> class ReachabilityAnalyserConfiguration;
-template<class SYS> class ReachabilityAnalyser;
+template<class SYS>
+class ReachabilityAnalyserConfiguration;
+template<class SYS>
+class ReachabilityAnalyser;
 
 /** @brief Policy for handling reachability chains that exceed their configured bounds. */
-enum class ChainOverspillPolicy : std::uint8_t { IGNORE, WARNING, ERROR };
+enum class ChainOverspillPolicy : std::uint8_t { IGNORE,
+                                                 WARNING,
+                                                 ERROR };
 
 using ContinuousReachabilityAnalyser = ReachabilityAnalyser<VectorField>;
 
-template<> struct SafetyCertificate<EuclideanSpace> {
+template<>
+struct SafetyCertificate<EuclideanSpace> {
     const ValidatedSierpinskian is_safe;
     const LabelledAugmentedPaving chain_reach_set;
     const LabelledAugmentedPaving safe_set;
@@ -79,36 +84,40 @@ template<> struct SafetyCertificate<EuclideanSpace> {
 
 //! \ingroup DynamicsModule
 //! \brief A class for performing reachability analysis on a hybrid system.
-template<class SYS> class ReachabilityAnalyser
-    : public ReachabilityAnalyserInterface<SYS>
-{
+template<class SYS>
+class ReachabilityAnalyser
+    : public ReachabilityAnalyserInterface<SYS> {
     typedef ReachabilityAnalyserInterface<SYS> Interface;
+
   public:
     typedef ReachabilityAnalyserConfiguration<SYS> ConfigurationType;
+    using typename Interface::BoundedSetInterfaceType;
+    using typename Interface::BoundingDomainType;
+    using typename Interface::CompactSetInterfaceType;
+    using typename Interface::EvolverType;
+    using typename Interface::LocatedSetInterfaceType;
+    using typename Interface::OpenSetInterfaceType;
+    using typename Interface::OvertSetInterfaceType;
+    using typename Interface::RegularLocatedSetInterfaceType;
+    using typename Interface::RegularSetInterfaceType;
+    using typename Interface::SafetyCertificateType;
+    using typename Interface::SetApproximationType;
     using typename Interface::SystemType;
     using typename Interface::TimeType;
-    using typename Interface::EvolverType;
-    using typename Interface::BoundingDomainType;
-    using typename Interface::BoundedSetInterfaceType;
-    using typename Interface::OvertSetInterfaceType;
-    using typename Interface::OpenSetInterfaceType;
-    using typename Interface::CompactSetInterfaceType;
-    using typename Interface::LocatedSetInterfaceType;
-    using typename Interface::RegularSetInterfaceType;
-    using typename Interface::RegularLocatedSetInterfaceType;
-    using typename Interface::SetApproximationType;
-    using typename Interface::SafetyCertificateType;
 
     typedef typename Interface::EnclosureType EnclosureType;
     typedef typename Interface::StorageType StorageType;
     using GridType = typename StorageType::GridType;
     using PavingType = typename StorageType::PavingType;
+
   private:
+
   protected:
     SharedPointer<SystemType> _system;
     SharedPointer<EvolverType> _evolver;
     SharedPointer<ConfigurationType> _configuration;
-    std::function<StorageType(GridType const&,SystemType const&)> _storage_factory;
+    std::function<StorageType(const GridType&, const SystemType&)> _storage_factory;
+
   public:
     //!@{
     //! \name Constructors and destructors
@@ -135,20 +144,21 @@ template<class SYS> class ReachabilityAnalyser
 
     //! Select one backend for all continuous cells or all hybrid locations.
     //! For ROBDD pavings the factory must capture a shared RobddManager.
-    Void set_paving_factory(std::function<Paving(Grid const&)> factory) {
-        if(not factory) throw std::invalid_argument("Empty paving factory");
-        if constexpr (std::is_same_v<StorageType,LabelledAugmentedPaving>) {
-            _storage_factory=[factory=std::move(factory)](
-                    GridType const& grid,SystemType const& system) -> StorageType {
-                return StorageType(factory(grid.euclidean_grid()),system);
+    Void set_paving_factory(std::function<Paving(const Grid&)> factory) {
+        if (not factory)
+            throw std::invalid_argument("Empty paving factory");
+        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPaving>) {
+            _storage_factory = [factory = std::move(factory)](
+                                   const GridType& grid, const SystemType& system) -> StorageType {
+                return StorageType(factory(grid.euclidean_grid()), system);
             };
-        } else if constexpr (std::is_same_v<StorageType,HybridAugmentedPaving>) {
+        } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             // The same factory creates the continuous paving on demand in
             // every hybrid location. Captured managers survive all copies.
-            _storage_factory=[factory=std::move(factory)](
-                    GridType const& grid,SystemType const& system) -> StorageType {
-                return StorageType(HybridPaving(grid,factory),
-                    make_hybrid_auxiliary_mapping(system));
+            _storage_factory = [factory = std::move(factory)](
+                                   const GridType& grid, const SystemType& system) -> StorageType {
+                return StorageType(HybridPaving(grid, factory),
+                                   make_hybrid_auxiliary_mapping(system));
             };
         } else {
             throw std::logic_error("Unsupported storage for paving factory");
@@ -159,64 +169,61 @@ template<class SYS> class ReachabilityAnalyser
     virtual const SystemType& system() const override { return *this->_system; }
     //!@}
 
-
-
     //!@{
     //! \name Evaluation of systems on abstract sets
     //! \brief Compute a lower-approximation to the set obtained by evolving the system starting in \a initial_set until \a time.
     virtual StorageType
-    lower_evolve(const OvertSetInterfaceType& initial_set,
-                 const TimeType& steps) const override;
+        lower_evolve(const OvertSetInterfaceType& initial_set,
+                     const TimeType& steps) const override;
 
     //! \brief Compute a lower-approximation to the reachable and evolved sets of the system starting in \a initial_set up to \a time.
-    virtual Pair<StorageType,StorageType>
-    lower_reach_evolve(const OvertSetInterfaceType& initial_set,
-                       const TimeType& time) const override;
+    virtual Pair<StorageType, StorageType>
+        lower_reach_evolve(const OvertSetInterfaceType& initial_set,
+                           const TimeType& time) const override;
 
     //! \brief Compute a lower-approximation to the reachable set of the system starting in \a initial_set up to \a time.
     virtual StorageType
-    lower_reach(const OvertSetInterfaceType& initial_set,
-                const TimeType& time) const override;
+        lower_reach(const OvertSetInterfaceType& initial_set,
+                    const TimeType& time) const override;
 
     //! \brief Compute an infinite-time lower-approximation to the reachable set of the system starting in \a initial_set.
     virtual StorageType
-    lower_reach(const OvertSetInterfaceType& initial_set) const override;
+        lower_reach(const OvertSetInterfaceType& initial_set) const override;
 
     //! \brief Compute an upper-approximation to the set obtained by evolving the system starting in \a initial_set up to \a time.
     virtual StorageType
-    upper_evolve(const CompactSetInterfaceType& initial_set,
-                 const TimeType& time) const override;
+        upper_evolve(const CompactSetInterfaceType& initial_set,
+                     const TimeType& time) const override;
 
     //! \brief Compute upper-approximations to the reachable and evolved sets of the system starting in \a initial_set up to \a time.
-    virtual Pair<StorageType,StorageType>
-    upper_reach_evolve(const CompactSetInterfaceType& initial_set,
-                       const TimeType& time) const override;
+    virtual Pair<StorageType, StorageType>
+        upper_reach_evolve(const CompactSetInterfaceType& initial_set,
+                           const TimeType& time) const override;
 
     //! \brief Compute an upper-approximation to the reachable set of the system starting in \a initial_set up to \a time.
     virtual StorageType
-    upper_reach(const CompactSetInterfaceType& initial_set,
-                const TimeType& time) const override;
-
+        upper_reach(const CompactSetInterfaceType& initial_set,
+                    const TimeType& time) const override;
 
     //! \brief Compute a (possibly-restricted) approximation to the outer chain-reachable set of the system starting in \a initial_set.
     virtual StorageType
-    outer_chain_reach(const CompactSetInterfaceType& initial_set) const override;
+        outer_chain_reach(const CompactSetInterfaceType& initial_set) const override;
 
     //! \brief Test if the system is safe.
     virtual SafetyCertificateType
-    verify_safety(const CompactSetInterfaceType& initial_set, const OpenSetInterfaceType& safe_set) const override;
+        verify_safety(const CompactSetInterfaceType& initial_set, const OpenSetInterfaceType& safe_set) const override;
 
     //!@}
 
   protected:
     // Helper functions for operators on lists of sets.
-    Pair<StorageType,StorageType> _reach_evolve_resume(const ListSet<EnclosureType>& initial_enclosures,
-            const TimeType& time, const Nat accuracy, ListSet<EnclosureType>& evolve_enclosures,
-            Semantics semantics, const EvolverType& evolver) const;
+    Pair<StorageType, StorageType> _reach_evolve_resume(const ListSet<EnclosureType>& initial_enclosures,
+                                                        const TimeType& time, const Nat accuracy, ListSet<EnclosureType>& evolve_enclosures,
+                                                        Semantics semantics, const EvolverType& evolver) const;
     StorageType _upper_reach(const StorageType& set, const TimeType& time,
-            const Nat accuracy, const EvolverType& evolver) const;
+                             const Nat accuracy, const EvolverType& evolver) const;
     StorageType _upper_evolve(const StorageType& set, const TimeType& time,
-            const Nat accuracy, const EvolverType& evolver) const;
+                              const Nat accuracy, const EvolverType& evolver) const;
     Void _adjoin_upper_reach_evolve(StorageType& reach_set, StorageType& final_set,
                                     const StorageType& set, const TimeType& time,
                                     const Nat accuracy, const EvolverType& evolver) const;
@@ -226,7 +233,8 @@ template<class SYS> class ReachabilityAnalyser
 
 //! \brief Configuration for a ReachabilityAnalyser, essentially for controlling the
 //!    accuracy of discretised evolution methods and reachability analysis.
-template<class SYS> class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
+template<class SYS>
+class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
   public:
     //! \brief The unsigned integer type.
     typedef Nat UnsignedIntType;
@@ -245,7 +253,6 @@ template<class SYS> class ReachabilityAnalyserConfiguration : public Configurati
     virtual ~ReachabilityAnalyserConfiguration() = default;
 
   private:
-
     //! \brief Reference back to the main class, for consistency checking.
     ReachabilityAnalyser<SYS>& _analyser;
 
@@ -308,7 +315,6 @@ template<class SYS> class ReachabilityAnalyserConfiguration : public Configurati
     ChainOverspillPolicy _outer_overspill_policy;
 
   public:
-
     const TimeType& transient_time() const { return _transient_time; }
     Void set_transient_time(const TimeType value) { _transient_time = TimeType(value); }
 
@@ -334,12 +340,9 @@ template<class SYS> class ReachabilityAnalyserConfiguration : public Configurati
     Void set_outer_overspill_policy(const ChainOverspillPolicy value) { _outer_overspill_policy = value; }
 
   public:
-
     virtual OutputStream& _write(OutputStream& os) const;
 };
 
-
 } // namespace Ariadne
-
 
 #endif // ARIADNE_REACHABILITY_ANALYSER_HPP

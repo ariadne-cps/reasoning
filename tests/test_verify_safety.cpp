@@ -26,31 +26,29 @@
  *  @brief Test verify safety semantics and regressions.
  */
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
-#include "function/taylor_function.hpp"
-#include "function/formula.hpp"
 #include "algebra/algebra.hpp"
-#include "set/function_set.hpp"
-#include "paving/binary_tree_paving.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
-#include "reasoning/reachability_analyser.hpp"
-#include "expression-set/expression_set.hpp"
+#include "function/formula.hpp"
+#include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "reasoning/reachability_analyser.hpp"
+#include "set/function_set.hpp"
 
 #include "ariadne-testing.hpp"
+#include "expression-set/expression_set.hpp"
 
 using namespace std;
 using namespace Ariadne;
 
-class TestVerifySafety : public Ariadne::Testing::ContextFixture
-{
-
+class TestVerifySafety : public Ariadne::Testing::ContextFixture {
     typedef VectorFieldEvolver EvolverType;
     typedef EvolverType::SystemType SystemType;
     typedef SystemType::TimeType TimeType;
@@ -69,27 +67,25 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture
     SetType initial_set;
     SymbolicSetType symbolic_safe_set;
     SetType safe_set;
-  public:
 
-    static SystemType build_system()
-    {
-        std::cout<<std::setprecision(20);
-        std::cerr<<std::setprecision(20);
-        std::clog<<std::setprecision(20);
+  public:
+    static SystemType build_system() {
+        std::cout << std::setprecision(20);
+        std::cerr << std::setprecision(20);
+        std::clog << std::setprecision(20);
         RealVariable x("x");
         // Contract toward the centre of a grid cell.  Its outer
         // approximation reaches a fixed point without accumulating
         // spurious neighbouring cells as a stationary flow can.
-        SystemType sys(List<DottedRealAssignment>{dot(x)=0.375_dec-x});
+        SystemType sys(List<DottedRealAssignment>{dot(x) = 0.375_dec - x});
         cout << "Done building system\n";
         return sys;
     }
 
-    static AnalyserType build_analyser(const SystemType& system)
-    {
+    static AnalyserType build_analyser(const SystemType& system) {
         GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
 
-        EvolverType evolver(system,integrator);
+        EvolverType evolver(system, integrator);
 
         AnalyserType analyser(evolver);
         analyser.configuration().set_maximum_grid_fineness(2);
@@ -102,12 +98,12 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture
           system(build_system()),
           analyser(build_analyser(system)),
           x("x"),
-          symbolic_initial_set({0.3125_dec<=x<=0.34375_dec}),
+          symbolic_initial_set({0.3125_dec <= x <= 0.34375_dec}),
           initial_set(symbolic_initial_set.euclidean_set(system.state_space())),
-          symbolic_safe_set({-2_dec<=x<=2_dec}),
-          safe_set(symbolic_safe_set.euclidean_set(system.state_space()))
-    {
-        cout << "Done creating initial and safe sets\n" << endl;
+          symbolic_safe_set({-2_dec <= x <= 2_dec}),
+          safe_set(symbolic_safe_set.euclidean_set(system.state_space())) {
+        cout << "Done creating initial and safe sets\n"
+             << endl;
 
         cout << "system=" << system << endl;
         cout << "initial_set=" << initial_set << endl;
@@ -116,7 +112,7 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture
 
     Void test_verify_safety_no_bounding() {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
-        auto safety_certificate=analyser.verify_safety(initial_set,safe_set);
+        auto safety_certificate = analyser.verify_safety(initial_set, safe_set);
         ARIADNE_TESTING_NOTE(safety_certificate.is_safe);
         ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.size());
         ARIADNE_TESTING_NOTE(safety_certificate.safe_set.size());
@@ -125,26 +121,22 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture
 
     Void test_verify_safety_crossing_bounding() {
         // Restriction must reject an initial set entirely outside the bounding domain.
-        analyser.configuration().set_bounding_domain(BoundingDomainType(analyser.system().dimension(),{1,2}));
-        ARIADNE_TESTING_EXPECT_EXCEPTION(analyser.verify_safety(initial_set,safe_set));
+        analyser.configuration().set_bounding_domain(BoundingDomainType(analyser.system().dimension(), {1, 2}));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(analyser.verify_safety(initial_set, safe_set));
     }
 
     Void test_verify_safety_crossing_safe() {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         // Initial cells are outside this safe set, so no proof is possible.
-        SymbolicSetType smaller_symbolic_safe_set({1_dec<=x<=2_dec});
+        SymbolicSetType smaller_symbolic_safe_set({1_dec <= x <= 2_dec});
         auto smaller_safe_set = smaller_symbolic_safe_set.euclidean_set(system.state_space());
 
-        auto safety_certificate=analyser.verify_safety(initial_set,smaller_safe_set);
+        auto safety_certificate = analyser.verify_safety(initial_set, smaller_safe_set);
         ARIADNE_TESTING_PROVE(is_indeterminate(safety_certificate.is_safe));
     }
-
-
 };
 
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_verify_safety");
     ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_no_bounding);
     ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_crossing_bounding);

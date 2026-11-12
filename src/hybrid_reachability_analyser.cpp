@@ -26,56 +26,44 @@
  *  @brief Implement hybrid reachability analysis.
  */
 
-#include "function/functional.hpp"
-
-#include <string>
-#include <sstream>
-#include <algorithm>
-
-#include <list>
-#include <set>
-#include <vector>
-#include <valarray>
-
-
-#include "utility/exceptions.hpp"
-
-#include "numeric/numeric.hpp"
-
-#include "algebra/vector.hpp"
-#include "algebra/matrix.hpp"
-
-#include "geometry/box.hpp"
-#include "set/list_set.hpp"
-#include "paving/binary_tree_paving.hpp"
-
-#include "integration/integrator.hpp"
-#include "equation-solving/equation_solver.hpp"
-
-#include "reasoning/reachability_analyser.tpl.hpp"
-
-#include "system/hybrid_automaton_interface.hpp"
-
-#include "evolution/hybrid_time.hpp"
-#include "hybrid/hybrid_space.hpp"
-#include "evolution/hybrid_orbit.hpp"
-#include "hybrid/hybrid_set.hpp"
-#include "hybrid/hybrid_paving.hpp"
-#include "evolution/hybrid_evolver.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 
+#include <algorithm>
+#include <list>
+#include <set>
+#include <sstream>
+#include <string>
+#include <valarray>
+#include <vector>
 
-#include "logging/logging.hpp"
-#include "rendering/figure.hpp"
-#include "linear-programming/linear_programming.hpp"
-
+#include "algebra/matrix.hpp"
+#include "algebra/vector.hpp"
+#include "evolution/hybrid_evolver.hpp"
+#include "evolution/hybrid_orbit.hpp"
+#include "evolution/hybrid_time.hpp"
+#include "function/functional.hpp"
+#include "geometry/box.hpp"
 #include "hybrid/hybrid_graphics.hpp"
+#include "hybrid/hybrid_paving.hpp"
+#include "hybrid/hybrid_set.hpp"
+#include "hybrid/hybrid_space.hpp"
+#include "integration/integrator.hpp"
+#include "logging/logging.hpp"
+#include "numeric/numeric.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "reasoning/reachability_analyser.tpl.hpp"
+#include "rendering/figure.hpp"
+#include "set/list_set.hpp"
+#include "system/hybrid_automaton_interface.hpp"
+#include "utility/exceptions.hpp"
 
+#include "equation-solving/equation_solver.hpp"
+#include "linear-programming/linear_programming.hpp"
 
 namespace Ariadne {
 
 inline Natural compute_time_steps(HybridTime time, HybridTime lock_to_grid_time) {
-    return ReasoningDetail::whole_time_steps(time.continuous_time(),lock_to_grid_time.continuous_time());
+    return ReasoningDetail::whole_time_steps(time.continuous_time(), lock_to_grid_time.continuous_time());
 }
 
 } // namespace Ariadne
@@ -85,38 +73,30 @@ namespace Ariadne {
 template class ReachabilityAnalyser<HybridAutomatonInterface>;
 
 HybridReachabilityAnalyser::
-HybridReachabilityAnalyser(const HybridEvolverInterface& evolver)
-    : ReachabilityAnalyser<HybridAutomatonInterface>(evolver)
-{
+    HybridReachabilityAnalyser(const HybridEvolverInterface& evolver)
+    : ReachabilityAnalyser<HybridAutomatonInterface>(evolver) {
 }
 
-
 HybridReachabilityAnalyser*
-HybridReachabilityAnalyser::
-clone() const
-{
+    HybridReachabilityAnalyser::
+        clone() const {
     return new HybridReachabilityAnalyser(*this);
 }
 
-
-
 HybridReachabilityAnalyserConfiguration::ReachabilityAnalyserConfiguration(ReachabilityAnalyser<HybridAutomatonInterface>& analyser)
-    : _analyser(analyser)
-{
+    : _analyser(analyser) {
     set_transient_time(0.0);
     set_transient_steps(0);
     set_lock_to_grid_time(1.0);
     set_lock_to_grid_steps(1);
     set_maximum_grid_fineness(3);
     set_maximum_grid_extent(16);
-    set_grid(std::shared_ptr<HybridGrid>(new HybridGrid(_analyser.system().state_space(),SimpleHybridScalings())));
+    set_grid(std::shared_ptr<HybridGrid>(new HybridGrid(_analyser.system().state_space(), SimpleHybridScalings())));
     set_outer_overspill_policy(ChainOverspillPolicy::ERROR);
 }
 
-
 OutputStream&
-HybridReachabilityAnalyserConfiguration::_write(OutputStream& os) const
-{
+    HybridReachabilityAnalyserConfiguration::_write(OutputStream& os) const {
     os << "HybridReachabilityAnalyserSettings"
        << "(\n  transient_time=" << transient_time()
        << ",\n  transient_steps=" << transient_steps()
@@ -131,28 +111,20 @@ HybridReachabilityAnalyserConfiguration::_write(OutputStream& os) const
     return os;
 }
 
-
-Void
-HybridReachabilityAnalyserConfiguration::set_bounding_domain(const HybridExactBoxes& bounding_domain)
-{
+Void HybridReachabilityAnalyserConfiguration::set_bounding_domain(const HybridExactBoxes& bounding_domain) {
     set_bounding_domain_ptr(std::make_shared<HybridExactBoxes>(bounding_domain));
 }
 
-Void
-HybridReachabilityAnalyserConfiguration::set_bounding_domain_ptr(const std::shared_ptr<HybridExactBoxes> value)
-{
- //   ARIADNE_ASSERT_MSG(possibly(value_ptr->space() == _analyser.system().state_space()),
- //           "The bounding domain to set has a different hybrid space than the system.");
+Void HybridReachabilityAnalyserConfiguration::set_bounding_domain_ptr(const std::shared_ptr<HybridExactBoxes> value) {
+    //   ARIADNE_ASSERT_MSG(possibly(value_ptr->space() == _analyser.system().state_space()),
+    //           "The bounding domain to set has a different hybrid space than the system.");
 
     _bounding_domain_ptr = value;
 }
 
-
-Void
-HybridReachabilityAnalyserConfiguration::set_grid(const std::shared_ptr<HybridGrid> value_ptr)
-{
+Void HybridReachabilityAnalyserConfiguration::set_grid(const std::shared_ptr<HybridGrid> value_ptr) {
     ARIADNE_ASSERT_MSG(possibly(value_ptr->space() == _analyser.system().state_space()),
-            "The grid to set has a different hybrid space than the system.");
+                       "The grid to set has a different hybrid space than the system.");
 
     _grid_ptr = value_ptr;
 }

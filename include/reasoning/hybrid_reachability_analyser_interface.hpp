@@ -29,13 +29,11 @@
 #ifndef ARIADNE_HYBRID_REACHABILITY_ANALYSER_INTERFACE_HPP
 #define ARIADNE_HYBRID_REACHABILITY_ANALYSER_INTERFACE_HPP
 
-
-#include "system/hybrid_automaton_interface.hpp"
-#include "hybrid/hybrid_set_interface.hpp"
 #include "evolution/evolver_interface.hpp"
-#include "reasoning/reachability_analyser_interface.hpp"
-
+#include "hybrid/hybrid_set_interface.hpp"
 #include "logging/logging.hpp"
+#include "reasoning/reachability_analyser_interface.hpp"
+#include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
 
@@ -46,8 +44,7 @@ class HybridPaving;
 //! \ingroup HybridDynamicsSubModule
 //! \brief A class for performing reachability analysis on a hybrid system.
 class HybridReachabilityAnalyserInterface
-    : public virtual ReachabilityAnalyserInterface<HybridAutomatonInterface>
-{
+    : public virtual ReachabilityAnalyserInterface<HybridAutomatonInterface> {
   public:
     typedef HybridAutomatonInterface SystemType;
     typedef SystemType::StateSpaceType StateSpaceType;
@@ -67,25 +64,19 @@ class HybridReachabilityAnalyserInterface
     /*! \brief Make a dynamically-allocated copy. */
     virtual HybridReachabilityAnalyserInterface* clone() const = 0;
     //!@}
-
 };
-
 
 //! \relates HybridReachabilityAnalyserInterface
 //! \brief Factory for hybrid reachability analyser interface classes.
 class HybridReachabilityAnalyserFactoryInterface
-    : public ReachabilityAnalyserFactoryInterface<HybridAutomatonInterface>
-{
+    : public ReachabilityAnalyserFactoryInterface<HybridAutomatonInterface> {
   public:
-
     //! \brief Create a copy of the factory.
     virtual HybridReachabilityAnalyserFactoryInterface* clone() const = 0;
     //! \brief Create a hybrid reachability analyser interface object around a \a system.
     virtual HybridReachabilityAnalyserInterface* create(const HybridAutomatonInterface& system) const = 0;
 };
 
-
 } // namespace Ariadne
-
 
 #endif // ARIADNE_HYBRID_REACHABILITY_ANALYSER_INTERFACE_HPP

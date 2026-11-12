@@ -29,16 +29,16 @@
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_HPP
 
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "evolution/hybrid_orbit.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
 
 namespace Ariadne {
 
 /** @brief Store initial, reachable, intermediate and final hybrid paving sets. */
 template<>
-class Orbit<HybridAugmentedPaving>
-{
+class Orbit<HybridAugmentedPaving> {
     struct Data;
+
   public:
     typedef HybridAugmentedPaving EnclosureListType;
 
@@ -49,13 +49,14 @@ class Orbit<HybridAugmentedPaving>
           const HybridAugmentedPaving& intermediate_set, const HybridAugmentedPaving& final_set);
 
     /** @brief Return the initial hybrid paving. */
-    HybridAugmentedPaving const& initial() const;
+    const HybridAugmentedPaving& initial() const;
     /** @brief Return the reach hybrid paving. */
-    HybridAugmentedPaving const& reach() const;
+    const HybridAugmentedPaving& reach() const;
     /** @brief Return the intermediate hybrid paving. */
-    HybridAugmentedPaving const& intermediate() const;
+    const HybridAugmentedPaving& intermediate() const;
     /** @brief Return the final hybrid paving. */
-    HybridAugmentedPaving const& final() const;
+    const HybridAugmentedPaving& final() const;
+
   private:
     SharedPointer<Data> _data;
 };

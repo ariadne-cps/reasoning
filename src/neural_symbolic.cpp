@@ -27,12 +27,13 @@
  */
 
 #include "reasoning/neural_symbolic.hpp"
-#include "numeric/builtin.hpp"
-#include "numeric/real.hpp"
 
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "numeric/builtin.hpp"
+#include "numeric/real.hpp"
 
 namespace Ariadne {
 namespace {
@@ -45,40 +46,44 @@ RealExpression exact_real(double x) {
 
 RealExpression activate(RealExpression value, NeuralActivation activation) {
     switch (activation) {
-        case NeuralActivation::Relu: return max(value, RealExpression(0));
-        case NeuralActivation::Tanh: return tanh(value);
-        case NeuralActivation::Sigmoid: return sigmoid(value);
-        case NeuralActivation::Softplus: return softplus(value);
+        case NeuralActivation::Relu:
+            return max(value, RealExpression(0));
+        case NeuralActivation::Tanh:
+            return tanh(value);
+        case NeuralActivation::Sigmoid:
+            return sigmoid(value);
+        case NeuralActivation::Softplus:
+            return softplus(value);
         // NeuralNetwork validates activations at construction and exposes
         // immutable layouts, so Identity is the only remaining activation.
-        default: return value;
+        default:
+            return value;
     }
 }
 
 } // namespace
 
 std::vector<Expression<Real>> make_expression(
-    NeuralParameterSnapshot const& snapshot,
-    Space<Real> const& space) {
-    auto const& network=snapshot.network();
-    if (space.size()!=network.input_dimension())
+    const NeuralParameterSnapshot& snapshot,
+    const Space<Real>& space) {
+    const auto& network = snapshot.network();
+    if (space.size() != network.input_dimension())
         throw std::invalid_argument("Wrong dimension of neural input space");
 
     std::vector<RealExpression> state;
     state.reserve(space.size());
-    for (SizeType i=0; i<space.size(); ++i)
+    for (SizeType i = 0; i < space.size(); ++i)
         state.emplace_back(space.variable(i));
 
-    auto const& weights=snapshot.values();
-    for (auto const& layer : network.layers()) {
+    const auto& weights = snapshot.values();
+    for (const auto& layer: network.layers()) {
         std::vector<RealExpression> output;
         output.reserve(layer.outputs);
-        for (std::size_t o=0;o<layer.outputs;++o) {
-            auto sum=exact_real(weights[layer.biases_offset+o]);
-            for (std::size_t i=0;i<layer.inputs;++i)
-                sum+=exact_real(weights[layer.weights_offset+o*layer.inputs+i])
-                    * state[i];
-            output.push_back(activate(std::move(sum),layer.activation));
+        for (std::size_t o = 0; o < layer.outputs; ++o) {
+            auto sum = exact_real(weights[layer.biases_offset + o]);
+            for (std::size_t i = 0; i < layer.inputs; ++i)
+                sum += exact_real(weights[layer.weights_offset + o * layer.inputs + i]) * state[i];
+            output.push_back(activate(std::move(sum), layer.activation));
         }
         state.swap(output);
     }

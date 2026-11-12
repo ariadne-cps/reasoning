@@ -40,7 +40,7 @@ namespace ReasoningDetail {
 int require_caller_rounding_mode(int mode);
 /** @brief Execute independent reachability lanes using the supplied thread manager. */
 void run_reachability_lanes(std::size_t count,
-    std::function<void(std::size_t)> const& process,ThreadManager& threading);
-}
-}
+                            const std::function<void(std::size_t)>& process, ThreadManager& threading);
+} // namespace ReasoningDetail
+} // namespace Ariadne
 #endif

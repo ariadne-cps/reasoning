@@ -29,28 +29,25 @@
 #ifndef ARIADNE_HYBRID_REACHABILITY_ANALYSER_HPP
 #define ARIADNE_HYBRID_REACHABILITY_ANALYSER_HPP
 
-
-#include "system/hybrid_automaton_interface.hpp"
 #include "evolution/configuration_interface.hpp"
-#include "reasoning/reachability_analyser.hpp"
-#include "hybrid/hybrid_set.decl.hpp"
-#include "hybrid/hybrid_set_interface.hpp"
 #include "evolution/hybrid_evolver_interface.hpp"
-#include "reasoning/hybrid_reachability_analyser_interface.hpp"
-
 #include "evolution/hybrid_orbit.hpp"
-#include "hybrid/hybrid_grid.hpp"
-#include "hybrid/hybrid_set.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
-#include "reasoning/hybrid_augmented_paving_orbit.hpp"
-
+#include "hybrid/hybrid_grid.hpp"
+#include "hybrid/hybrid_paving.hpp"
+#include "hybrid/hybrid_set.decl.hpp"
+#include "hybrid/hybrid_set.hpp"
+#include "hybrid/hybrid_set_interface.hpp"
 #include "logging/logging.hpp"
-
+#include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_reachability_analyser_interface.hpp"
+#include "reasoning/reachability_analyser.hpp"
+#include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
 
-template<class ES> class Orbit;
+template<class ES>
+class Orbit;
 
 class DiscreteLocation;
 class HybridAutomatonInterface;
@@ -60,13 +57,15 @@ class HybridGridCell;
 class HybridPaving;
 class HybridAugmentedPaving;
 
-template<class ES> class HybridListSet;
+template<class ES>
+class HybridListSet;
 
 class HybridEvolverInterface;
 
 class HybridAutomaton;
 
-template<> struct SafetyCertificate<HybridSpace> {
+template<>
+struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
     HybridAugmentedPaving chain_reach_set;
     HybridAugmentedPaving safe_set;
@@ -75,16 +74,17 @@ template<> struct SafetyCertificate<HybridSpace> {
 using HybridSafetyCertificate = SafetyCertificate<HybridSpace>;
 using HybridReachabilityAnalyserConfiguration = ReachabilityAnalyserConfiguration<HybridAutomatonInterface>;
 
-template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface>;
+template<>
+class ReachabilityAnalyserConfiguration<HybridAutomatonInterface>;
 
 //! \ingroup AnalysisModule
 //! \ingroup HybridDynamicsSubModule
 //! \brief A class for performing reachability analysis on a hybrid system.
 class HybridReachabilityAnalyser
-    : public ReachabilityAnalyser<HybridAutomatonInterface>
-{
+    : public ReachabilityAnalyser<HybridAutomatonInterface> {
   public:
     typedef HybridReachabilityAnalyserConfiguration ConfigurationType;
+
   public:
     //!@{
     //! \name Constructors and destructors
@@ -95,14 +95,12 @@ class HybridReachabilityAnalyser
     //! \brief Make a dynamically-allocated copy.
     virtual HybridReachabilityAnalyser* clone() const;
     //!@}
-
 };
-
 
 //! \brief Configuration for a HybridReachabilityAnalyser, essentially for controlling the
 //!    accuracy of discretised evolution methods and reachability analysis.
-template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public ConfigurationInterface {
-
+template<>
+class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public ConfigurationInterface {
   public:
     //! \brief The unsigned integer type.
     typedef Nat UnsignedIntType;
@@ -118,7 +116,6 @@ template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : p
     virtual ~ReachabilityAnalyserConfiguration() = default;
 
   private:
-
     //! \brief Reference back to the main class, for consistency checking.
     ReachabilityAnalyser<HybridAutomatonInterface>& _analyser;
 
@@ -218,10 +215,10 @@ template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : p
     ChainOverspillPolicy _outer_overspill_policy;
 
   public:
-    //FIXME: Be consistent in use of time and steps
+    // FIXME: Be consistent in use of time and steps
 
-    const TimeType transient_time() const { return HybridTime(Dyadic(_transient_time),_transient_steps); }
-    const TimeType lock_to_grid_time() const { return HybridTime(Dyadic(_lock_to_grid_time),_lock_to_grid_steps); }
+    const TimeType transient_time() const { return HybridTime(Dyadic(_transient_time), _transient_steps); }
+    const TimeType lock_to_grid_time() const { return HybridTime(Dyadic(_lock_to_grid_time), _lock_to_grid_steps); }
 
     //    const RealType& transient_time() const { return _transient_time; }
     Void set_transient_time(const Double value) { _transient_time = RealType(value); }
@@ -229,7 +226,7 @@ template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : p
     const UnsignedIntType& transient_steps() const { return _transient_steps; }
     Void set_transient_steps(const UnsignedIntType value) { _transient_steps = value; }
 
-//    const RealType& lock_to_grid_time() const { return _lock_to_grid_time; }
+    //    const RealType& lock_to_grid_time() const { return _lock_to_grid_time; }
     Void set_lock_to_grid_time(const Double value) { _lock_to_grid_time = RealType(value); }
 
     const UnsignedIntType& lock_to_grid_steps() const { return _lock_to_grid_steps; }
@@ -257,18 +254,16 @@ template<> class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : p
     Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
 
     Void set_scaling(const RealVariable& v, ApproximateDouble s) {
-        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(this->grid().scalings())) .set_scaling(v,s); }
+        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(this->grid().scalings())).set_scaling(v, s);
+    }
 
     const ChainOverspillPolicy& outer_overspill_policy() const { return _outer_overspill_policy; }
     Void set_outer_overspill_policy(const ChainOverspillPolicy value) { _outer_overspill_policy = value; }
 
   public:
-
     virtual OutputStream& _write(OutputStream& os) const;
 };
 
-
 } // namespace Ariadne
-
 
 #endif // ARIADNE_HYBRID_REACHABILITY_ANALYSER_HPP
