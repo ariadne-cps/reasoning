@@ -1,3 +1,31 @@
+/***************************************************************************
+ *            parallel_reachability.cpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne Reasoning.
+ *
+ *  Ariadne Reasoning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne Reasoning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/** @file src/parallel_reachability.cpp
+ *  @brief Run independent reachability lanes while preserving rounding modes.
+ */
+
 #include "reasoning/parallel_reachability.hpp"
 #include "threading/task_group.hpp"
 #include "threading/thread_manager.hpp"

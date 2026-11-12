@@ -1,5 +1,5 @@
 /***************************************************************************
- *            src/neural_symbolic.cpp
+ *            neural_symbolic.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -20,6 +20,10 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/** @file src/neural_symbolic.cpp
+ *  @brief Implement symbolic expansion of frozen neural networks.
  */
 
 #include "reasoning/neural_symbolic.hpp"

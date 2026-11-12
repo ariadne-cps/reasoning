@@ -1,3 +1,31 @@
+/***************************************************************************
+ *            benchmark_infinite_time_reachability.cpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne Reasoning.
+ *
+ *  Ariadne Reasoning is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne Reasoning is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/** @file benchmarks/benchmark_infinite_time_reachability.cpp
+ *  @brief Benchmark infinite-time lower and outer-chain reachability computations.
+ */
+
 // Whole-analysis infinite-time lower and outer-chain reachability benchmark.
 // Workload matches tests/test_infinite_time_reachability.cpp.
 // The analyser selects the backend for every intermediate Paving.
