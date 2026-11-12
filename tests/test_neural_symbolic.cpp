@@ -1,5 +1,5 @@
 /***************************************************************************
- *            tests/test_neural_symbolic.cpp
+ *            test_neural_symbolic.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -20,6 +20,10 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/** @file tests/test_neural_symbolic.cpp
+ *  @brief Test neural symbolic semantics and regressions.
  */
 
 #include "ariadne-reasoning.hpp"
