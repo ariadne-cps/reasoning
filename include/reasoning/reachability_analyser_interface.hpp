@@ -1,29 +1,29 @@
 /***************************************************************************
- *            dynamics/reachability_analyser_interface.hpp
+ *            reasoning/reachability_analyser_interface.hpp
  *
  *  Copyright  2006-20  Pieter Collins
  *
  ****************************************************************************/
 
 /*
- *  This file is part of Ariadne.
+ *  This file is part of Ariadne Reasoning.
  *
- *  Ariadne is free software: you can redistribute it and/or modify
+ *  Ariadne Reasoning is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Ariadne is distributed in the hope that it will be useful,
+ *  Ariadne Reasoning is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
+ *  along with Ariadne Reasoning.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file dynamics/reachability_analyser_interface.hpp
- *  \brief Interface for performing reachability analysis.
+/** @file reasoning/reachability_analyser_interface.hpp
+ *  @brief Interface for reachability analysers and their factories.
  */
 
 #ifndef ARIADNE_REACHABILITY_ANALYSER_INTERFACE_HPP

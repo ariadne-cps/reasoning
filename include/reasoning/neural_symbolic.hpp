@@ -1,5 +1,5 @@
 /***************************************************************************
- *            include/reasoning/neural_symbolic.hpp
+ *            reasoning/neural_symbolic.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -23,7 +23,7 @@
  */
 
 /** @file reasoning/neural_symbolic.hpp
- *  @brief Expansion of frozen dense networks into Ariadne real expressions.
+ *  @brief Expand frozen neural networks into real symbolic expressions.
  */
 #ifndef ARIADNE_REASONING_NEURAL_SYMBOLIC_HPP
 #define ARIADNE_REASONING_NEURAL_SYMBOLIC_HPP
