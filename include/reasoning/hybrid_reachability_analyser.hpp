@@ -38,6 +38,10 @@
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
+#include "paving/paver.hpp"
+#include <optional>
+#include <stdexcept>
+#include <utility>
 #include "logging/logging.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
@@ -209,6 +213,9 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     //! \details Provided as a pointer in order to avoid double construction. It must always be defined.
     SharedPointer<HybridGrid> _grid_ptr;
 
+    //! \brief Explicit paver used to approximate evolved hybrid enclosures.
+    std::optional<Paver> _paver;
+
     //! \brief The policy for overspill in outer chain reach computation.
     //! \details A OVERSPILL_IGNORE simply bypasses checks, OVERSPILL_WARNING issues a warning and OVERSPILL_ERROR
     //! issues a OuterChainOverspill exception.
@@ -250,6 +257,13 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
 
     const HybridGrid& grid() const { return *_grid_ptr; }
     HybridGrid& grid() { return *_grid_ptr; }
+
+    //! \brief Require the caller to select a paver before analysis.
+    const Paver& paver() const {
+        if (!_paver) throw std::logic_error("HybridReachabilityAnalyserConfiguration: set_paver() is required");
+        return *_paver;
+    }
+    Void set_paver(Paver paver) { _paver = std::move(paver); }
     //! \brief Check the consistency in respect to the system space, then set the grid.
     Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
 

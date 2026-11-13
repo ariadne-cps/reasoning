@@ -327,7 +327,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         enclosure.set_auxiliary_mapping(system.auxiliary_mapping());
 
         AugmentedPaving storage(grid, system.auxiliary_mapping());
-        adjoin_outer_approximation_to(enclosure, storage, 2u);
+        adjoin_outer_approximation_to(enclosure, storage, 2u, Paver(new AffinePaver()));
         ARIADNE_TESTING_PROVE(storage.size() > 0u);
 
         // Same-sized but distinct auxiliary mapping: the consistency check
@@ -335,10 +335,10 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         VectorField twin_system(List<DottedRealAssignment>{dot(x) = -x, dot(y) = -y},
                                 List<RealAssignment>{let(a) = x + y});
         AugmentedPaving twin_storage(grid, twin_system.auxiliary_mapping());
-        adjoin_outer_approximation_to(enclosure, twin_storage, 2u);
+        adjoin_outer_approximation_to(enclosure, twin_storage, 2u, Paver(new AffinePaver()));
         ARIADNE_TESTING_PROVE(twin_storage.size() > 0u);
 
-        AugmentedPaving approximation = outer_approximation(enclosure, grid, 2u);
+        AugmentedPaving approximation = outer_approximation(enclosure, grid, 2u, Paver(new AffinePaver()));
         ARIADNE_TESTING_PROVE(approximation.size() > 0u);
         ARIADNE_TESTING_PROVE(subset(storage, approximation) || intersect(storage, approximation));
     }

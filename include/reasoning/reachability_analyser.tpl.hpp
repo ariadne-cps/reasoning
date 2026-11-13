@@ -106,12 +106,12 @@ auto ReachabilityAnalyser<SYS>::
         auto orbit = evolver.orbit(initial_enclosure, time, semantics);
 
         for (auto enclosure: orbit.reach())
-            adjoin_outer_approximation_to(enclosure, reach_cells, accuracy);
+            adjoin_outer_approximation_to(enclosure, reach_cells, accuracy, this->_configuration->paver());
         LOGGING_PRINTLN_AT(1, "final reach size = " << reach_cells.size());
 
         for (auto enclosure: orbit.final()) {
             LOGGING_PRINTLN_AT(2, "enclosure = " << enclosure);
-            adjoin_outer_approximation_to(enclosure, evolve_cells, accuracy);
+            adjoin_outer_approximation_to(enclosure, evolve_cells, accuracy, this->_configuration->paver());
             EnclosureType new_enclosure = enclosure;
             new_enclosure.clear_time();
             evolve_enclosures.adjoin(new_enclosure);
@@ -138,7 +138,7 @@ auto ReachabilityAnalyser<SYS>::
         EnclosureType initial_enclosure = evolver.enclosure(cell.box());
         ListSet<EnclosureType> reach = evolver.orbit(initial_enclosure, time, Semantics::UPPER).reach();
         for (auto enclosure: reach) {
-            adjoin_outer_approximation_to(enclosure, result, accuracy);
+            adjoin_outer_approximation_to(enclosure, result, accuracy, this->_configuration->paver());
         }
     }
     return result;
@@ -161,7 +161,7 @@ auto ReachabilityAnalyser<SYS>::
         EnclosureType initial_enclosure = evolver.enclosure(cell.box());
         ListSet<EnclosureType> final = evolver.orbit(initial_enclosure, time, Semantics::UPPER).final();
         for (auto enclosure: final)
-            adjoin_outer_approximation_to(enclosure, result, accuracy);
+            adjoin_outer_approximation_to(enclosure, result, accuracy, this->_configuration->paver());
     }
     LOGGING_PRINTLN("_upper_evolve result size = " << result.size());
     return result;
@@ -191,9 +191,9 @@ Void ReachabilityAnalyser<SYS>::
     auto adjoin_incrementally = [&](const auto& enclosure, StorageType& target) {
         if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             std::lock_guard<std::mutex> lock(hybrid_adjoin_mutex);
-            adjoin_outer_approximation_to(enclosure, target, accuracy);
+            adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
         } else {
-            adjoin_outer_approximation_to(enclosure, target, accuracy);
+            adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
         }
     };
 
@@ -288,7 +288,7 @@ auto ReachabilityAnalyser<SYS>::
         EnclosureType initial_enclosure = _evolver->enclosure(cell.box());
         ListSet<EnclosureType> final_enclosures = _evolver->orbit(initial_enclosure, time, Semantics::LOWER).final();
         for (auto enclosure: final_enclosures) {
-            adjoin_outer_approximation_to(enclosure, final_cells, grid_fineness);
+            adjoin_outer_approximation_to(enclosure, final_cells, grid_fineness, this->_configuration->paver());
         }
     }
     return final_cells;
@@ -316,7 +316,7 @@ auto ReachabilityAnalyser<SYS>::
         EnclosureType initial_enclosure = _evolver->enclosure(cell.box());
         ListSet<EnclosureType> reach_enclosures = _evolver->orbit(initial_enclosure, time, Semantics::LOWER).reach();
         for (auto enclosure: reach_enclosures)
-            adjoin_outer_approximation_to(enclosure, reach_cells, grid_fineness);
+            adjoin_outer_approximation_to(enclosure, reach_cells, grid_fineness, this->_configuration->paver());
     }
     return reach_cells;
 }
@@ -347,9 +347,9 @@ auto ReachabilityAnalyser<SYS>::
         EnclosureType initial_enclosure = _evolver->enclosure(cell.box());
         auto orbit = _evolver->orbit(initial_enclosure, time, Semantics::LOWER);
         for (auto enclosure: orbit.reach())
-            adjoin_outer_approximation_to(enclosure, reach, grid_fineness);
+            adjoin_outer_approximation_to(enclosure, reach, grid_fineness, this->_configuration->paver());
         for (auto enclosure: orbit.final())
-            adjoin_outer_approximation_to(enclosure, evolve_cells, grid_fineness);
+            adjoin_outer_approximation_to(enclosure, evolve_cells, grid_fineness, this->_configuration->paver());
     }
     return make_pair(reach, evolve_cells);
 }

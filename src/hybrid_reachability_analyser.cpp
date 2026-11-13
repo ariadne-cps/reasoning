@@ -106,6 +106,7 @@ OutputStream&
        << ",\n  maximum_grid_extent=" << maximum_grid_extent()
        << ",\n  bounding_domain=" << (bounding_domain_ptr() ? "available" : "none")
        << ",\n  grid=" << grid()
+       << ",\n  paver=" << (_paver ? "configured" : "not configured")
        << ",\n  outer_overspill_policy=" << outer_overspill_policy()
        << "\n)\n";
     return os;
