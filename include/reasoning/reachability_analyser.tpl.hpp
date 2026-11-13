@@ -511,7 +511,6 @@ auto ReachabilityAnalyser<SYS>::
         LOGGING_PRINTLN_AT(1, "found " << found_cells.size() << " cells, with " << evolve_cells.size() << " new intermediate.");
         if (evolve_cells.is_empty())
             break;
-        LOGGING_PRINTLN_AT(1, "evolve_cells=" << evolve_cells);
     }
     LOGGING_PRINTLN("remainder_time=" << remainder_time);
     if (!evolve_cells.is_empty() && possibly(remainder_time > 0)) {
