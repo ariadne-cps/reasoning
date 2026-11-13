@@ -27,6 +27,9 @@
  */
 
 #include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string_view>
 #include <type_traits>
 
 #include "threading/thread_manager.hpp"
@@ -157,7 +160,17 @@ int main(int argc, char** argv) {
     Logger::instance().redirect_to_file("test_analyser_logging.log");
     Logger::instance().configuration().set_verbosity(6u);
     ARIADNE_TESTING_SUITE("test_analyser_logging");
-    ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_continuous_and_discrete_diagnostics);
-    ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_hybrid_diagnostics);
+    // Temporary ThreadSanitizer diagnostic: isolate the fixture cases in
+    // separate processes without changing normal CTest coverage.
+    const char* selected_case = std::getenv("ARIADNE_LOGGING_TEST_CASE");
+    const std::string_view selection = selected_case != nullptr ? selected_case : "";
+    if (selection != "" && selection != "continuous" && selection != "hybrid") {
+        std::cerr << "Unknown ARIADNE_LOGGING_TEST_CASE: " << selection << '\n';
+        return 2;
+    }
+    if (selection.empty() || selection == "continuous")
+        ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_continuous_and_discrete_diagnostics);
+    if (selection.empty() || selection == "hybrid")
+        ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_hybrid_diagnostics);
     return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
