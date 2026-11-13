@@ -29,6 +29,9 @@
 #ifndef ARIADNE_HYBRID_REACHABILITY_ANALYSER_HPP
 #define ARIADNE_HYBRID_REACHABILITY_ANALYSER_HPP
 
+#include <stdexcept>
+#include <utility>
+
 #include "evolution/configuration_interface.hpp"
 #include "evolution/hybrid_evolver_interface.hpp"
 #include "evolution/hybrid_orbit.hpp"
@@ -38,10 +41,8 @@
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
-#include "paving/paver.hpp"
-#include <stdexcept>
-#include <utility>
 #include "logging/logging.hpp"
+#include "paving/paver.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
 #include "reasoning/reachability_analyser.hpp"
