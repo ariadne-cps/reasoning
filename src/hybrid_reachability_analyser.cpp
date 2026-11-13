@@ -84,7 +84,7 @@ HybridReachabilityAnalyser*
 }
 
 HybridReachabilityAnalyserConfiguration::ReachabilityAnalyserConfiguration(ReachabilityAnalyser<HybridAutomatonInterface>& analyser)
-    : _analyser(analyser), _paver(new ReducePaver()) {
+    : _analyser(analyser), _paver(new ConstraintPaver()) {
     set_transient_time(0.0);
     set_transient_steps(0);
     set_lock_to_grid_time(1.0);
