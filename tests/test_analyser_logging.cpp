@@ -27,8 +27,6 @@
  */
 
 #include <algorithm>
-#include <cstdlib>
-#include <iostream>
 #include <string_view>
 #include <type_traits>
 
@@ -162,11 +160,15 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_analyser_logging");
     // CTest executes the continuous/discrete and hybrid fixture cases in
     // separate processes, retaining their full assertions and TSAN coverage.
-    const char* selected_case = std::getenv("ARIADNE_LOGGING_TEST_CASE");
-    const std::string_view selection = selected_case != nullptr ? selected_case : "";
-    if (selection != "" && selection != "continuous" && selection != "hybrid") {
-        std::cerr << "Unknown ARIADNE_LOGGING_TEST_CASE: " << selection << '\n';
-        return 2;
+    // CTest passes the case selector as the last argument. Remove it before
+    // invoking the common test runner, which accepts --concise/--full only.
+    std::string_view selection;
+    if (argc > 1) {
+        const std::string_view last_argument(argv[argc - 1]);
+        if (last_argument == "--continuous" || last_argument == "--hybrid") {
+            selection = last_argument.substr(2);
+            --argc;
+        }
     }
     if (selection.empty() || selection == "continuous")
         ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_continuous_and_discrete_diagnostics);
