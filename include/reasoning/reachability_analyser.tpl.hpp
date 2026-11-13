@@ -514,6 +514,7 @@ auto ReachabilityAnalyser<SYS>::
         accumulated_evolve_cells.adjoin(found_cells);
         LOGGING_PRINTLN_AT(1, "computing " << i + 1u << "-th reachability step...");
         this->_adjoin_upper_reach_evolve(found_cells, evolve_cells, evolve_cells, lock_to_grid_time, grid_fineness, *_evolver);
+        LOGGING_PRINTLN_AT(1, "evolve bounding box = " << evolve_cells.state_paving().bounding_box());
         LOGGING_PRINTLN_AT(1, "found.size()=" << found_cells.size());
         LOGGING_PRINTLN_AT(1, "evolve.size()=" << evolve_cells.size());
         evolve_cells.remove(accumulated_evolve_cells);
