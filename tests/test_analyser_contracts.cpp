@@ -27,6 +27,7 @@
  */
 
 #include <memory>
+#include <sstream>
 #include <type_traits>
 
 #include "paving/robdd_paving.hpp"
@@ -63,6 +64,40 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(subset(initial_cells, certificate.safe_set));
         ARIADNE_TESTING_PROVE(is_indeterminate(certificate.is_safe));
         ARIADNE_TESTING_PROVE(not subset(certificate.chain_reach_set, certificate.safe_set));
+    }
+
+    Void test_default_subdivision_paver() {
+        auto check = [&](auto& analyser) {
+            std::ostringstream current;
+            current << analyser.configuration().paver();
+            ARIADNE_TESTING_PROVE(
+                current.str().find("SubdivisionPaver") != std::string::npos);
+            // Explicit selection must still override the new default.
+            analyser.configuration().set_paver(Paver(new ConstraintPaver()));
+            std::ostringstream overridden;
+            overridden << analyser.configuration().paver();
+            ARIADNE_TESTING_PROVE(
+                overridden.str().find("ConstraintPaver") != std::string::npos);
+        };
+
+        RealVariable x("x");
+        VectorField flow(List<DottedRealAssignment>{dot(x) = -x});
+        GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-3_pr));
+        VectorFieldEvolver flow_evolver(flow, integrator);
+        ContractAnalyser<VectorField> continuous(flow_evolver);
+        check(continuous);
+
+        IteratedMap map(List<PrimedRealAssignment>{next(x) = x / 2});
+        IteratedMapEvolver map_evolver(map);
+        ContractAnalyser<IteratedMap> discrete(map_evolver);
+        check(discrete);
+
+        DiscreteLocation q;
+        HybridAutomaton system;
+        system.new_mode(q, {dot(x) = -x});
+        GeneralHybridEvolver hybrid_evolver(system);
+        ContractAnalyser<HybridAutomatonInterface> hybrid(hybrid_evolver);
+        check(hybrid);
     }
 
     Void test_safety_becomes_unknown_after_initial_containment() {
@@ -253,6 +288,7 @@ class TestAnalyserContracts : public Testing::ContextFixture {
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_analyser_contracts");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_whole_steps_never_round_past_target);
+    ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_default_subdivision_paver);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_safety_becomes_unknown_after_initial_containment);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_continuous_and_discrete_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_hybrid_restriction);
