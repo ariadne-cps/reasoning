@@ -54,31 +54,11 @@ jobs:
         run: cmake --build "${{ runner.workspace }}/build-tsan" --parallel 2 --target tests pyariadne
 
       - name: Test
-        id: tsan_tests
         env:
-          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+          TSAN_OPTIONS: halt_on_error=1
         # Python is uninstrumented and cannot load a TSAN-instrumented libariadne-reasoning.so.
         # pyariadne is still compiled above; regular CI runs its import tests.
         run: ctest --test-dir "${{ runner.workspace }}/build-tsan" -LE python --output-on-failure
-
-      # Temporary diagnostic for the lock-order inversion in test_analyser_logging.
-      # Keep the full test above failing if TSAN reports an error; these runs
-      # distinguish a real within-case inversion from cross-case address reuse.
-      - name: Diagnose continuous/discrete analyser logging separately
-        if: ${{ failure() && steps.tsan_tests.outcome == 'failure' }}
-        env:
-          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
-          ARIADNE_LOGGING_TEST_CASE: continuous
-        run: |
-          "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
-
-      - name: Diagnose hybrid analyser logging separately
-        if: ${{ failure() && steps.tsan_tests.outcome == 'failure' }}
-        env:
-          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
-          ARIADNE_LOGGING_TEST_CASE: hybrid
-        run: |
-          "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
 
   address-undefined-sanitizer:
     name: Ubuntu 24.04 x86 Clang 16 [AddressSanitizer + UBSan]

@@ -15,8 +15,21 @@ set(UNIT_TESTS
 foreach(TEST IN LISTS UNIT_TESTS)
     add_executable(${TEST} ${TEST}.cpp)
     target_link_libraries(${TEST} PRIVATE ariadne-reasoning reasoning ariadne-testing)
-    add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}> --concise)
-    set_property(TEST ${TEST} PROPERTY LABELS "reasoning")
+    if(TEST STREQUAL "test_analyser_logging")
+        # Run the continuous/discrete and hybrid cases in distinct processes.
+        # This avoids reusing workload-mutex addresses in one TSan lock graph.
+        add_test(NAME test_analyser_logging_continuous COMMAND $<TARGET_FILE:${TEST}> --concise)
+        set_tests_properties(test_analyser_logging_continuous PROPERTIES
+            ENVIRONMENT "ARIADNE_LOGGING_TEST_CASE=continuous"
+            LABELS "reasoning")
+        add_test(NAME test_analyser_logging_hybrid COMMAND $<TARGET_FILE:${TEST}> --concise)
+        set_tests_properties(test_analyser_logging_hybrid PROPERTIES
+            ENVIRONMENT "ARIADNE_LOGGING_TEST_CASE=hybrid"
+            LABELS "reasoning")
+    else()
+        add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}> --concise)
+        set_property(TEST ${TEST} PROPERTY LABELS "reasoning")
+    endif()
 endforeach()
 add_custom_target(tests)
 add_dependencies(tests ${UNIT_TESTS})

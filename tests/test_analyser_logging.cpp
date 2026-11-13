@@ -160,8 +160,8 @@ int main(int argc, char** argv) {
     Logger::instance().redirect_to_file("test_analyser_logging.log");
     Logger::instance().configuration().set_verbosity(6u);
     ARIADNE_TESTING_SUITE("test_analyser_logging");
-    // Temporary ThreadSanitizer diagnostic: isolate the fixture cases in
-    // separate processes without changing normal CTest coverage.
+    // CTest executes the continuous/discrete and hybrid fixture cases in
+    // separate processes, retaining their full assertions and TSAN coverage.
     const char* selected_case = std::getenv("ARIADNE_LOGGING_TEST_CASE");
     const std::string_view selection = selected_case != nullptr ? selected_case : "";
     if (selection != "" && selection != "continuous" && selection != "hybrid") {
