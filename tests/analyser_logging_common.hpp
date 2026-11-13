@@ -1,5 +1,5 @@
 /***************************************************************************
- *            test_analyser_logging.cpp
+ *            analyser_logging_common.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,12 +22,14 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file tests/test_analyser_logging.cpp
- *  @brief Test analyser logging semantics and regressions.
+/** @file tests/analyser_logging_common.hpp
+ *  @brief Shared analyser logging test helpers.
  */
 
+#ifndef ARIADNE_TEST_ANALYSER_LOGGING_COMMON_HPP
+#define ARIADNE_TEST_ANALYSER_LOGGING_COMMON_HPP
+
 #include <algorithm>
-#include <string_view>
 #include <type_traits>
 
 #include "threading/thread_manager.hpp"
@@ -48,7 +50,7 @@ struct LoggingAnalyser : ReachabilityAnalyser<SYS> {
     }
 };
 
-class TestAnalyserLogging : public Testing::ContextFixture {
+class TestAnalyserLoggingBase : public Testing::ContextFixture {
   public:
     using ContextFixture::ContextFixture;
 
@@ -123,56 +125,7 @@ class TestAnalyserLogging : public Testing::ContextFixture {
         }
     }
 
-    void test_continuous_and_discrete_diagnostics() {
-        RealVariable x("x");
-        BoundedConstraintSet initial(RealBox({
-            {0.25_dec, 0.5_dec}
-        }));
-        BoundedConstraintSet safe(RealBox({
-            {-4, 4}
-        }));
-        VectorField system(List<DottedRealAssignment>{dot(x) = -x});
-        GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-3_pr));
-        VectorFieldEvolver evolver(system, integrator);
-        LoggingAnalyser<VectorField> continuous(evolver);
-        check(continuous, initial, safe, Real(1 / 16_q));
-        IteratedMap map(List<PrimedRealAssignment>{next(x) = x / 2});
-        IteratedMapEvolver map_evolver(map);
-        LoggingAnalyser<IteratedMap> discrete(map_evolver);
-        check(discrete, initial, safe, Integer(1));
-    }
 
-    void test_hybrid_diagnostics() {
-        RealVariable x("x");
-        DiscreteLocation q;
-        HybridAutomaton system;
-        system.new_mode(q, {dot(x) = -x});
-        GeneralHybridEvolver evolver(system);
-        LoggingAnalyser<HybridAutomatonInterface> analyser(evolver);
-        check(analyser, HybridBoundedConstraintSet(q, {0.25_dec <= x <= 0.5_dec}),
-              HybridBoundedConstraintSet(q, {-4 <= x <= 4}), HybridTime(Real(1 / 16_q), Integer(1)));
-    }
 };
 
-int main(int argc, char** argv) {
-    Logger::instance().redirect_to_file("test_analyser_logging.log");
-    Logger::instance().configuration().set_verbosity(6u);
-    ARIADNE_TESTING_SUITE("test_analyser_logging");
-    // CTest executes the continuous/discrete and hybrid fixture cases in
-    // separate processes, retaining their full assertions and TSAN coverage.
-    // CTest passes the case selector as the last argument. Remove it before
-    // invoking the common test runner, which accepts --concise/--full only.
-    std::string_view selection;
-    if (argc > 1) {
-        const std::string_view last_argument(argv[argc - 1]);
-        if (last_argument == "--continuous" || last_argument == "--hybrid") {
-            selection = last_argument.substr(2);
-            --argc;
-        }
-    }
-    if (selection.empty() || selection == "continuous")
-        ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_continuous_and_discrete_diagnostics);
-    if (selection.empty() || selection == "hybrid")
-        ARIADNE_TESTING_ADD_TEST(TestAnalyserLogging, test_hybrid_diagnostics);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
-}
+#endif // ARIADNE_TEST_ANALYSER_LOGGING_COMMON_HPP
