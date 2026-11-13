@@ -69,14 +69,16 @@ jobs:
         env:
           TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
           ARIADNE_LOGGING_TEST_CASE: continuous
-        run: "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
+        run: |
+          "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
 
       - name: Diagnose hybrid analyser logging separately
         if: ${{ failure() && steps.tsan_tests.outcome == 'failure' }}
         env:
           TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
           ARIADNE_LOGGING_TEST_CASE: hybrid
-        run: "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
+        run: |
+          "${{ runner.workspace }}/build-tsan/tests/test_analyser_logging" --concise
 
   address-undefined-sanitizer:
     name: Ubuntu 24.04 x86 Clang 16 [AddressSanitizer + UBSan]
