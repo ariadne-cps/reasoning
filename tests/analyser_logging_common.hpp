@@ -124,8 +124,6 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
             ARIADNE_TESTING_PROVE(not evolved.is_empty());
         }
     }
-
-
 };
 
 #endif // ARIADNE_TEST_ANALYSER_LOGGING_COMMON_HPP
