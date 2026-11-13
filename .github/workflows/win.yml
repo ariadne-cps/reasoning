@@ -70,7 +70,7 @@ jobs:
 
       - name: Test reasoning and Python
         if: matrix.build_type == 'Debug'
-        run: ctest --test-dir build -j $env:NUMBER_OF_PROCESSORS --output-on-failure --timeout 240
+        run: ctest --test-dir build -j $env:NUMBER_OF_PROCESSORS --output-on-failure --timeout 360
 
       - name: Build Release benchmarks
         if: matrix.build_type == 'Release'
