@@ -84,7 +84,7 @@ HybridReachabilityAnalyser*
 }
 
 HybridReachabilityAnalyserConfiguration::ReachabilityAnalyserConfiguration(ReachabilityAnalyser<HybridAutomatonInterface>& analyser)
-    : _analyser(analyser) {
+    : _analyser(analyser), _paver(new AffinePaver()) {
     set_transient_time(0.0);
     set_transient_steps(0);
     set_lock_to_grid_time(1.0);
@@ -106,7 +106,7 @@ OutputStream&
        << ",\n  maximum_grid_extent=" << maximum_grid_extent()
        << ",\n  bounding_domain=" << (bounding_domain_ptr() ? "available" : "none")
        << ",\n  grid=" << grid()
-       << ",\n  paver=" << (_paver ? "configured" : "not configured")
+       << ",\n  paver=" << paver()
        << ",\n  outer_overspill_policy=" << outer_overspill_policy()
        << "\n)\n";
     return os;

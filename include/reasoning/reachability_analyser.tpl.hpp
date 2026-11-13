@@ -758,7 +758,7 @@ Void ReachabilityAnalyserConfiguration<SYS>::set_bounding_domain(const BoundingD
 
 template<class SYS>
 ReachabilityAnalyserConfiguration<SYS>::ReachabilityAnalyserConfiguration(ReachabilityAnalyser<SYS>& analyser)
-    : _analyser(analyser) {
+    : _analyser(analyser), _paver(new AffinePaver()) {
     set_transient_time(0);
     set_lock_to_grid_time(1);
     set_maximum_grid_fineness(3);
@@ -780,7 +780,8 @@ OutputStream&
         os << bounding_domain();
     else
         os << "none";
-    os << ",\n  grid=" << grid()
+    os << ",\n  paver=" << paver()
+       << ",\n  grid=" << grid()
        << "\n)\n";
     return os;
 }

@@ -30,7 +30,6 @@
 #define ARIADNE_REACHABILITY_ANALYSER_HPP
 
 #include <functional>
-#include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -311,8 +310,8 @@ class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
     //! \details Provided as a pointer in order to avoid double construction. It must always be defined.
     SharedPointer<GridType> _grid_ptr;
 
-    //! \brief Explicit paver used for enclosure-to-grid approximation.
-    std::optional<Paver> _paver;
+    //! \brief Algorithm used for enclosure-to-grid approximation.
+    Paver _paver;
 
     //! \brief The policy for overspill in outer chain reach computation.
     //! \details A OVERSPILL_IGNORE simply bypasses checks, OVERSPILL_WARNING issues a warning and OVERSPILL_ERROR
@@ -341,11 +340,8 @@ class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
     const GridType& grid() const { return *_grid_ptr; }
     Void set_grid(const GridType& grid);
 
-    //! \brief Require the caller to select a paver before analysis.
-    const Paver& paver() const {
-        if (!_paver) throw std::logic_error("ReachabilityAnalyserConfiguration: set_paver() is required");
-        return *_paver;
-    }
+    //! \brief Algorithm used for approximating evolved enclosures on the grid.
+    const Paver& paver() const { return _paver; }
     Void set_paver(Paver paver) { _paver = std::move(paver); }
 
     const ChainOverspillPolicy& outer_overspill_policy() const { return _outer_overspill_policy; }
