@@ -182,6 +182,8 @@ Void ReachabilityAnalyser<SYS>::
 
     LOGGING_PRINTLN("Evolving " << cells.size() << " cells");
     ProgressIndicator indicator(static_cast<double>(cells.size()));
+    LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
+                                << indicator.percentage() << "% of cells evolved.");
 
     // Each continuous destination owns a synchronised Paving. Hybrid
     // destinations additionally own a location map without a map-level lock:
@@ -197,6 +199,22 @@ Void ReachabilityAnalyser<SYS>::
         }
     };
 
+    // A single progress line belongs to the analyser scope, not to the
+    // individual worker scopes. Serialise updates and output together so
+    // every completed cell advances the global indicator.
+    std::mutex progress_mutex;
+    const std::string progress_scope = logscopemanager.scope();
+    auto report_cell_completed = [&] {
+        std::lock_guard<std::mutex> lock(progress_mutex);
+        indicator.update_current(indicator.current_value() + 1.0);
+        if (not Logger::instance().is_muted_at(0)) {
+            std::ostringstream message;
+            message << "[" << indicator.symbol() << "] "
+                    << indicator.percentage() << "% of cells evolved.";
+            Logger::instance().hold(progress_scope, message.str());
+        }
+    };
+
     auto process_cell = [&](const auto& cell, const EvolverType& local_evolver) {
         LOGGING_PRINTLN_AT(1, "evolving cell = " << cell);
         EnclosureType initial_enclosure = local_evolver.enclosure(cell.box());
@@ -208,6 +226,7 @@ Void ReachabilityAnalyser<SYS>::
             adjoin_incrementally(enclosure, reach_cells);
         for (auto enclosure: orbit.final())
             adjoin_incrementally(enclosure, evolve_cells);
+        report_cell_completed();
     };
 
     bool ran_parallel = false;
@@ -247,20 +266,12 @@ Void ReachabilityAnalyser<SYS>::
             };
 
             ReasoningDetail::run_reachability_lanes(lanes, process_lane, threads);
-            indicator.update_current(static_cast<double>(work.size()));
-            LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
-                                        << indicator.percentage() << "% of cells evolved.");
             ran_parallel = true;
         }
     }
     if (not ran_parallel) {
-        std::size_t processed = 0u;
-        for (const auto& cell: cells) {
+        for (const auto& cell: cells)
             process_cell(cell, evolver);
-            indicator.update_current(static_cast<double>(++processed));
-            LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
-                                        << indicator.percentage() << "% of cells evolved.");
-        }
     }
 
     LOGGING_PRINTLN("final reach size = " << reach_cells.size());
