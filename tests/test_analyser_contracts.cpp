@@ -30,6 +30,7 @@
 #include <sstream>
 #include <type_traits>
 
+#include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/time_partition.hpp"
 
@@ -294,5 +295,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_hybrid_restriction);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_continuous_and_discrete_time_boundaries);
     ARIADNE_TESTING_ADD_TEST(TestAnalyserContracts, test_hybrid_time_boundaries);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

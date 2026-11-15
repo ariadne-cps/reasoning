@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "logging/test_runner.hpp"
 #include "numeric/builtin.hpp"
 #include "numeric/real.hpp"
 
@@ -163,5 +164,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("symbolic");
     ARIADNE_TESTING_ADD_TEST(TestSymbolic, test_affine_exact_coefficients_and_derivatives);
     ARIADNE_TESTING_ADD_TEST(TestSymbolic, test_supported_nonlinear_activations);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

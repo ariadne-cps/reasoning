@@ -44,6 +44,7 @@
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/graphics_interface.hpp"
+#include "logging/test_runner.hpp"
 #include "numeric/rational.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
@@ -453,5 +454,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_upper_reach_helper);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_parallel_upper_reach_evolve);
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_selected_robdd_backend);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

@@ -38,6 +38,7 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
+#include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "set/function_set.hpp"
@@ -141,5 +142,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_no_bounding);
     ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_crossing_bounding);
     ARIADNE_TESTING_ADD_TEST(TestVerifySafety, test_verify_safety_crossing_safe);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

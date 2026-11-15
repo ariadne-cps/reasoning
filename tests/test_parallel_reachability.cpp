@@ -38,6 +38,7 @@
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "integration/integrator.hpp"
+#include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/parallel_reachability.hpp"
@@ -211,5 +212,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestParallelReachability, test_discrete_three_cells_and_single_cell_fallback);
     ARIADNE_TESTING_ADD_TEST(
         TestParallelReachability, test_shared_incremental_upper_reach_evolve);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

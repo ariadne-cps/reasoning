@@ -34,6 +34,7 @@
 #include "evolution/orbit.hpp"
 #include "function/formula.hpp"
 #include "logging/logging.hpp"
+#include "logging/test_runner.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
@@ -299,5 +300,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_break);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety_reach_escapes);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verbose_logging);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

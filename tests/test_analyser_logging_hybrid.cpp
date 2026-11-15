@@ -27,6 +27,7 @@
  */
 
 #include "analyser_logging_common.hpp"
+#include "logging/test_runner.hpp"
 
 class TestAnalyserLoggingHybrid : public TestAnalyserLoggingBase {
   public:
@@ -45,10 +46,9 @@ class TestAnalyserLoggingHybrid : public TestAnalyserLoggingBase {
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().redirect_to_file("test_analyser_logging_hybrid.log");
     Logger::instance().configuration().set_verbosity(6u);
     ARIADNE_TESTING_SUITE("test_analyser_logging_hybrid");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserLoggingHybrid, test_hybrid_diagnostics);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
 

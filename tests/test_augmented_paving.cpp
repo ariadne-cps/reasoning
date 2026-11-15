@@ -43,6 +43,7 @@
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "labelled/labelled_augmented_paving_draw.hpp"
+#include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/binary_tree_paving.hpp"
@@ -353,5 +354,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_augmented_paving_preconditions);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_augmented_paving_orbit);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_enclosure_augmented_paving);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

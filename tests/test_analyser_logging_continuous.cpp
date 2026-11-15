@@ -27,6 +27,7 @@
  */
 
 #include "analyser_logging_common.hpp"
+#include "logging/test_runner.hpp"
 
 class TestAnalyserLoggingContinuous : public TestAnalyserLoggingBase {
   public:
@@ -53,10 +54,9 @@ class TestAnalyserLoggingContinuous : public TestAnalyserLoggingBase {
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().redirect_to_file("test_analyser_logging_continuous.log");
     Logger::instance().configuration().set_verbosity(6u);
     ARIADNE_TESTING_SUITE("test_analyser_logging_continuous");
     ARIADNE_TESTING_ADD_TEST(TestAnalyserLoggingContinuous, test_continuous_and_discrete_diagnostics);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
 
