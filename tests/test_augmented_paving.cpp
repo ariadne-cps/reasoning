@@ -30,7 +30,6 @@
 #include <memory>
 
 #include "algebra/vector.hpp"
-#include "drawing/augmented_paving_draw.hpp"
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "evolution/enclosure.hpp"
@@ -42,7 +41,6 @@
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
-#include "labelled/labelled_augmented_paving_draw.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
@@ -144,8 +142,8 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(copy->size() == storage.size());
 
         NullCanvas canvas;
-        draw(canvas, Projection2d(3, 0, 1), storage);
-        AugmentedPavingDrawable drawable(storage);
+        PavingDrawing::draw(canvas, Projection2d(3, 0, 1), storage);
+        PavingDrawing::AugmentedPavingDrawable drawable(storage);
         const Drawable2dInterface& drawable_interface = drawable;
         drawable_interface.draw(canvas, Projection2d(3, 0, 1));
         std::unique_ptr<Drawable2dInterface> drawable_copy(drawable.clone());
@@ -234,22 +232,16 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         ls1.adjoin_outer_approximation(box, 2u);
         std::unique_ptr<LabelledAugmentedPaving> copy(ls1.clone());
-        LabelledAugmentedPavingDrawable drawable(ls1);
+        PavingDrawing::LabelledAugmentedPavingDrawable drawable(ls1);
         std::unique_ptr<LabelledDrawable2dInterface> lcopy(drawable.labelled_clone());
         ARIADNE_TESTING_PROVE(copy->size() == ls1.size());
         ARIADNE_TESTING_PROVE(lcopy != nullptr);
 
         NullCanvas canvas;
-        draw(canvas, Variables2d(x, y), ls1);
+        PavingDrawing::draw(canvas, Variables2d(x, y), ls1);
         lcopy->draw(canvas, Variables2d(x, y));
 
-        // The new adapter in Reasoning must preserve the same projection
-        // and clone semantics while both APIs coexist during migration.
-        PavingDrawing::draw(canvas, Variables2d(x, y), ls1);
-        PavingDrawing::LabelledAugmentedPavingDrawable new_drawable(ls1);
-        std::unique_ptr<LabelledDrawable2dInterface> new_copy(new_drawable.labelled_clone());
-        ARIADNE_TESTING_PROVE(new_copy != nullptr);
-        ARIADNE_TESTING_EXPECT_NO_THROW(new_copy->draw(canvas, Variables2d(x, y)));
+        // Exercise both projection-based and variable-labelled figures.
         LabelledFigure new_figure(Axes2d(-2.0, x, 2.0, -2.0, y, 2.0));
         PavingDrawing::draw(new_figure, ls1);
         ARIADNE_TESTING_EXPECT_NO_THROW(new_figure._paint_all(canvas));
