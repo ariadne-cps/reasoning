@@ -230,16 +230,16 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         FlattenedPavingCanvas all_locations_canvas;
         for_each_flattened_paving(graph, Set<DiscreteLocation>{}, Variables2d(x, y),
-            [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(all_locations_canvas, projection, euclidean);
+            [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
+                PavingDrawing::draw(all_locations_canvas, selected_projection, euclidean);
             });
         ARIADNE_TESTING_EXPECT_EQUAL(all_locations_canvas.boundaries, canvas.boundaries);
 
         FlattenedPavingCanvas excluded_canvas;
         for_each_flattened_paving(graph, Set<DiscreteLocation>{DiscreteLocation(1)},
                                  Variables2d(x, y),
-            [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(excluded_canvas, projection, euclidean);
+            [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
+                PavingDrawing::draw(excluded_canvas, selected_projection, euclidean);
             });
         ARIADNE_TESTING_EXPECT_EQUAL(excluded_canvas.boundaries, 0u);
     }
