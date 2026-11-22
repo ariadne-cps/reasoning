@@ -46,6 +46,7 @@
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit_draw.hpp"
+#include "reasoning/hybrid_paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"
@@ -168,6 +169,12 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         NullCanvas canvas;
         Set<DiscreteLocation> locations{q};
         draw(canvas, locations, Variables2d(x, y), from_grid);
+        FlattenedPavingCanvas migrated_canvas;
+        PavingDrawing::draw(migrated_canvas, locations, Variables2d(x, y), from_grid);
+        ARIADNE_TESTING_PROVE(migrated_canvas.boundaries > 0u);
+        FlattenedPavingCanvas legacy_canvas;
+        draw(legacy_canvas, locations, Variables2d(x, y), from_grid);
+        ARIADNE_TESTING_EXPECT_EQUAL(migrated_canvas.boundaries, legacy_canvas.boundaries);
         HybridAugmentedPavingDrawable drawable(from_grid);
         const HybridDrawableInterface& drawable_interface = drawable;
         drawable_interface.draw(canvas, locations, Variables2d(x, y));

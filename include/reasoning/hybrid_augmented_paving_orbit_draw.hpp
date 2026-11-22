@@ -31,21 +31,14 @@
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
 
-#include "reasoning/hybrid_paving_flatten.hpp"
-#include "reasoning/paving_drawing.hpp"
+#include "reasoning/hybrid_paving_drawing.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
 namespace Ariadne {
 /** @brief Draw the reachable phase of a hybrid augmented paving orbit. */
 inline Void draw(CanvasInterface& canvas, const Set<DiscreteLocation>& locations,
                  const Variables2d& axes, const Orbit<HybridAugmentedPaving>& orbit) {
-    // The orbit owns its hybrid state; the drawing path sees only
-    // location-filtered Euclidean pavings and ordinary projections.
-    const HybridPaving graph = orbit.reach().state_auxiliary_paving();
-    for_each_flattened_paving(graph, locations, axes,
-        [&](const Projection2d& projection, const SubPavingInterface& paving) {
-            PavingDrawing::draw(canvas, projection, paving);
-        });
+    PavingDrawing::draw(canvas, locations, axes, orbit.reach());
 }
 } // namespace Ariadne
 #endif // ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
