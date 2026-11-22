@@ -57,7 +57,7 @@ inline Void draw(CanvasInterface& canvas, const Projection2d& projection,
 inline Void draw(CanvasInterface& canvas, const Projection2d& projection,
                  const AugmentedPaving& paving) {
     const BinaryTreePaving graph = paving.state_auxiliary_paving();
-    draw(canvas, projection, static_cast<const SubPavingInterface&>(graph));
+    PavingDrawing::draw(canvas, projection, static_cast<const SubPavingInterface&>(graph));
 }
 
 // Figure keeps independent copies, including borrowed subpaving views.
@@ -109,11 +109,11 @@ inline Void draw(Figure& figure, const SubPavingInterface& paving) {
 }
 
 inline Void draw(Figure& figure, const Paving& paving) {
-    draw(figure, static_cast<const PavingInterface&>(paving));
+    PavingDrawing::draw(figure, static_cast<const PavingInterface&>(paving));
 }
 
 inline Void draw(Figure& figure, const SubPaving& paving) {
-    draw(figure, static_cast<const SubPavingInterface&>(paving));
+    PavingDrawing::draw(figure, static_cast<const SubPavingInterface&>(paving));
 }
 
 inline Void draw(Figure& figure, const GridCell& cell) {
