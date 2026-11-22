@@ -26,19 +26,26 @@
  *  @brief Drawing adapters for hybrid augmented paving orbits.
  */
 
-// Drawing of the reasoning-owned hybrid augmented paving orbit.
-// The hybrid paving itself is rendered by hybrid/hybrid_augmented_paving_draw.hpp.
+// Rendering consumes Euclidean pavings after location filtering, without
+// adding a hybrid-specific drawing adapter to the Drawing module.
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
 
-#include "hybrid/hybrid_augmented_paving_draw.hpp"
+#include "reasoning/hybrid_paving_flatten.hpp"
+#include "reasoning/paving_drawing.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 
 namespace Ariadne {
 /** @brief Draw the reachable phase of a hybrid augmented paving orbit. */
 inline Void draw(CanvasInterface& canvas, const Set<DiscreteLocation>& locations,
                  const Variables2d& axes, const Orbit<HybridAugmentedPaving>& orbit) {
-    Ariadne::draw(canvas, locations, axes, orbit.reach());
+    // The orbit owns its hybrid state; the drawing path sees only
+    // location-filtered Euclidean pavings and ordinary projections.
+    const HybridPaving graph = orbit.reach().state_auxiliary_paving();
+    for_each_flattened_paving(graph, locations, axes,
+        [&](const Projection2d& projection, const SubPavingInterface& paving) {
+            PavingDrawing::draw(canvas, projection, paving);
+        });
 }
 } // namespace Ariadne
 #endif // ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP

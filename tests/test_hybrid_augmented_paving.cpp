@@ -56,6 +56,13 @@
 using namespace Ariadne;
 using namespace std;
 
+// Count the Euclidean boundaries emitted by a location-filtered rendering.
+class FlattenedPavingCanvas final : public NullCanvas {
+  public:
+    Nat boundaries = 0u;
+    Void fill_boundary(const List<Point2d>&) override { ++boundaries; }
+};
+
 class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
     RealVariable x;
     RealVariable y;
@@ -194,8 +201,28 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(full_orbit.intermediate().size() == intermediate.size());
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
 
-        NullCanvas canvas;
+        // Location selection precedes drawing. Compare the resulting
+        // Euclidean projection with the same selected subpaving drawn directly.
+        FlattenedPavingCanvas canvas;
         draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit);
+        ARIADNE_TESTING_PROVE(canvas.boundaries > 0u);
+
+        const HybridPaving graph = full_orbit.reach().state_auxiliary_paving();
+        FlattenedPavingCanvas euclidean_canvas;
+        const RealSpace space = graph.space(q);
+        const Projection2d projection(space.dimension(), space.index(x), space.index(y));
+        PavingDrawing::draw(euclidean_canvas, projection,
+                            static_cast<const SubPavingInterface&>(graph[q]));
+        ARIADNE_TESTING_EXPECT_EQUAL(canvas.boundaries, euclidean_canvas.boundaries);
+
+        FlattenedPavingCanvas all_locations_canvas;
+        draw(all_locations_canvas, Set<DiscreteLocation>{}, Variables2d(x, y), full_orbit);
+        ARIADNE_TESTING_EXPECT_EQUAL(all_locations_canvas.boundaries, canvas.boundaries);
+
+        FlattenedPavingCanvas excluded_canvas;
+        draw(excluded_canvas, Set<DiscreteLocation>{DiscreteLocation(1)},
+             Variables2d(x, y), full_orbit);
+        ARIADNE_TESTING_EXPECT_EQUAL(excluded_canvas.boundaries, 0u);
     }
 
     Void test_owned_auxiliary_space_lifetime_and_identity() {
