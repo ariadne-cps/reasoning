@@ -109,9 +109,9 @@ Void draw_coloured_pavings(Figure& figure, const Colour& colour,
     draw_coloured_pavings(figure, remaining...);
 }
 
-template<class... Pavings>
+template<class BoundingBox, class... Pavings>
 Void plot(const char* filename, const Projection2d& projection,
-          const RenderingBoundingBoxType& bounds, const Pavings&... pavings) {
+          const BoundingBox& bounds, const Pavings&... pavings) {
     Figure figure(bounds, projection);
     draw_coloured_pavings(figure, pavings...);
     figure.write(filename);
