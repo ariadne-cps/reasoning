@@ -31,6 +31,7 @@
 
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
+#include "reasoning/hybrid_paving_flatten.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 
@@ -152,6 +153,65 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(canvas.boundaries > previous);
     }
 
+    Void test_located_paving_projection() {
+        RealVariable x("x"), y("y");
+        const RealSpace space({x, y});
+        const DiscreteLocation q(1);
+        const Grid grid(2u);
+        BinaryTreePaving tree(grid);
+        tree.adjoin(GridCell(grid, 0u, BinaryWord()));
+
+        const Located<BinaryTreePaving> located(q, tree);
+        ARIADNE_TESTING_PROVE(located.location() == q);
+
+        PavingDrawingCanvas canvas;
+        with_projected_location(located, space, Variables2d(x, y),
+            [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                PavingDrawing::draw(canvas, projection,
+                                    static_cast<const SubPavingInterface&>(value));
+            });
+        ARIADNE_TESTING_EXPECT_EQUAL(canvas.boundaries, 1u);
+    }
+
+    Void test_selected_hybrid_family_location() {
+        RealVariable x("x"), y("y");
+        const DiscreteLocation q1(1), q2(2);
+        MonolithicHybridSpace spaces;
+        spaces.new_location(q1, RealSpace({x, y}));
+        spaces.new_location(q2, RealSpace({x, y}));
+        Hybrid<BinaryTreePaving> family(
+            HybridSpace(spaces),
+            [](const DiscreteLocation&, const RealSpace& space) {
+                return BinaryTreePaving(Grid(space.dimension()));
+            });
+
+        ARIADNE_TESTING_PROVE(family.has_location(q2));
+        ARIADNE_TESTING_PROVE(not family.has_value(q2));
+        const Grid grid(2u);
+        family[q1].adjoin(GridCell(grid, 0u, BinaryWord()));
+        const Hybrid<BinaryTreePaving>& selected_family = family;
+
+        PavingDrawingCanvas canvas;
+        with_projected_location(selected_family, q1, Variables2d(x, y),
+            [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                PavingDrawing::draw(canvas, projection,
+                                    static_cast<const SubPavingInterface&>(value));
+            });
+        ARIADNE_TESTING_EXPECT_EQUAL(canvas.boundaries, 1u);
+        ARIADNE_TESTING_PROVE(not selected_family.has_value(q2));
+
+        // An explicit RealSpace also supports families without a stored
+        // HybridSpace; no auto-materialisation is performed for drawing.
+        PavingDrawingCanvas explicit_space_canvas;
+        with_projected_location(selected_family, q1, RealSpace({x, y}),
+                                Variables2d(x, y),
+            [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                PavingDrawing::draw(explicit_space_canvas, projection,
+                                    static_cast<const SubPavingInterface&>(value));
+            });
+        ARIADNE_TESTING_EXPECT_EQUAL(explicit_space_canvas.boundaries, 1u);
+    }
+
     Void test_robdd_storage_drawing() {
         Grid grid(2u);
         auto manager = std::make_shared<RobddManager>();
@@ -169,6 +229,8 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_generic_paving_and_figure_ownership);
     ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_cells_and_borrowed_binary_tree_views);
     ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_augmented_paving_graph_and_cloning);
+    ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_located_paving_projection);
+    ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_selected_hybrid_family_location);
     ARIADNE_TESTING_ADD_TEST(TestPavingDrawing, test_robdd_storage_drawing);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
