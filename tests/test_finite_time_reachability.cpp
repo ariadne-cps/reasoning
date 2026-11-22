@@ -38,7 +38,7 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "labelled/labelled_augmented_paving_draw.hpp"
+#include "reasoning/labelled_paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
@@ -153,7 +153,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Evolved to " << lower_evolve.size() << " cells " << endl
              << endl;
 
-        plot("test_reachability_analyser-lower_reach_lower_evolve.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-lower_reach_lower_evolve.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
@@ -169,7 +169,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(lower_reach.size() > 0);
         ARIADNE_TESTING_PROVE(lower_evolve.size() > 0);
 
-        plot("test_reachability_analyser-map_lower_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-map_lower_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
@@ -186,7 +186,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Evolved to " << upper_evolve_set.size() << " cells " << endl
              << endl;
 
-        plot("test_reachability_analyser-map_upper_reach_upper_evolve.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-map_upper_reach_upper_evolve.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, upper_reach_set, evolve_set_colour, upper_evolve_set);
     }
 
@@ -201,7 +201,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Evolved to " << reach_evolve_set.second.size() << " cells " << endl
              << endl;
 
-        plot("test_reachability_analyser-map_upper_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-map_upper_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, reach_evolve_set.first, final_set_colour, reach_evolve_set.second);
     }
 

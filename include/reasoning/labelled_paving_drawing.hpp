@@ -95,5 +95,27 @@ inline LabelledFigure& operator<<(LabelledFigure& figure, const LabelledAugmente
     return figure;
 }
 
+// Explicit plotting entry points for labelled paving results. These preserve
+// the geometry and colour sequence of the generic plot() API without making
+// Drawing aware of grids, paving backends or labelled paving wrappers.
+inline Void draw_coloured_pavings(Figure&) {}
+
+template<class... Remaining>
+Void draw_coloured_pavings(Figure& figure, const Colour& colour,
+                          const LabelledAugmentedPaving& paving,
+                          const Remaining&... remaining) {
+    figure.set_fill_colour(colour);
+    PavingDrawing::draw(figure, paving);
+    draw_coloured_pavings(figure, remaining...);
+}
+
+template<class... Pavings>
+Void plot(const char* filename, const Projection2d& projection,
+          const RenderingBoundingBoxType& bounds, const Pavings&... pavings) {
+    Figure figure(bounds, projection);
+    draw_coloured_pavings(figure, pavings...);
+    figure.write(filename);
+}
+
 } // namespace Ariadne::PavingDrawing
 #endif // ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP

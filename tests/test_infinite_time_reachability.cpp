@@ -38,7 +38,7 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "labelled/labelled_augmented_paving_draw.hpp"
+#include "reasoning/labelled_paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
@@ -147,7 +147,7 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Reached " << lower_reach_set.size() << " cells " << endl
              << endl;
 
-        plot("test_reachability_analyser-map_infinite_time_lower_reach.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-map_infinite_time_lower_reach.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, lower_reach_set);
 
         // Zero transient time and no bounding domain: both restriction and
@@ -172,7 +172,7 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Reached " << outer_chain_reach_set.size() << " cells " << endl
              << endl;
 
-        plot("test_reachability_analyser-map_outer_chain_reach.png", Projection2d(2, 0, 1), graphics_box,
+        PavingDrawing::plot("test_reachability_analyser-map_outer_chain_reach.png", Projection2d(2, 0, 1), graphics_box,
              reach_set_colour, outer_chain_reach_set);
 
         cout << "Recomputing with tight restriction" << endl;
