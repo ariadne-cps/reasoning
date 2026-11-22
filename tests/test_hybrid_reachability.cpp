@@ -442,7 +442,7 @@ Void TestHybridReachability::test_upper_reach_helper() {
 }
 
 int main(int argc, char** argv) {
-    DrawerManager::instance().set_drawer(GridDrawer(2));
+    DrawerManager::instance().set_drawer(BoxDrawer());
 
     ARIADNE_TESTING_SUITE("test_hybrid_reachability");
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_bouncing_ball);

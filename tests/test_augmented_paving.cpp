@@ -346,7 +346,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
 };
 
 int main(int argc, char** argv) {
-    DrawerManager::instance().set_drawer(GridDrawer(2));
+    DrawerManager::instance().set_drawer(BoxDrawer());
 
     ARIADNE_TESTING_SUITE("test_augmented_paving");
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_augmented_paving_interface);
