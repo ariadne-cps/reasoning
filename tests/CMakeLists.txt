@@ -12,6 +12,7 @@ set(UNIT_TESTS
     test_augmented_paving
     test_hybrid_augmented_paving
     test_hybrid_paving
+    test_paving_drawing
     test_neural_symbolic
 )
 foreach(TEST IN LISTS UNIT_TESTS)
