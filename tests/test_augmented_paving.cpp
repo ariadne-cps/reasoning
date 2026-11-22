@@ -43,6 +43,7 @@
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "labelled/labelled_augmented_paving_draw.hpp"
+#include "reasoning/labelled_paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/augmented_paving.hpp"
@@ -241,6 +242,17 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         NullCanvas canvas;
         draw(canvas, Variables2d(x, y), ls1);
         lcopy->draw(canvas, Variables2d(x, y));
+
+        // The new adapter in Reasoning must preserve the same projection
+        // and clone semantics while both APIs coexist during migration.
+        PavingDrawing::draw(canvas, Variables2d(x, y), ls1);
+        PavingDrawing::LabelledAugmentedPavingDrawable new_drawable(ls1);
+        std::unique_ptr<LabelledDrawable2dInterface> new_copy(new_drawable.labelled_clone());
+        ARIADNE_TESTING_PROVE(new_copy != nullptr);
+        ARIADNE_TESTING_EXPECT_NO_THROW(new_copy->draw(canvas, Variables2d(x, y)));
+        LabelledFigure new_figure(Axes2d(-2.0, x, 2.0, -2.0, y, 2.0));
+        PavingDrawing::draw(new_figure, ls1);
+        ARIADNE_TESTING_EXPECT_NO_THROW(new_figure._paint_all(canvas));
 
         ARIADNE_TESTING_NOTE(ls1);
 
