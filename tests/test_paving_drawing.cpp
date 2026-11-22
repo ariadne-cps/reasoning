@@ -31,6 +31,7 @@
 
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
+#include "evolution/located_projection.hpp"
 #include "reasoning/hybrid_paving_flatten.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -165,7 +166,7 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(located.location() == q);
 
         PavingDrawingCanvas canvas;
-        with_projected_location(located, space, Variables2d(x, y),
+        with_projected_location(located, space, x, y,
             [&](const Projection2d& projection, const BinaryTreePaving& value) {
                 PavingDrawing::draw(canvas, projection,
                                     static_cast<const SubPavingInterface&>(value));
@@ -192,7 +193,7 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         const Hybrid<BinaryTreePaving>& selected_family = family;
 
         PavingDrawingCanvas canvas;
-        with_projected_location(selected_family, q1, Variables2d(x, y),
+        with_projected_location(selected_family, q1, x, y,
             [&](const Projection2d& projection, const BinaryTreePaving& value) {
                 PavingDrawing::draw(canvas, projection,
                                     static_cast<const SubPavingInterface&>(value));
@@ -204,7 +205,7 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         // HybridSpace; no auto-materialisation is performed for drawing.
         PavingDrawingCanvas explicit_space_canvas;
         with_projected_location(selected_family, q1, RealSpace({x, y}),
-                                Variables2d(x, y),
+                                x, y,
             [&](const Projection2d& projection, const BinaryTreePaving& value) {
                 PavingDrawing::draw(explicit_space_canvas, projection,
                                     static_cast<const SubPavingInterface&>(value));
