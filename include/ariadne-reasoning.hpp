@@ -39,6 +39,7 @@
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/grid_adapters.hpp"
+#include "reasoning/scaling_adapters.hpp"
 #include "reasoning/hybrid_paving_flatten.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/paving_drawing.hpp"
