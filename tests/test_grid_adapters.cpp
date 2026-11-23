@@ -75,14 +75,14 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 1u);
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
-        const Grid& two = generic[second];
-        ARIADNE_TESTING_PROVE(two == legacy[second]);
-        ARIADNE_TESTING_EXPECT_EQUAL(two.dimension(), 2u);
+        const Grid& second_grid = generic[second];
+        ARIADNE_TESTING_PROVE(second_grid == legacy[second]);
+        ARIADNE_TESTING_EXPECT_EQUAL(second_grid.dimension(), 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 2u);
 
         const Hybrid<Grid>& read_only = generic;
         ARIADNE_TESTING_PROVE(read_only[first] == one);
-        ARIADNE_TESTING_PROVE(read_only[second] == two);
+        ARIADNE_TESTING_PROVE(read_only[second] == second_grid);
         ARIADNE_TESTING_EXPECT_EQUAL(read_only.materialized_locations().size(), 2u);
     }
 };
