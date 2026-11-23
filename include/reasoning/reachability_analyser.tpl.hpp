@@ -185,15 +185,18 @@ Void ReachabilityAnalyser<SYS>::
     LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] "
                                 << indicator.percentage() << "% of cells evolved.");
 
-    // A paver performs compound read/modify/write operations: even when
-    // BinaryTreePaving protects its node mutations, the paver can read grid
-    // metadata before entering that internal critical section. Serialise
-    // complete publications for both continuous and hybrid destinations,
-    // including the hybrid location lookup. Orbit evolution stays parallel.
-    std::mutex publication_mutex;
+    // Continuous pavings own a stable Grid and synchronise their internal
+    // mutations. Hybrid pavings additionally have a location map whose
+    // lookup/insertion sequence must be serialised as a single operation.
+    // Orbit evolution remains concurrent in both cases.
+    std::mutex hybrid_adjoin_mutex;
     auto adjoin_incrementally = [&](const auto& enclosure, StorageType& target) {
-        std::lock_guard<std::mutex> lock(publication_mutex);
-        adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
+        if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
+            std::lock_guard<std::mutex> lock(hybrid_adjoin_mutex);
+            adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
+        } else {
+            adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
+        }
     };
 
     // A single progress line belongs to the analyser scope, not to the
