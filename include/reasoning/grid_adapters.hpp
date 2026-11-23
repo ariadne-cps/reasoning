@@ -29,6 +29,7 @@
 #ifndef ARIADNE_REASONING_GRID_ADAPTERS_HPP
 #define ARIADNE_REASONING_GRID_ADAPTERS_HPP
 
+#include "evolution/scalings.hpp"
 #include "hybrid/hybrid_grid.hpp"
 #include "hybrid/value.hpp"
 #include "labelled/value.hpp"
@@ -40,6 +41,12 @@ namespace Ariadne {
 // remains a geometry-independent value/metadata wrapper.
 inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space) {
     return LabelledValue<Grid>(grid, space);
+}
+
+// Materialize a paving Grid only in Reasoning: Scalings owns the numeric
+// policy and ordering, while the paving-specific representation stays here.
+inline Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
+    return Grid(scalings.lengths(space));
 }
 
 // Legacy HybridGrid and its scaling policy are currently paving-dependent.

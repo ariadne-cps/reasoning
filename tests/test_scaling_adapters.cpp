@@ -28,6 +28,7 @@
 
 #include "hybrid/hybrid_grid.hpp"
 #include "logging/test_runner.hpp"
+#include "reasoning/grid_adapters.hpp"
 #include "reasoning/scaling_adapters.hpp"
 
 #include "ariadne-testing.hpp"
@@ -80,14 +81,16 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         const Scalings& first_scalings = generic[first];
         ARIADNE_TESTING_EXPECT_EQUAL(first_scalings.scaling(x), 2.0_x);
         ARIADNE_TESTING_EXPECT_EQUAL(first_scalings.scaling(z), 1.0_x);
-        ARIADNE_TESTING_PROVE(first_scalings.grid(space[first]) == legacy[first]);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(first_scalings, space[first]) == legacy[first]);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(first_scalings, space[first]) == first_scalings.grid(space[first]));
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 1u);
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
         const Scalings& second_scalings = generic[second];
         ARIADNE_TESTING_EXPECT_EQUAL(second_scalings.scaling(y), 3.0_x);
         ARIADNE_TESTING_EXPECT_EQUAL(second_scalings.scaling(x), 5.0_x);
-        ARIADNE_TESTING_PROVE(second_scalings.grid(space[second]) == legacy[second]);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(second_scalings, space[second]) == legacy[second]);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(second_scalings, space[second]) == second_scalings.grid(space[second]));
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 2u);
 
         const Hybrid<Scalings>& read_only = generic;
