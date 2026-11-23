@@ -49,6 +49,11 @@ Void adjoin_outer_approximation_to(const Enclosure& enclosure, AugmentedPaving& 
  */
 AugmentedPaving outer_approximation(const Enclosure& enclosure, const Grid& grid, Nat fineness, const Paver& paver);
 
+/** @brief Add a hybrid enclosure's validated outer approximation to a hybrid paving.
+ *  The enclosure and paving must have identical variable spaces at its location.
+ */
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridPaving& paving, Nat fineness, const Paver& paver);
+
 /** @brief Add the location-aware outer approximation of a hybrid enclosure
  *  without coupling to an automaton or reasoning-layer objects.
  */

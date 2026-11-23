@@ -103,11 +103,33 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         HybridAugmentedPaving wrong(HybridGrid(wrong_state), mapping);
         ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(enclosure, wrong, 2u, paver));
     }
+
+    Void test_hybrid_enclosure_paving_space_contract() {
+        const DiscreteLocation q(1);
+        const RealVariable x("x"), y("y");
+        const RealSpace state_space({x, y});
+        const ExactBoxType domain({{-1, 1}, {-1, 1}});
+        const EnclosureConfiguration config(TaylorFunctionFactory(ThresholdSweeper<FloatDP>(dp, 1e-8)));
+        const HybridEnclosure initial(HybridExactBox(q, state_space, domain), config);
+
+        MonolithicHybridSpace valid_space;
+        valid_space.new_location(q, state_space);
+        HybridPaving paving{HybridGrid(HybridSpace(valid_space))};
+        const Paver paver(new AffinePaver());
+        adjoin_outer_approximation_to(initial, paving, 0u, paver);
+        ARIADNE_TESTING_PROVE(paving[q].size() > 0u);
+
+        MonolithicHybridSpace incompatible;
+        incompatible.new_location(q, RealSpace({y, x}));
+        HybridPaving wrong{HybridGrid(HybridSpace(incompatible))};
+        ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(initial, wrong, 0u, paver));
+    }
 };
 
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_enclosure_augmented_paving");
     ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_continuous);
     ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_hybrid);
+    ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_hybrid_enclosure_paving_space_contract);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
