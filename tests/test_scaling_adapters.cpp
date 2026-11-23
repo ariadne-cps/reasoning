@@ -99,10 +99,36 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(read_only.materialized_locations().size(), 2u);
         ARIADNE_TESTING_EXPECT_EXCEPTION(generic[absent]);
     }
+
+    Void test_grid_materialization_from_euclidean_scalings() {
+        const RealVariable x("x"), y("y");
+        const RealSpace reordered({y, x});
+        const Map<RealVariable, ExactDouble> entries{{x, 2.0_x}};
+        const Scalings named(3.0_x, entries);
+        const Grid named_grid = grid_from_scalings(named, reordered);
+        ARIADNE_TESTING_EXPECT_EQUAL(named_grid.dimension(), 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[0].get_d(), 3.0);
+        ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[1].get_d(), 2.0);
+        ARIADNE_TESTING_PROVE(named_grid == named.grid(reordered));
+
+        Scalings uniform(ApproximateDouble(2.0));
+        const RealSpace natural({x, y});
+        ARIADNE_TESTING_PROVE(grid_from_scalings(uniform, natural) == uniform.grid(natural));
+        uniform.set_scaling(x, ApproximateDouble(4.0));
+        const Grid modified = grid_from_scalings(uniform, natural);
+        ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[0].get_d(), 4.0);
+        ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[1].get_d(), 2.0);
+        ARIADNE_TESTING_PROVE(modified == uniform.grid(natural));
+
+        const Scalings empty(1.0_x, Map<RealVariable, ExactDouble>{});
+        ARIADNE_TESTING_EXPECT_EQUAL(grid_from_scalings(empty, RealSpace()).dimension(), 0u);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(empty, RealSpace()) == empty.grid(RealSpace()));
+    }
 };
 
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_scaling_adapters");
     ARIADNE_TESTING_ADD_TEST(TestScalingAdapters, test_hybrid_scalings_match_legacy_and_are_lazy);
+    ARIADNE_TESTING_ADD_TEST(TestScalingAdapters, test_grid_materialization_from_euclidean_scalings);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
