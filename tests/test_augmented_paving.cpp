@@ -33,7 +33,7 @@
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "evolution/enclosure.hpp"
-#include "evolution/enclosure_augmented_paving.hpp"
+#include "reasoning/enclosure_augmented_paving.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "function/function.hpp"

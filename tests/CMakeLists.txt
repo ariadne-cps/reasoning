@@ -10,6 +10,7 @@ set(UNIT_TESTS
     test_verify_safety
     test_iterated_map_reachability
     test_augmented_paving
+    test_enclosure_augmented_paving
     test_hybrid_augmented_paving
     test_hybrid_paving
     test_grid_adapters

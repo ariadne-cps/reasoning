@@ -43,7 +43,7 @@
 
 #include "algebra/matrix.hpp"
 #include "algebra/vector.hpp"
-#include "evolution/enclosure_augmented_paving.hpp"
+#include "reasoning/enclosure_augmented_paving.hpp"
 #include "function/functional.hpp"
 #include "geometry/box.hpp"
 #include "integration/integrator.hpp"

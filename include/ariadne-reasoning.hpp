@@ -28,7 +28,7 @@
 
 #ifndef ARIADNE_ARIADNE_REASONING_HPP
 #define ARIADNE_ARIADNE_REASONING_HPP
-#include "evolution/enclosure_augmented_paving.hpp"
+#include "reasoning/enclosure_augmented_paving.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
