@@ -82,7 +82,7 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(first_scalings.scaling(x), 2.0_x);
         ARIADNE_TESTING_EXPECT_EQUAL(first_scalings.scaling(z), 1.0_x);
         ARIADNE_TESTING_PROVE(grid_from_scalings(first_scalings, space[first]) == legacy[first]);
-        ARIADNE_TESTING_PROVE(grid_from_scalings(first_scalings, space[first]) == first_scalings.grid(space[first]));
+
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 1u);
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
@@ -90,7 +90,7 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(second_scalings.scaling(y), 3.0_x);
         ARIADNE_TESTING_EXPECT_EQUAL(second_scalings.scaling(x), 5.0_x);
         ARIADNE_TESTING_PROVE(grid_from_scalings(second_scalings, space[second]) == legacy[second]);
-        ARIADNE_TESTING_PROVE(grid_from_scalings(second_scalings, space[second]) == second_scalings.grid(space[second]));
+
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 2u);
 
         const Hybrid<Scalings>& read_only = generic;
@@ -109,20 +109,23 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.dimension(), 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[0].get_d(), 3.0);
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[1].get_d(), 2.0);
-        ARIADNE_TESTING_PROVE(named_grid == named.grid(reordered));
+
 
         Scalings uniform(ApproximateDouble(2.0));
         const RealSpace natural({x, y});
-        ARIADNE_TESTING_PROVE(grid_from_scalings(uniform, natural) == uniform.grid(natural));
+        const Grid uniform_grid = grid_from_scalings(uniform, natural);
+        ARIADNE_TESTING_EXPECT_EQUAL(uniform_grid.dimension(), 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(uniform_grid.lengths()[0].get_d(), 2.0);
+        ARIADNE_TESTING_EXPECT_EQUAL(uniform_grid.lengths()[1].get_d(), 2.0);
         uniform.set_scaling(x, ApproximateDouble(4.0));
         const Grid modified = grid_from_scalings(uniform, natural);
         ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[0].get_d(), 4.0);
         ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[1].get_d(), 2.0);
-        ARIADNE_TESTING_PROVE(modified == uniform.grid(natural));
+
 
         const Scalings empty(1.0_x, Map<RealVariable, ExactDouble>{});
         ARIADNE_TESTING_EXPECT_EQUAL(grid_from_scalings(empty, RealSpace()).dimension(), 0u);
-        ARIADNE_TESTING_PROVE(grid_from_scalings(empty, RealSpace()) == empty.grid(RealSpace()));
+
     }
 };
 

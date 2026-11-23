@@ -46,7 +46,11 @@ inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace&
 // Materialize a paving Grid only in Reasoning: Scalings owns the numeric
 // policy and ordering, while the paving-specific representation stays here.
 inline Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
-    return Grid(scalings.lengths(space));
+    Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
+    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
+        lengths[axis] = scalings.scaling(space[axis]);
+    }
+    return Grid(lengths);
 }
 
 // Legacy HybridGrid and its scaling policy are currently paving-dependent.
