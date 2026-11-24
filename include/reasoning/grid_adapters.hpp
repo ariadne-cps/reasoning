@@ -34,6 +34,7 @@
 #include "hybrid/value.hpp"
 #include "labelled/value.hpp"
 #include "paving/grid.hpp"
+#include "paving/paving_interface.hpp"
 
 namespace Ariadne {
 
@@ -41,6 +42,12 @@ namespace Ariadne {
 // remains a geometry-independent value/metadata wrapper.
 inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space) {
     return LabelledValue<Grid>(grid, space);
+}
+
+// Keep backend-specific Paving creation in Reasoning; the wrapper records
+// coordinate labels but never assumes tree rather than ROBDD storage.
+inline LabelledValue<Paving> make_labelled_paving(Paving paving, const RealSpace& space) {
+    return LabelledValue<Paving>(std::move(paving), space);
 }
 
 // Materialize a paving Grid only in Reasoning: Scalings owns the numeric

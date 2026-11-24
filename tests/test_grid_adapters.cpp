@@ -26,8 +26,11 @@
  *  @brief Verify generic grid wrappers against legacy labelled and hybrid grids.
  */
 
+#include <memory>
+
 #include "labelled/labelled_grid.hpp"
 #include "logging/test_runner.hpp"
+#include "paving/robdd_paving.hpp"
 #include "reasoning/grid_adapters.hpp"
 
 #include "ariadne-testing.hpp"
@@ -48,6 +51,44 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(generic.value() == legacy.euclidean_grid());
         ARIADNE_TESTING_EXPECT_EQUAL(generic.value().dimension(), 2u);
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_grid(Grid(1u), space));
+    }
+
+    Void test_labelled_pavings_preserve_tree_and_robdd() {
+        const RealVariable x("x"), y("y");
+        const RealSpace space({y, x});
+        const Grid grid(2u);
+        const GridCell cell(grid, 0u, BinaryWord());
+
+        BinaryTreePaving tree(grid);
+        tree.adjoin(cell);
+        const Paving tree_paving(new BinaryTreePaving(tree));
+        const LabelledPaving legacy_tree(tree_paving, space);
+        const LabelledValue<Paving> generic_tree = make_labelled_paving(tree_paving, space);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_tree.space(), legacy_tree.space());
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_tree.value().dimension(), 2u);
+        ARIADNE_TESTING_PROVE(generic_tree.value().superset(cell));
+        ARIADNE_TESTING_PROVE(legacy_tree.euclidean_set().superset(cell));
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(generic_tree.value())) != nullptr);
+
+        const auto manager = std::make_shared<RobddManager>();
+        RobddPaving robdd(manager, grid);
+        robdd.adjoin(cell);
+        const Paving robdd_paving(new RobddPaving(robdd));
+        const LabelledPaving legacy_robdd(robdd_paving, space);
+        const LabelledValue<Paving> generic_robdd = make_labelled_paving(robdd_paving, space);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_robdd.space(), legacy_robdd.space());
+        ARIADNE_TESTING_PROVE(generic_robdd.value().superset(cell));
+        ARIADNE_TESTING_PROVE(legacy_robdd.euclidean_set().superset(cell));
+        const LabelledValue<Paving> copied(generic_robdd);
+        ARIADNE_TESTING_PROVE(copied.value().superset(cell));
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(copied.value())) != nullptr);
+
+        ARIADNE_TESTING_EXPECT_EXCEPTION(
+            make_labelled_paving(tree_paving, RealSpace({x})));
     }
 
     Void test_hybrid_grids_match_legacy_and_are_lazy() {
@@ -90,6 +131,7 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_grid_adapters");
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_grid_matches_legacy);
+    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_pavings_preserve_tree_and_robdd);
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_hybrid_grids_match_legacy_and_are_lazy);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
