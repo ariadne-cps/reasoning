@@ -40,7 +40,6 @@
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
 #include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
@@ -185,11 +184,26 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         from_grid.recombine();
         ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
 
+        // Snapshot the occupied location without implicitly converting the
+        // mutable hybrid element proxy to the legacy labelled subclass.
+        // The snapshot must retain its cells after the original is cleared.
+        const LabelledAugmentedPavingValue snapshot =
+            make_labelled_augmented_slice(const_storage, q);
+        const SizeType snapshot_size = snapshot.value().size();
+        ARIADNE_TESTING_PROVE(snapshot_size > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(snapshot_size, from_grid.size());
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(snapshot),
+                                     system.continuous_state_space(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(snapshot),
+                                     system.continuous_auxiliary_space(q));
         auto element = from_grid[q];
-        LabelledAugmentedPaving labelled = element;
-        ARIADNE_TESTING_PROVE(labelled.size() == from_grid.size());
         element.clear();
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
+        ARIADNE_TESTING_EXPECT_EQUAL(snapshot.value().size(), snapshot_size);
+        ARIADNE_TESTING_PROVE(not snapshot.value().is_empty());
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(snapshot.value().state_paving())) != nullptr);
 
         from_grid.adjoin_outer_approximation(initial, 2u);
         NullCanvas canvas;
