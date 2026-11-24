@@ -44,7 +44,6 @@
 #include "reasoning/scaling_adapters.hpp"
 #include "reasoning/hybrid_paving_flatten.hpp"
 #include "reasoning/labelled_augmented_paving_value_drawing.hpp"
-#include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
