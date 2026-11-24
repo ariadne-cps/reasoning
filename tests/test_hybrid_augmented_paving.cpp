@@ -40,11 +40,13 @@
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
+#include "labelled/labelled_augmented_paving.hpp"
 #include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_slice.hpp"
 #include "reasoning/hybrid_paving_flatten.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -108,6 +110,20 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
             dynamic_cast<const RobddPaving*>(&static_cast<const PavingInterface&>(
                 robdd_storage.state_paving()[q])) != nullptr);
 
+        const HybridAugmentedPaving& const_robdd_storage = robdd_storage;
+        const LabelledAugmentedPavingValue robdd_slice =
+            make_labelled_augmented_slice(const_robdd_storage, q);
+        const LabelledAugmentedPavingValue copied_robdd_slice(robdd_slice);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(robdd_slice),
+                                     system.continuous_state_space(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(robdd_slice),
+                                     system.continuous_auxiliary_space(q));
+        ARIADNE_TESTING_PROVE(copied_robdd_slice.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(
+                    copied_robdd_slice.value().state_paving())) != nullptr);
+
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
         ARIADNE_TESTING_EXPECT_EQUAL(from_grid.size(), 0u);
         ARIADNE_TESTING_PROVE(from_grid.begin() == from_grid.end());
@@ -142,9 +158,19 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().size() > 0u);
         ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().space(q) ==
                               system.state_auxiliary_space()[q]);
+        // Read-only hybrid slices now use generic labelled values rather
+        // than HybridAugmentedPaving::operator[] returning the legacy class.
         const HybridAugmentedPaving& const_independent = independent;
-        LabelledAugmentedPaving labelled_view = const_independent[q];
-        ARIADNE_TESTING_PROVE(labelled_view.size() == independent.size());
+        const LabelledAugmentedPavingValue labelled_view =
+            make_labelled_augmented_slice(const_independent, q);
+        ARIADNE_TESTING_PROVE(labelled_view.value().size() == independent.size());
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(labelled_view),
+                                     system.continuous_state_space(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(labelled_view),
+                                     system.continuous_auxiliary_space(q));
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(labelled_view.value().state_paving())) != nullptr);
 
         ARIADNE_TESTING_PROVE(subset(from_paving, from_grid));
         from_paving.adjoin(from_grid);
