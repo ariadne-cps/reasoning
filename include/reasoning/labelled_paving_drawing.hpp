@@ -31,6 +31,7 @@
 #define ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP
 
 #include "reasoning/paving_drawing.hpp"
+#include "reasoning/augmented_paving_plot.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 
@@ -93,28 +94,6 @@ inline LabelledFigure& operator<<(LabelledFigure& figure, const LabelledAugmente
     /** @brief Perform the labelled geometric operation. */
     PavingDrawing::draw_to_figure(figure, paving);
     return figure;
-}
-
-// Explicit plotting entry points for labelled paving results. These preserve
-// the geometry and colour sequence of the generic plot() API without making
-// Drawing aware of grids, paving backends or labelled paving wrappers.
-inline Void draw_coloured_pavings(Figure&) {}
-
-template<class... Remaining>
-Void draw_coloured_pavings(Figure& figure, const Colour& colour,
-                          const LabelledAugmentedPaving& paving,
-                          const Remaining&... remaining) {
-    figure.set_fill_colour(colour);
-    PavingDrawing::draw(figure, paving);
-    draw_coloured_pavings(figure, remaining...);
-}
-
-template<class BoundingBox, class... Pavings>
-Void plot(const char* filename, const Projection2d& projection,
-          const BoundingBox& bounds, const Pavings&... pavings) {
-    Figure figure(bounds, projection);
-    draw_coloured_pavings(figure, pavings...);
-    figure.write(filename);
 }
 
 } // namespace Ariadne::PavingDrawing

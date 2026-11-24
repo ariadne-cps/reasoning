@@ -36,6 +36,7 @@
 #include "labelled/labelled_mapping.hpp"
 #include "paving/augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/augmented_paving_plot.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/grid_adapters.hpp"
