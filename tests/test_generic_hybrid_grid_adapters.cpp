@@ -78,16 +78,16 @@ class TestGenericHybridGridAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(not grids.has_value(second));
         ARIADNE_TESTING_EXPECT_EQUAL(grids.size(), 1u);
 
-        const Grid& two = grids[second];
+        const Grid& second_grid = grids[second];
         ARIADNE_TESTING_EXPECT_EQUAL(materializations, 2u);
-        ARIADNE_TESTING_EXPECT_EQUAL(two.dimension(), 2u);
-        ARIADNE_TESTING_EXPECT_EQUAL(two.lengths()[0].get_d(), 3.0);
-        ARIADNE_TESTING_EXPECT_EQUAL(two.lengths()[1].get_d(), 5.0);
+        ARIADNE_TESTING_EXPECT_EQUAL(second_grid.dimension(), 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(second_grid.lengths()[0].get_d(), 3.0);
+        ARIADNE_TESTING_EXPECT_EQUAL(second_grid.lengths()[1].get_d(), 5.0);
         ARIADNE_TESTING_EXPECT_EQUAL(grids.size(), 2u);
 
         const Hybrid<Grid>& read_only = grids;
         ARIADNE_TESTING_PROVE(read_only[first] == one);
-        ARIADNE_TESTING_PROVE(read_only[second] == two);
+        ARIADNE_TESTING_PROVE(read_only[second] == second_grid);
         ARIADNE_TESTING_EXPECT_EQUAL(materializations, 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(read_only.materialized_locations().size(), 2u);
         ARIADNE_TESTING_EXPECT_EXCEPTION(grids[absent]);
