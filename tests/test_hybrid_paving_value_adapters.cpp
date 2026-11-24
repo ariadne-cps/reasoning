@@ -43,6 +43,7 @@
 #include "paving/robdd_paving.hpp"
 #include "reasoning/grid_adapters.hpp"
 #include "reasoning/scaling_adapters.hpp"
+#include "reasoning/hybrid_paving.hpp"
 #include "reasoning/hybrid_paving_value_operations.hpp"
 #include "system/hybrid_automaton.hpp"
 
