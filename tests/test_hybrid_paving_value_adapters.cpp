@@ -43,6 +43,8 @@
 #include "paving/robdd_paving.hpp"
 #include "reasoning/grid_adapters.hpp"
 #include "reasoning/scaling_adapters.hpp"
+#include "reasoning/hybrid_paving_value_operations.hpp"
+#include "system/hybrid_automaton.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -137,6 +139,81 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         }
     }
 
+    Void test_extend_auxiliary_matches_legacy_and_preserves_lazy_backend() {
+        const RealVariable x("x"), a("a");
+        const StringVariable q("q");
+        const DiscreteLocation first({q | "1"}), second({q | "2"});
+        HybridAutomaton automaton;
+        ARIADNE_TESTING_EXPECT_NO_THROW(automaton.new_mode(
+            first, List<RealAssignment>{let(a) = x + 1},
+            List<DottedRealAssignment>{dot(x) = -x}));
+        ARIADNE_TESTING_EXPECT_NO_THROW(automaton.new_mode(
+            second, List<RealAssignment>{let(a) = x + 2},
+            List<DottedRealAssignment>{dot(x) = -x}));
+
+        const HybridSpace state_space = automaton.state_space();
+        const HybridSpace expanded_space = automaton.state_auxiliary_space();
+        const HybridGrid legacy_grid(state_space);
+        const Grid grid(1u);
+        const GridCell cell(grid, 0u, BinaryWord());
+        const auto unit_scalings = [](const DiscreteLocation&, const RealSpace&) {
+            return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+        };
+
+        for (Bool use_robdd : {false, true}) {
+            auto manager = std::make_shared<RobddManager>();
+            std::function<Paving(const Grid&)> backend =
+                [manager, use_robdd](const Grid& selected) -> Paving {
+                    if (use_robdd)
+                        return Paving(new RobddPaving(manager, selected));
+                    return Paving(new BinaryTreePaving(selected));
+                };
+
+            HybridPaving legacy(legacy_grid, backend);
+            Hybrid<Paving> generic = make_hybrid_pavings(
+                state_space, make_hybrid_grids(
+                    state_space, Hybrid<Scalings>(state_space, unit_scalings)),
+                backend);
+            generic[first].adjoin(cell);
+            legacy[first].adjoin(cell);
+            ARIADNE_TESTING_PROVE(not generic.has_value(second));
+            ARIADNE_TESTING_PROVE(not legacy.nontrivial_location(second));
+
+            Hybrid<Paving> expanded = extend_auxiliary(
+                generic, Hybrid<Scalings>(expanded_space, unit_scalings),
+                backend, automaton);
+            HybridPaving legacy_expanded = extend_auxiliary(legacy, automaton);
+            ARIADNE_TESTING_PROVE(expanded.has_location(second));
+            ARIADNE_TESTING_PROVE(expanded.has_value(first));
+            ARIADNE_TESTING_PROVE(not expanded.has_value(second));
+            ARIADNE_TESTING_PROVE(not generic.has_value(second));
+            ARIADNE_TESTING_EXPECT_EQUAL(expanded.space()[first].dimension(), 2u);
+
+            const Hybrid<Paving>& constant_expanded = expanded;
+            const Paving& actual = constant_expanded[first];
+            const Paving& expected = legacy_expanded[first];
+            ARIADNE_TESTING_PROVE(actual.grid() == expected.grid());
+            for (const auto& selected_cell : actual)
+                ARIADNE_TESTING_PROVE(expected.superset(selected_cell));
+            for (const auto& selected_cell : expected)
+                ARIADNE_TESTING_PROVE(actual.superset(selected_cell));
+            ARIADNE_TESTING_PROVE(not actual.is_empty());
+
+            const Hybrid<Paving> copied(expanded);
+            ARIADNE_TESTING_PROVE(not copied.has_value(second));
+            const Paving& snapshot = copied[first];
+            for (const auto& selected_cell : expected)
+                ARIADNE_TESTING_PROVE(snapshot.superset(selected_cell));
+            if (use_robdd) {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
+                    &static_cast<const PavingInterface&>(snapshot)) != nullptr);
+            } else {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
+                    &static_cast<const PavingInterface&>(snapshot)) != nullptr);
+            }
+        }
+    }
+
     Void test_rejects_empty_or_wrong_grid_backend() {
         const DiscreteLocation first(1);
         const RealVariable x("x");
@@ -164,6 +241,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_hybrid_paving_value_adapters");
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_tree_robdd_and_lazy_locations);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_extend_auxiliary_matches_legacy_and_preserves_lazy_backend);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_rejects_empty_or_wrong_grid_backend);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
