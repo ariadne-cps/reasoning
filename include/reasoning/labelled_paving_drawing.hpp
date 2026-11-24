@@ -31,7 +31,6 @@
 #define ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP
 
 #include "reasoning/paving_drawing.hpp"
-#include "reasoning/augmented_paving_plot.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 
