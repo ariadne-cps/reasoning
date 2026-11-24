@@ -26,7 +26,7 @@
  *  @brief Validate backend-neutral coloured paving plotting and drawing order.
  */
 
-#include "reasoning/augmented_paving_plot.hpp"
+#include "reasoning/paving_drawing.hpp"
 
 #ifdef ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_HPP
 #error Coloured augmented paving plots must not import the legacy labelled paving

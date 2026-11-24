@@ -23,13 +23,15 @@
  */
 
 /** @file reasoning/hybrid_paving.hpp
- *  @brief Auxiliary-variable extensions for hybrid pavings.
+ *  @brief Auxiliary-variable extension and projected views for hybrid pavings.
  */
 
 #ifndef ARIADNE_REASONING_HYBRID_PAVING_HPP
 #define ARIADNE_REASONING_HYBRID_PAVING_HPP
 
 #include "hybrid/hybrid_paving.hpp"
+#include "labelled/figure.hpp"
+#include "paving/paving_interface.hpp"
 
 namespace Ariadne {
 
@@ -39,6 +41,25 @@ class HybridAutomatonInterface;
 //! Extend a hybrid state paving with the auxiliary variables of a system.
 HybridPaving extend_auxiliary(const HybridPaving& hgtp,
                               const HybridAutomatonInterface& ha);
+
+// Flatten location-indexed storage into ordinary continuous sets before any
+// rendering. No hybrid drawing object, backend conversion or new dependency
+// in the Drawing module is needed. An empty location filter selects all
+// materialised locations, as with the legacy HybridPaving::draw.
+template<class Visitor>
+Void for_each_flattened_paving(const HybridPaving& storage,
+                              const Set<DiscreteLocation>& locations,
+                              const Variables2d& axes, Visitor&& visitor) {
+    for (auto it = storage.locations_begin(); it != storage.locations_end(); ++it) {
+        if (locations.empty() || locations.contains(it->first)) {
+            const RealSpace space = storage.space(it->first);
+            const Projection2d projection(
+                space.dimension(), space.index(axes.x()), space.index(axes.y()));
+            visitor(projection, static_cast<const SubPavingInterface&>(it->second));
+        }
+    }
+}
+
 
 } // namespace Ariadne
 

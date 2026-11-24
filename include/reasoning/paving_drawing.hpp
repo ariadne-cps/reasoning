@@ -23,7 +23,7 @@
  */
 
 /** @file reasoning/paving_drawing.hpp
- *  @brief Drawing adapters for paving geometry, outside the Drawing module.
+ *  @brief Drawing and plotting adapters for paving geometry in Reasoning.
  */
 
 #ifndef ARIADNE_REASONING_PAVING_DRAWING_HPP
@@ -122,6 +122,28 @@ inline Void draw(Figure& figure, const GridCell& cell) {
 
 inline Void draw(Figure& figure, const AugmentedPaving& paving) {
     figure.draw(AugmentedPavingDrawable(paving));
+}
+
+// Preserve the legacy colour/order sequence while accepting any
+// AugmentedPaving, including its labelled legacy subclass. No labelled
+// representation is required by this plotting interface.
+inline Void draw_coloured_pavings(Figure&) {}
+
+template<class... Remaining>
+Void draw_coloured_pavings(Figure& figure, const Colour& colour,
+                          const AugmentedPaving& paving,
+                          const Remaining&... remaining) {
+    figure.set_fill_colour(colour);
+    PavingDrawing::draw(figure, paving);
+    draw_coloured_pavings(figure, remaining...);
+}
+
+template<class BoundingBox, class... Pavings>
+Void plot(const char* filename, const Projection2d& projection,
+          const BoundingBox& bounds, const Pavings&... pavings) {
+    Figure figure(bounds, projection);
+    draw_coloured_pavings(figure, pavings...);
+    figure.write(filename);
 }
 
 } // namespace Ariadne::PavingDrawing

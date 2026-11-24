@@ -38,7 +38,7 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "reasoning/augmented_paving_plot.hpp"
+#include "reasoning/paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
