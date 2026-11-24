@@ -15,6 +15,7 @@ set(UNIT_TESTS
     test_hybrid_paving
     test_grid_adapters
     test_labelled_augmented_paving_adapters
+    test_generic_labelled_paving_drawing
     test_scaling_adapters
     test_paving_drawing
     test_neural_symbolic

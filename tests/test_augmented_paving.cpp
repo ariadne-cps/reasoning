@@ -41,6 +41,7 @@
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
+#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/labelled_augmented_paving_adapters.hpp"
 #include "logging/test_runner.hpp"

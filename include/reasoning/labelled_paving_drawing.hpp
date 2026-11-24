@@ -31,7 +31,6 @@
 #define ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP
 
 #include "reasoning/paving_drawing.hpp"
-#include "reasoning/labelled_augmented_paving_adapters.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 
@@ -94,40 +93,6 @@ inline LabelledFigure& operator<<(LabelledFigure& figure, const LabelledAugmente
     /** @brief Perform the labelled geometric operation. */
     PavingDrawing::draw_to_figure(figure, paving);
     return figure;
-}
-
-// Generic value counterpart: the drawing logic remains in Reasoning because
-// its AugmentedPaving representation must not enter the Drawing module.
-// Figure stores an owned drawable snapshot, just as with the legacy class.
-inline Void draw(CanvasInterface& canvas, const Variables2d& axes,
-                 const LabelledAugmentedPavingValue& paving) {
-    const Projection2d proj = Ariadne::projection(state_auxiliary_space(paving), axes);
-    PavingDrawing::draw(canvas, proj, paving.value());
-}
-
-class LabelledAugmentedPavingValueDrawable final : public LabelledDrawable2dInterface {
-  public:
-    explicit LabelledAugmentedPavingValueDrawable(const LabelledAugmentedPavingValue& paving)
-        : _paving(paving) {}
-
-    LabelledAugmentedPavingValueDrawable* labelled_clone() const override {
-        return new LabelledAugmentedPavingValueDrawable(*this);
-    }
-
-    Void draw(CanvasInterface& canvas, const Variables2d& axes) const override {
-        PavingDrawing::draw(canvas, axes, _paving);
-    }
-
-  private:
-    LabelledAugmentedPavingValue _paving;
-};
-
-inline Void draw(Figure& figure, const LabelledAugmentedPavingValue& paving) {
-    PavingDrawing::draw(figure, paving.value());
-}
-
-inline Void draw(LabelledFigure& figure, const LabelledAugmentedPavingValue& paving) {
-    figure.draw(LabelledAugmentedPavingValueDrawable(paving));
 }
 
 // Explicit plotting entry points for labelled paving results. These preserve

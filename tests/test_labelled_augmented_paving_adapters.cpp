@@ -32,6 +32,7 @@
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/labelled_augmented_paving_adapters.hpp"
+#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
