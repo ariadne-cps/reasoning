@@ -31,7 +31,8 @@
 #include "labelled/labelled_grid.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/grid_adapters.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 
 #include "ariadne-testing.hpp"
 

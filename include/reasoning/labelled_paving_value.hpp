@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/labelled_augmented_paving_adapters.hpp
+ *            reasoning/labelled_paving_value.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,19 +22,33 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/labelled_augmented_paving_adapters.hpp
- *  @brief Paving-specific composition of state and auxiliary coordinate metadata.
+/** @file reasoning/labelled_paving_value.hpp
+ *  @brief Labelled values for grid, paving, and augmented paving geometry.
  */
 
-#ifndef ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_ADAPTERS_HPP
-#define ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_ADAPTERS_HPP
+#ifndef ARIADNE_REASONING_LABELLED_PAVING_VALUE_HPP
+#define ARIADNE_REASONING_LABELLED_PAVING_VALUE_HPP
 
 #include <utility>
 
 #include "labelled/value.hpp"
 #include "paving/augmented_paving.hpp"
+#include "paving/grid.hpp"
+#include "paving/paving_interface.hpp"
 
 namespace Ariadne {
+
+// Keep grid-specific composition in Reasoning, while LabelledValue<T>
+// remains a geometry-independent value/metadata wrapper.
+inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space) {
+    return LabelledValue<Grid>(grid, space);
+}
+
+// Keep backend-specific Paving creation in Reasoning; the wrapper records
+// coordinate labels but never assumes tree rather than ROBDD storage.
+inline LabelledValue<Paving> make_labelled_paving(Paving paving, const RealSpace& space) {
+    return LabelledValue<Paving>(std::move(paving), space);
+}
 
 // The first space names state coordinates; the second names the auxiliary
 // mapping's outputs. No paving-specific metadata is added to LabelledValue.
@@ -105,4 +119,4 @@ inline Bool intersect(const LabelledAugmentedPavingValue& left,
 
 } // namespace Ariadne
 
-#endif // ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_ADAPTERS_HPP
+#endif // ARIADNE_REASONING_LABELLED_PAVING_VALUE_HPP

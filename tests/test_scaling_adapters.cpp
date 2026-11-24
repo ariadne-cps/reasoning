@@ -28,8 +28,8 @@
 
 #include "hybrid/hybrid_grid.hpp"
 #include "logging/test_runner.hpp"
-#include "reasoning/hybrid_grid_value_adapters.hpp"
-#include "reasoning/scaling_adapters.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
 
 #include "ariadne-testing.hpp"
 

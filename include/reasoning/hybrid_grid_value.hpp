@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/hybrid_grid_value_adapters.hpp
+ *            reasoning/hybrid_grid_value.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/hybrid_grid_value_adapters.hpp
+/** @file reasoning/hybrid_grid_value.hpp
  *  @brief Materialize paving grids from generic lazy scaling values.
  */
 
-#ifndef ARIADNE_REASONING_HYBRID_GRID_VALUE_ADAPTERS_HPP
-#define ARIADNE_REASONING_HYBRID_GRID_VALUE_ADAPTERS_HPP
+#ifndef ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
+#define ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
 
 #include <utility>
 
@@ -61,4 +61,4 @@ inline Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalin
 
 } // namespace Ariadne
 
-#endif // ARIADNE_REASONING_HYBRID_GRID_VALUE_ADAPTERS_HPP
+#endif // ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP

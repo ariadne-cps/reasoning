@@ -26,7 +26,7 @@
  *  @brief Check grid materialization without legacy hybrid grid or scaling headers.
  */
 
-#include "reasoning/hybrid_grid_value_adapters.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 #ifdef ARIADNE_HYBRID_GRID_HPP
 #error Generic grid adapters must not import the legacy HybridGrid header

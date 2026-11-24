@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/grid_adapters.hpp
+ *            reasoning/hybrid_grid_compat.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,34 +22,21 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/grid_adapters.hpp
- *  @brief Paving-specific factories over generic labelled and hybrid values.
+/** @file reasoning/hybrid_grid_compat.hpp
+ *  @brief Legacy hybrid grid and scaling policies adapted to generic values.
  */
 
-#ifndef ARIADNE_REASONING_GRID_ADAPTERS_HPP
-#define ARIADNE_REASONING_GRID_ADAPTERS_HPP
+#ifndef ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP
+#define ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP
+
+#include <utility>
 
 #include "evolution/scalings.hpp"
 #include "hybrid/hybrid_grid.hpp"
 #include "hybrid/value.hpp"
-#include "labelled/value.hpp"
-#include "paving/grid.hpp"
-#include "paving/paving_interface.hpp"
-#include "reasoning/hybrid_grid_value_adapters.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
-
-// Keep grid-specific composition in Reasoning, while LabelledValue<T>
-// remains a geometry-independent value/metadata wrapper.
-inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space) {
-    return LabelledValue<Grid>(grid, space);
-}
-
-// Keep backend-specific Paving creation in Reasoning; the wrapper records
-// coordinate labels but never assumes tree rather than ROBDD storage.
-inline LabelledValue<Paving> make_labelled_paving(Paving paving, const RealSpace& space) {
-    return LabelledValue<Paving>(std::move(paving), space);
-}
 
 // Legacy HybridGrid and its scaling policy are currently paving-dependent.
 // This factory preserves the policy while storing the grids in Hybrid<Grid>,
@@ -62,6 +49,25 @@ inline Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings
         });
 }
 
+
+// Materialize only the variables belonging to the requested location.
+// A shared HybridScalings policy may depend on both the location and the
+// variable; resolving it lazily preserves that behavior for Hybrid<Scalings>.
+inline Hybrid<Scalings> make_hybrid_scalings(HybridSpace space, HybridScalings policy) {
+    return Hybrid<Scalings>(std::move(space),
+        [policy = std::move(policy)](const DiscreteLocation& location,
+                                     const RealSpace& real_space) {
+            Map<RealVariable, ExactDouble> entries;
+            for (SizeType index = 0; index < real_space.dimension(); ++index) {
+                const RealVariable& variable = real_space[index];
+                entries.insert(variable, policy.scaling(location, variable));
+            }
+            // All variables of this location have explicit scaling values.
+            // The fallback is only used for names outside its RealSpace.
+            return Scalings(1.0_x, entries);
+        });
+}
+
 } // namespace Ariadne
 
-#endif // ARIADNE_REASONING_GRID_ADAPTERS_HPP
+#endif // ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP

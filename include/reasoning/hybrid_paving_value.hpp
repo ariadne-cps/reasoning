@@ -34,7 +34,7 @@
 
 #include "hybrid/value.hpp"
 #include "paving/paving_interface.hpp"
-#include "reasoning/hybrid_grid_value_adapters.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
 

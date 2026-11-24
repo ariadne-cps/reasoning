@@ -41,8 +41,7 @@
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/grid_adapters.hpp"
-#include "reasoning/scaling_adapters.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "system/hybrid_automaton.hpp"
 

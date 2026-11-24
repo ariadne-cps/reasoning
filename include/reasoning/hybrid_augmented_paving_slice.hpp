@@ -30,7 +30,7 @@
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_SLICE_HPP
 
 #include "hybrid/hybrid_augmented_paving.hpp"
-#include "reasoning/labelled_augmented_paving_adapters.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 
 namespace Ariadne {
 

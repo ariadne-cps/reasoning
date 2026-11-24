@@ -29,7 +29,7 @@
 #define ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_VALUE_DRAWING_HPP
 
 #include "labelled/figure.hpp"
-#include "reasoning/labelled_augmented_paving_adapters.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/paving_drawing.hpp"
 
 namespace Ariadne::PavingDrawing {
