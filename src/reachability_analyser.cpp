@@ -47,7 +47,7 @@
 #include "logging/logging.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"
-#include "reasoning/reachability_analyser.tpl.hpp"
+#include "reachability_analyser.tpl.hpp"
 #include "rendering/figure.hpp"
 #include "set/function_set.hpp"
 #include "set/list_set.hpp"

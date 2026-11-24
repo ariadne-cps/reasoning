@@ -41,7 +41,7 @@
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/parallel_reachability.hpp"
+#include "parallel_reachability.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "threading/thread_manager.hpp"
 

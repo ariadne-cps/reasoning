@@ -26,7 +26,7 @@
  *  @brief Run independent reachability lanes while preserving rounding modes.
  */
 
-#include "reasoning/parallel_reachability.hpp"
+#include "parallel_reachability.hpp"
 
 #include <exception>
 #include <stdexcept>

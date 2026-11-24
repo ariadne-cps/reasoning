@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/reachability_analyser.tpl.hpp
+ *            src/reachability_analyser.tpl.hpp
  *
  *  Copyright  2006-20  Alberto Casagrande, Pieter Collins, Davide Bresolin
  *
@@ -22,7 +22,7 @@
  *  along with Ariadne Reasoning.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/reachability_analyser.tpl.hpp
+/** @file src/reachability_analyser.tpl.hpp
  *  @brief Template implementations of reachability analysis algorithms.
  */
 
@@ -52,7 +52,7 @@
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/analysis_paving_factory.hpp"
-#include "reasoning/parallel_reachability.hpp"
+#include "parallel_reachability.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/time_partition.hpp"
 #include "rendering/figure.hpp"

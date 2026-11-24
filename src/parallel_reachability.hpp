@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/parallel_reachability.hpp
+ *            src/parallel_reachability.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,7 +22,7 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/parallel_reachability.hpp
+/** @file src/parallel_reachability.hpp
  *  @brief Parallel reachability lane execution and rounding-mode validation.
  */
 

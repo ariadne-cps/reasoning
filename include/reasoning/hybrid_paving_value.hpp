@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/hybrid_paving_value_adapters.hpp
+ *            reasoning/hybrid_paving_value.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/hybrid_paving_value_adapters.hpp
+/** @file reasoning/hybrid_paving_value.hpp
  *  @brief Lazy paving backends stored in generic location-indexed values.
  */
 
-#ifndef ARIADNE_REASONING_HYBRID_PAVING_VALUE_ADAPTERS_HPP
-#define ARIADNE_REASONING_HYBRID_PAVING_VALUE_ADAPTERS_HPP
+#ifndef ARIADNE_REASONING_HYBRID_PAVING_VALUE_HPP
+#define ARIADNE_REASONING_HYBRID_PAVING_VALUE_HPP
 
 #include <functional>
 #include <utility>
@@ -63,6 +63,21 @@ inline Hybrid<Paving> make_hybrid_pavings(
         });
 }
 
+class HybridAutomatonInterface;
+
+/** @brief Extend the materialized hybrid state pavings with auxiliary variables.
+ *  @details The generic storage does not own a scaling policy or a paving
+ *  backend factory: both are supplied explicitly. Preserve the selected
+ *  tree/ROBDD backend and share its manager through the backend capture.
+ *  Missing state locations stay unmaterialized in the result. The input grid
+ *  at every materialized location must match the supplied scaling policy.
+ */
+Hybrid<Paving> extend_auxiliary(
+    const Hybrid<Paving>& state_pavings,
+    Hybrid<Scalings> scalings,
+    std::function<Paving(const Grid&)> backend,
+    const HybridAutomatonInterface& automaton);
+
 } // namespace Ariadne
 
-#endif // ARIADNE_REASONING_HYBRID_PAVING_VALUE_ADAPTERS_HPP
+#endif // ARIADNE_REASONING_HYBRID_PAVING_VALUE_HPP

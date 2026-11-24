@@ -25,6 +25,7 @@ set(UNIT_TESTS
 )
 foreach(TEST IN LISTS UNIT_TESTS)
     add_executable(${TEST} ${TEST}.cpp)
+    target_include_directories(${TEST} PRIVATE "${PROJECT_SOURCE_DIR}/src")
     target_link_libraries(${TEST} PRIVATE ariadne-reasoning reasoning ariadne-testing)
     add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}> --concise --logtonull)
     set_property(TEST ${TEST} PROPERTY LABELS "reasoning")

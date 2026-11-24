@@ -28,7 +28,7 @@
 
 #include <memory>
 
-#include "reasoning/hybrid_paving_value_adapters.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 
 #ifdef ARIADNE_HYBRID_GRID_HPP
 #error Generic paving adapter must not import the legacy HybridGrid header
@@ -44,7 +44,6 @@
 #include "reasoning/grid_adapters.hpp"
 #include "reasoning/scaling_adapters.hpp"
 #include "reasoning/hybrid_paving.hpp"
-#include "reasoning/hybrid_paving_value_operations.hpp"
 #include "system/hybrid_automaton.hpp"
 
 #include "ariadne-testing.hpp"

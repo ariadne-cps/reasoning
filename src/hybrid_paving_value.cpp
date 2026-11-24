@@ -1,5 +1,5 @@
 /***************************************************************************
- *            src/hybrid_paving_value_operations.cpp
+ *            src/hybrid_paving_value.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,11 +22,11 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file src/hybrid_paving_value_operations.cpp
+/** @file src/hybrid_paving_value.cpp
  *  @brief Extend generic lazy hybrid pavings with system auxiliary coordinates.
  */
 
-#include "reasoning/hybrid_paving_value_operations.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 
 #include "function/functional.hpp"
 #include "paving/binary_tree_paving.hpp"
