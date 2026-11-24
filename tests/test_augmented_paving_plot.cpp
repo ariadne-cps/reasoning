@@ -87,11 +87,11 @@ class TestAugmentedPavingPlot : public Ariadne::Testing::ContextFixture {
         // must be rendered in insertion order regardless of their backend.
         bool seen_tree = false;
         bool seen_robdd = false;
-        for (double red : rendered.rendered_colours) {
-            if (red == 0.25) {
+        for (double red_component : rendered.rendered_colours) {
+            if (red_component == 0.25) {
                 ARIADNE_TESTING_PROVE(not seen_robdd);
                 seen_tree = true;
-            } else if (red == 0.75) {
+            } else if (red_component == 0.75) {
                 ARIADNE_TESTING_PROVE(seen_tree);
                 seen_robdd = true;
             } else {
