@@ -29,7 +29,7 @@ require_same_dependency_commit(Symbolic CHAINS
     "evolution|system|hybrid|labelled|expression-set|symbolic"
     "smt|symbolic")
 require_same_dependency_commit(Bdd CHAINS
-    "evolution|system|hybrid|labelled|drawing|paving|bdd"
+    "evolution|system|hybrid|labelled|paving|bdd"
     "sat|bdd")
 require_same_dependency_commit(ConstraintSolving CHAINS
     "evolution|system|hybrid|labelled|expression-set|set|constraint-solving"
