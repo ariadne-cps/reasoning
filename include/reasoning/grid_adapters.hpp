@@ -35,6 +35,7 @@
 #include "labelled/value.hpp"
 #include "paving/grid.hpp"
 #include "paving/paving_interface.hpp"
+#include "reasoning/hybrid_grid_value_adapters.hpp"
 
 namespace Ariadne {
 
@@ -48,16 +49,6 @@ inline LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace&
 // coordinate labels but never assumes tree rather than ROBDD storage.
 inline LabelledValue<Paving> make_labelled_paving(Paving paving, const RealSpace& space) {
     return LabelledValue<Paving>(std::move(paving), space);
-}
-
-// Materialize a paving Grid only in Reasoning: Scalings owns the numeric
-// policy and ordering, while the paving-specific representation stays here.
-inline Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
-    Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
-    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
-        lengths[axis] = scalings.scaling(space[axis]);
-    }
-    return Grid(lengths);
 }
 
 // Legacy HybridGrid and its scaling policy are currently paving-dependent.
