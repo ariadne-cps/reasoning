@@ -32,12 +32,19 @@
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/labelled_augmented_paving_adapters.hpp"
+#include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 
 #include "ariadne-testing.hpp"
 
 using namespace Ariadne;
+
+class PavingBoundaryCanvas : public NullCanvas {
+  public:
+    Nat boundaries = 0u;
+    Void fill_boundary(const List<Point2d>&) override { ++boundaries; }
+};
 
 class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixture {
   public:
@@ -89,6 +96,29 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         NullCanvas canvas;
         const Projection2d projection(3u, 0u, 2u);
         PavingDrawing::draw(canvas, projection, copy.value());
+        ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
+
+        // Select one state and one auxiliary variable. The generic adapter
+        // must use the same ordered projection and draw the same cell graph.
+        PavingBoundaryCanvas legacy_canvas, generic_canvas;
+        PavingDrawing::draw(legacy_canvas, Variables2d(y, a), legacy_robdd);
+        PavingDrawing::draw(generic_canvas, Variables2d(y, a), copy);
+        ARIADNE_TESTING_PROVE(legacy_canvas.boundaries > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_canvas.boundaries,
+                                     legacy_canvas.boundaries);
+
+        PavingDrawing::LabelledAugmentedPavingValueDrawable drawable(copy);
+        std::unique_ptr<LabelledDrawable2dInterface> cloned(drawable.labelled_clone());
+        PavingBoundaryCanvas clone_canvas;
+        cloned->draw(clone_canvas, Variables2d(y, a));
+        ARIADNE_TESTING_EXPECT_EQUAL(clone_canvas.boundaries,
+                                     legacy_canvas.boundaries);
+        LabelledFigure figure(Axes2d(-2.0, y, 2.0, -2.0, a, 2.0));
+        PavingDrawing::draw(figure, copy);
+        PavingBoundaryCanvas figure_canvas;
+        figure._paint_all(figure_canvas);
+        ARIADNE_TESTING_EXPECT_EQUAL(figure_canvas.boundaries,
+                                     legacy_canvas.boundaries);
         ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
 
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_augmented_paving(

@@ -42,6 +42,7 @@
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
+#include "reasoning/labelled_augmented_paving_adapters.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/augmented_paving.hpp"
@@ -241,9 +242,16 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         PavingDrawing::draw(canvas, Variables2d(x, y), ls1);
         lcopy->draw(canvas, Variables2d(x, y));
 
-        // Exercise both projection-based and variable-labelled figures.
+        // Exercise the real labelled-figure consumer with the generic value.
+        // Keep the independent legacy drawing and clone checks above as
+        // parity coverage until the legacy provider can be removed.
+        const LabelledAugmentedPavingValue generic = make_labelled_augmented_paving(
+            AugmentedPaving(ls1.euclidean_set()), state_space, auxiliary_space);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_auxiliary_space(generic),
+                                     ls1.state_auxiliary_space());
+        PavingDrawing::draw(canvas, Variables2d(x, y), generic);
         LabelledFigure new_figure(Axes2d(-2.0, x, 2.0, -2.0, y, 2.0));
-        PavingDrawing::draw(new_figure, ls1);
+        PavingDrawing::draw(new_figure, generic);
         ARIADNE_TESTING_EXPECT_NO_THROW(new_figure._paint_all(canvas));
 
         ARIADNE_TESTING_NOTE(ls1);
