@@ -213,6 +213,126 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         }
     }
 
+    Void test_set_operations_match_legacy_without_unwanted_materialization() {
+        const DiscreteLocation first(1), second(2), third(3), absent(4);
+        const RealVariable x("x");
+        MonolithicHybridSpace spaces;
+        spaces.new_location(first, RealSpace({x}));
+        spaces.new_location(second, RealSpace({x}));
+        spaces.new_location(third, RealSpace({x}));
+        const HybridSpace space(spaces);
+        const HybridGrid legacy_grid(space);
+        const Grid grid(1u);
+        const GridCell cell_left(grid, 0u, BinaryWord("0"));
+        const GridCell cell_right(grid, 0u, BinaryWord("1"));
+
+        for (Bool use_robdd : {false, true}) {
+            auto manager = std::make_shared<RobddManager>();
+            std::function<Paving(const Grid&)> backend =
+                [manager, use_robdd](const Grid& selected) -> Paving {
+                    if (use_robdd)
+                        return Paving(new RobddPaving(manager, selected));
+                    return Paving(new BinaryTreePaving(selected));
+                };
+            const auto make_generic = [&]() {
+                return make_hybrid_pavings(
+                    space, make_hybrid_grids(
+                        space, Hybrid<Scalings>(space,
+                            [](const DiscreteLocation&, const RealSpace&) {
+                                return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+                            })),
+                    backend);
+            };
+            Hybrid<Paving> original_left = make_generic();
+            Hybrid<Paving> original_right = make_generic();
+            HybridPaving legacy_left(legacy_grid, backend);
+            HybridPaving legacy_right(legacy_grid, backend);
+            original_left[first].adjoin(cell_left);
+            original_left[second].adjoin(cell_right);
+            original_right[first].adjoin(cell_right);
+            original_right[third].adjoin(cell_left);
+            legacy_left[first].adjoin(cell_left);
+            legacy_left[second].adjoin(cell_right);
+            legacy_right[first].adjoin(cell_right);
+            legacy_right[third].adjoin(cell_left);
+
+            // Comparisons must not force lazy construction.
+            ARIADNE_TESTING_PROVE(subset(original_left, original_right) ==
+                                  subset(legacy_left, legacy_right));
+            ARIADNE_TESTING_PROVE(intersect(original_left, original_right) ==
+                                  intersect(legacy_left, legacy_right));
+            ARIADNE_TESTING_EXPECT_EQUAL(original_left.size(), 2u);
+            ARIADNE_TESTING_EXPECT_EQUAL(original_right.size(), 2u);
+            ARIADNE_TESTING_PROVE(not original_left.has_value(third));
+            ARIADNE_TESTING_PROVE(not original_right.has_value(second));
+            ARIADNE_TESTING_PROVE(not original_left.has_location(absent));
+
+            const auto check_slice = [&](const Hybrid<Paving>& generic,
+                                         const HybridPaving& legacy,
+                                         const DiscreteLocation& location) {
+                ARIADNE_TESTING_PROVE(generic.has_value(location) ==
+                                      legacy.nontrivial_location(location));
+                if (generic.has_value(location)) {
+                    const Paving& lhs = generic[location];
+                    const Paving& rhs = legacy[location];
+                    ARIADNE_TESTING_PROVE(lhs.grid() == rhs.grid());
+                    ARIADNE_TESTING_PROVE(lhs.subset(
+                        static_cast<const PavingInterface&>(rhs)));
+                    ARIADNE_TESTING_PROVE(rhs.subset(
+                        static_cast<const PavingInterface&>(lhs)));
+                    if (use_robdd) {
+                        ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
+                            &static_cast<const PavingInterface&>(lhs)) != nullptr);
+                    } else {
+                        ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
+                            &static_cast<const PavingInterface&>(lhs)) != nullptr);
+                    }
+                }
+            };
+
+            Hybrid<Paving> joined = original_left;
+            HybridPaving legacy_joined = legacy_left;
+            adjoin(joined, original_right);
+            legacy_joined.adjoin(legacy_right);
+            for (const auto& location : {first, second, third})
+                check_slice(joined, legacy_joined, location);
+            ARIADNE_TESTING_EXPECT_EQUAL(joined.size(), 3u);
+            ARIADNE_TESTING_PROVE(joined[first].superset(cell_left));
+            ARIADNE_TESTING_PROVE(joined[first].superset(cell_right));
+            ARIADNE_TESTING_PROVE(subset(original_right, joined));
+            ARIADNE_TESTING_PROVE(intersect(joined, original_right));
+
+            Hybrid<Paving> difference = original_left;
+            HybridPaving legacy_difference = legacy_left;
+            remove(difference, original_right);
+            legacy_difference.remove(legacy_right);
+            for (const auto& location : {first, second, third})
+                check_slice(difference, legacy_difference, location);
+            ARIADNE_TESTING_PROVE(difference.has_value(third));
+            ARIADNE_TESTING_PROVE(difference[third].is_empty());
+            ARIADNE_TESTING_PROVE(difference[first].superset(cell_left));
+            ARIADNE_TESTING_PROVE(not difference[first].superset(cell_right));
+
+            Hybrid<Paving> restricted = original_left;
+            HybridPaving legacy_restricted = legacy_left;
+            restrict(restricted, original_right);
+            legacy_restricted.restrict(legacy_right);
+            for (const auto& location : {first, second, third})
+                check_slice(restricted, legacy_restricted, location);
+            ARIADNE_TESTING_PROVE(restricted[first].is_empty());
+            ARIADNE_TESTING_PROVE(restricted[second].is_empty());
+            ARIADNE_TESTING_PROVE(not restricted.has_value(third));
+            ARIADNE_TESTING_PROVE(subset(restricted, original_right));
+            ARIADNE_TESTING_PROVE(not intersect(restricted, original_right));
+
+            // Neither source acquires a materialized location as a side effect.
+            ARIADNE_TESTING_EXPECT_EQUAL(original_left.size(), 2u);
+            ARIADNE_TESTING_EXPECT_EQUAL(original_right.size(), 2u);
+            ARIADNE_TESTING_PROVE(not original_left.has_value(third));
+            ARIADNE_TESTING_PROVE(not original_right.has_value(second));
+        }
+    }
+
     Void test_rejects_empty_or_wrong_grid_backend() {
         const DiscreteLocation first(1);
         const RealVariable x("x");
@@ -241,6 +361,7 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_hybrid_paving_value_adapters");
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_tree_robdd_and_lazy_locations);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_extend_auxiliary_matches_legacy_and_preserves_lazy_backend);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_set_operations_match_legacy_without_unwanted_materialization);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_rejects_empty_or_wrong_grid_backend);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
