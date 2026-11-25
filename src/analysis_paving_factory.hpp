@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/analysis_paving_factory.hpp
+ *            src/analysis_paving_factory.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,20 +22,17 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/analysis_paving_factory.hpp
+/** @file src/analysis_paving_factory.hpp
  *  @brief Factories for constructing analysis-specific paving representations.
  */
 
-#ifndef ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP
-#define ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP
+#ifndef ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
+#define ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
 
-#include "hybrid/hybrid_augmented_paving.hpp"
+#include "reasoning/reachability_analyser.hpp"
 
 namespace Ariadne {
 class HybridAutomatonInterface;
-
-/** @brief Adapt an automaton into a lazy, location-indexed auxiliary mapping. */
-HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterface& system);
 
 /** @brief Construct the storage representation selected by a reachability analyser. */
 template<class STORAGE>
@@ -63,4 +60,4 @@ STORAGE make_analysis_paving(GRID const& grid, SYS const& system) {
     return AnalysisPavingFactory<STORAGE>::make(grid, system);
 }
 } // namespace Ariadne
-#endif // ARIADNE_REASONING_ANALYSIS_PAVING_FACTORY_HPP
+#endif // ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP

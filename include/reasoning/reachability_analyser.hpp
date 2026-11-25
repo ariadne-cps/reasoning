@@ -43,12 +43,18 @@
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
 #include "paving/paving_interface.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 #include "set/function_set.hpp"
 
 namespace Ariadne {
+
+class HybridAutomatonInterface;
+
+/** @brief Adapt an automaton into a lazy, location-indexed auxiliary mapping. */
+HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterface& system);
+
 
 template<class ES>
 class Orbit;

@@ -51,7 +51,7 @@
 #include "logging/progress_indicator.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "analysis_paving_factory.hpp"
 #include "parallel_reachability.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "reasoning/time_partition.hpp"

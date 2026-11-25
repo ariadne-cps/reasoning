@@ -46,7 +46,7 @@
 #include "labelled/graphics_interface.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/rational.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "analysis_paving_factory.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"

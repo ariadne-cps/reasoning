@@ -43,7 +43,7 @@
 #include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_augmented_paving_slice.hpp"
 #include "reasoning/hybrid_paving.hpp"
