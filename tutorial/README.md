@@ -25,6 +25,11 @@ cmake --build tutorial/build --parallel
 ./tutorial/build/tutorial_reasoning
 ```
 
+The C++ tutorial intentionally includes only `ariadne-reasoning.hpp`. It
+returns exit code 0 if the certificate proves safety; an indeterminate or
+unproved result yields exit code 1. Its success is verified through the
+process exit status rather than console output.
+
 ## Python tutorial
 
 Point `PYTHONPATH` to the installed `pyariadne_reasoning` extension and configure the

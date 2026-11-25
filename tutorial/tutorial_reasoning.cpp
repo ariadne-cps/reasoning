@@ -26,11 +26,6 @@
  *  @brief Demonstrate reachability and safety analysis with Ariadne Reasoning.
  */
 
-#include <iostream>
-#include <stdexcept>
-
-#include "integration/integrator.hpp"
-
 #include "ariadne-reasoning.hpp"
 
 using namespace Ariadne;
@@ -54,11 +49,6 @@ int main() {
     // Unlike finite-time upper_reach, verify_safety attempts to prove
     // that every reachable state remains in the safe set for all time.
     auto certificate = analyser.verify_safety(initial, safe);
-    if (!definitely(certificate.is_safe)) {
-        throw std::runtime_error("Safety could not be verified");
-    }
-
-    std::cout << "Safety verified for all time.\n"
-              << "Chain-reachable grid cells: " << certificate.chain_reach_set.size() << '\n';
-    return 0;
+    // A nonzero exit code means that the proof did not establish safety.
+    return definitely(certificate.is_safe) ? 0 : 1;
 }
