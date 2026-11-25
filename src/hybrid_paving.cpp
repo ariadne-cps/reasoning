@@ -28,12 +28,31 @@
 
 // Hybrid paving operations depending on a system specification.
 #include "reasoning/hybrid_paving.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 
 #include "function/functional.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
+
+namespace {
+// Use the same backend-neutral geometric kernel for legacy HybridPaving
+// and generic Hybrid<Paving>. The binary tree is a derived representation;
+// only the destination's selected tree/ROBDD backend remains authoritative.
+Void adjoin_auxiliary_skew_product(
+    Paving& destination, const Paving& source,
+    const Grid& auxiliary_grid,
+    const EffectiveVectorMultivariateFunction& auxiliary_function) {
+    BinaryTreePaving tree(source.grid());
+    for (auto cell = source.begin(), end = source.end(); cell != end; ++cell)
+        tree.adjoin(*cell);
+    const BinaryTreePaving product =
+        outer_skew_product(tree, auxiliary_grid, auxiliary_function);
+    for (const auto& cell : product)
+        destination.adjoin(cell);
+}
+} // namespace
 
 HybridPaving extend_auxiliary(const HybridPaving& hybrid_paving,
                               const HybridAutomatonInterface& hybrid_automaton) {
@@ -51,18 +70,49 @@ HybridPaving extend_auxiliary(const HybridPaving& hybrid_paving,
         RealSpace auxiliary_space = hybrid_automaton.continuous_auxiliary_space(location);
         EffectiveVectorMultivariateFunction auxiliary_function = hybrid_automaton.auxiliary_function(location);
         Grid auxiliary_grid = scalings.grid(location, auxiliary_space);
-        // The skew product is a derived geometric view. Preserve the
-        // selected state backend without changing authoritative storage.
-        BinaryTreePaving tree(state_paving.grid());
-        for (auto cell = state_paving.begin(), end = state_paving.end(); cell != end; ++cell)
-            tree.adjoin(*cell);
-        BinaryTreePaving product = outer_skew_product(tree, auxiliary_grid, auxiliary_function);
-        // A paving-level union requires backend compatibility. Import the
-        // derived geometry cell by cell into the chosen backend instead:
-        // Tree and ROBDD both support direct GridCell insertion.
         Paving& destination = result[location];
-        for (const auto& cell: product)
-            destination.adjoin(cell);
+        adjoin_auxiliary_skew_product(
+            destination, state_paving, auxiliary_grid, auxiliary_function);
+    }
+    return result;
+}
+
+Hybrid<Paving> extend_auxiliary(
+    const Hybrid<Paving>& state_pavings,
+    Hybrid<Scalings> scalings,
+    std::function<Paving(const Grid&)> backend,
+    const HybridAutomatonInterface& automaton) {
+    // Keep a copy for validating the input's location-dependent grid.
+    Hybrid<Scalings> state_scalings(scalings);
+    const HybridSpace expanded_space = automaton.state_auxiliary_space();
+    Hybrid<Paving> result = make_hybrid_pavings(
+        expanded_space,
+        make_hybrid_grids(expanded_space, std::move(scalings)),
+        std::move(backend));
+
+    // Materialized input locations are the only locations to transfer.
+    // Neither the input nor the output materializes any other location.
+    for (auto iter = state_pavings.begin(); iter != state_pavings.end(); ++iter) {
+        const DiscreteLocation& location = iter->first;
+        const Paving& state_paving = iter->second;
+        ARIADNE_PRECONDITION(expanded_space.has_location(location));
+        ARIADNE_PRECONDITION(state_pavings.space()[location] ==
+                             automaton.continuous_state_space(location));
+        ARIADNE_PRECONDITION(state_scalings.has_location(location));
+        const Grid expected_state_grid =
+            grid_from_scalings(state_scalings[location],
+                               automaton.continuous_state_space(location));
+        ARIADNE_PRECONDITION(state_paving.grid() == expected_state_grid);
+
+        const RealSpace auxiliary_space = automaton.continuous_auxiliary_space(location);
+        const EffectiveVectorMultivariateFunction auxiliary_function =
+            automaton.auxiliary_function(location);
+        const Grid auxiliary_grid =
+            grid_from_scalings(state_scalings[location], auxiliary_space);
+
+        Paving& destination = result[location];
+        adjoin_auxiliary_skew_product(
+            destination, state_paving, auxiliary_grid, auxiliary_function);
     }
     return result;
 }
