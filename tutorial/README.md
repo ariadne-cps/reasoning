@@ -25,9 +25,10 @@ cmake --build tutorial/build --parallel
 ./tutorial/build/tutorial_reasoning
 ```
 
-The C++ tutorial intentionally includes only `ariadne-reasoning.hpp`. It
-reports the proof result and the chain-reachable cell count using the Ariadne
-logger; an unproved result yields exit code 1 instead of reporting success.
+The C++ tutorial includes only the public `ariadne-reasoning.hpp` umbrella
+for Ariadne APIs, plus the standard `<iostream>` header for console output.
+It prints the proof result and the chain-reachable cell count using standard
+streams; an unproved result prints an error and yields exit code 1.
 
 ## Python tutorial
 
