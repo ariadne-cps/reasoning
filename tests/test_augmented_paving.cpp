@@ -326,6 +326,44 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
     }
 
+
+    Void test_labelled_legacy_drawing_after_provider_cutover() {
+        RealVariable state_x("x"), state_y("y"), aux_z("z");
+        RealSpace state({state_x, state_y}), auxiliary({aux_z});
+        EffectiveScalarMultivariateFunction coordinate =
+            EffectiveScalarMultivariateFunction::coordinate(2u, 0u);
+        EffectiveVectorMultivariateFunction mapping({coordinate});
+        LabelledMapping labelled_mapping(state, mapping, auxiliary);
+        LabelledGrid labelled_grid(Grid(2u), state);
+        LabelledAugmentedPaving paving(labelled_grid, labelled_mapping);
+        ARIADNE_TESTING_PROVE(paving.is_empty());
+        paving.adjoin_outer_approximation(ExactBoxType({{-1, 1}, {-1, 1}}), 2u);
+        ARIADNE_TESTING_PROVE(paving.size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(paving.state_space(), state);
+        ARIADNE_TESTING_EXPECT_EQUAL(paving.auxiliary_space(), auxiliary);
+        ARIADNE_TESTING_EXPECT_EQUAL(paving.state_auxiliary_paving().dimension(), 3u);
+
+        NullCanvas canvas;
+        PavingDrawing::draw(canvas, Variables2d(state_x, state_y), paving);
+        PavingDrawing::LabelledAugmentedPavingDrawable drawable(paving);
+        drawable.draw(canvas, Variables2d(state_x, state_y));
+        std::unique_ptr<LabelledDrawable2dInterface> clone(drawable.labelled_clone());
+        clone->draw(canvas, Variables2d(state_x, state_y));
+
+        Figure figure(ExactBoxType({{-2, 2}, {-2, 2}, {-2, 2}}),
+                      Projection2d(3u, 0u, 1u));
+        PavingDrawing::draw_to_figure(figure, paving);
+        PavingDrawing::draw(figure, paving);
+        ARIADNE_TESTING_EXPECT_EQUAL(&PavingDrawing::operator<<(figure, paving), &figure);
+        LabelledFigure labelled_figure(
+            Axes2d(-2.0, state_x, 2.0, -2.0, state_y, 2.0));
+        PavingDrawing::draw_to_figure(labelled_figure, paving);
+        PavingDrawing::draw(labelled_figure, paving);
+        ARIADNE_TESTING_EXPECT_EQUAL(
+            &PavingDrawing::operator<<(labelled_figure, paving), &labelled_figure);
+        ARIADNE_TESTING_EXPECT_NO_THROW(labelled_figure._paint_all(canvas));
+    }
+
     Void test_enclosure_augmented_paving() {
         GradedTaylorSeriesIntegrator integrator(StepMaximumError(1e-2_pr));
         VectorFieldEvolver evolver(system, integrator);
@@ -366,6 +404,7 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_augmented_paving);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_augmented_paving_preconditions);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_augmented_paving_orbit);
+    ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_labelled_legacy_drawing_after_provider_cutover);
     ARIADNE_TESTING_ADD_TEST(TestAugmentedPaving, test_enclosure_augmented_paving);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
