@@ -26,9 +26,8 @@ cmake --build tutorial/build --parallel
 ```
 
 The C++ tutorial intentionally includes only `ariadne-reasoning.hpp`. It
-returns exit code 0 if the certificate proves safety; an indeterminate or
-unproved result yields exit code 1. Its success is verified through the
-process exit status rather than console output.
+reports the proof result and the chain-reachable cell count using the Ariadne
+logger; an unproved result yields exit code 1 instead of reporting success.
 
 ## Python tutorial
 

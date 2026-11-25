@@ -49,6 +49,12 @@ int main() {
     // Unlike finite-time upper_reach, verify_safety attempts to prove
     // that every reachable state remains in the safe set for all time.
     auto certificate = analyser.verify_safety(initial, safe);
-    // A nonzero exit code means that the proof did not establish safety.
-    return definitely(certificate.is_safe) ? 0 : 1;
+    if (not definitely(certificate.is_safe)) {
+        LOGGING_PRINTLN("Safety could not be verified.");
+        return 1;
+    }
+
+    LOGGING_PRINTLN("Safety verified for all time.");
+    LOGGING_PRINTLN("Chain-reachable grid cells: " << certificate.chain_reach_set.size());
+    return 0;
 }
