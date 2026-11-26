@@ -26,10 +26,13 @@
  *  @brief Test hybrid paving behavior.
  */
 
+#include <memory>
+
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_space.hpp"
 #include "logging/test_runner.hpp"
+#include "paving/robdd_paving.hpp"
 #include "system/hybrid_automaton.hpp"
 #include "reasoning/hybrid_paving.hpp"
 

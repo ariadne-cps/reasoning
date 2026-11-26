@@ -111,6 +111,37 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EXCEPTION(generic[absent]);
     }
 
+    Void test_integrated_provider_grid_factories() {
+        const DiscreteLocation first(1), second(2), absent(9);
+        const RealVariable x("x"), y("y"), z("z");
+        MonolithicHybridSpace locations;
+        locations.new_location(first, RealSpace({x}));
+        locations.new_location(second, RealSpace({y, x}));
+        const HybridSpace space(locations);
+        const HybridScalings policy(LocationDependentPolicy{});
+        const HybridGrid provider(space, policy);
+        Hybrid<Grid> generic = make_hybrid_grids(space, make_hybrid_scalings(space, policy));
+        ARIADNE_TESTING_PROVE(not generic.has_value(first));
+        ARIADNE_TESTING_PROVE(not generic.has_value(second));
+        ARIADNE_TESTING_PROVE(provider.grid(first) == Grid(Vector<ExactDouble>{2.0_x}));
+        ARIADNE_TESTING_PROVE(generic[first] == provider.grid(first));
+        ARIADNE_TESTING_PROVE(not generic.has_value(second));
+        ARIADNE_TESTING_PROVE(provider.grid(second) == Grid(Vector<ExactDouble>{3.0_x, 5.0_x}));
+        ARIADNE_TESTING_PROVE(generic[second] == provider.grid(second));
+        ARIADNE_TESTING_PROVE(HybridGrid::make_grid(policy, second, RealSpace({x, y})) ==
+                              Grid(Vector<ExactDouble>{5.0_x, 3.0_x}));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(provider.grid(absent));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(generic[absent]);
+
+        const Map<Identifier, ExactDouble> named{{x.name(), 2.0_x}, {y.name(), 3.0_x}};
+        const HybridScalings fallback{SimpleHybridScalings(4.0_x, named)};
+        const RealSpace auxiliary({z, y, x});
+        const Grid expected(Vector<ExactDouble>{4.0_x, 3.0_x, 2.0_x});
+        ARIADNE_TESTING_PROVE(HybridGrid::make_grid(fallback, first, auxiliary) == expected);
+        ARIADNE_TESTING_PROVE(grid_from_scalings(fallback, first, auxiliary) == expected);
+        ARIADNE_TESTING_EXPECT_EQUAL(HybridGrid::make_grid(fallback, first, RealSpace()).dimension(), 0u);
+    }
+
     Void test_grid_materialization_from_euclidean_scalings() {
         const RealVariable x("x"), y("y");
         const RealSpace reordered({y, x});
@@ -144,5 +175,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_scaling_adapters");
     ARIADNE_TESTING_ADD_TEST(TestScalingAdapters, test_hybrid_scalings_match_legacy_and_are_lazy);
     ARIADNE_TESTING_ADD_TEST(TestScalingAdapters, test_grid_materialization_from_euclidean_scalings);
+    ARIADNE_TESTING_ADD_TEST(TestScalingAdapters, test_integrated_provider_grid_factories);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
