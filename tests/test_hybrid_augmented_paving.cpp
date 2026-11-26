@@ -31,6 +31,7 @@
 #include <sstream>
 
 #include "algebra/vector.hpp"
+#include "analysis_paving_factory.hpp"
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "function/function.hpp"
@@ -46,7 +47,6 @@
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
-#include "analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
@@ -214,9 +214,9 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         FlattenedPavingCanvas migrated_canvas;
         const HybridPaving graph = from_grid.state_auxiliary_paving();
         for_each_flattened_paving(graph, locations, Variables2d(x, y),
-            [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(migrated_canvas, projection, euclidean);
-            });
+                                  [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
+                                      PavingDrawing::draw(migrated_canvas, projection, euclidean);
+                                  });
         ARIADNE_TESTING_PROVE(migrated_canvas.boundaries > 0u);
         FlattenedPavingCanvas legacy_canvas;
         draw(legacy_canvas, locations, Variables2d(x, y), from_grid);
@@ -259,9 +259,9 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         FlattenedPavingCanvas canvas;
         const HybridPaving graph = full_orbit.reach().state_auxiliary_paving();
         for_each_flattened_paving(graph, Set<DiscreteLocation>{q}, Variables2d(x, y),
-            [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(canvas, projection, euclidean);
-            });
+                                  [&](const Projection2d& projection, const SubPavingInterface& euclidean) {
+                                      PavingDrawing::draw(canvas, projection, euclidean);
+                                  });
         ARIADNE_TESTING_PROVE(canvas.boundaries > 0u);
         FlattenedPavingCanvas euclidean_canvas;
         const RealSpace space = graph.space(q);
@@ -272,17 +272,17 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         FlattenedPavingCanvas all_locations_canvas;
         for_each_flattened_paving(graph, Set<DiscreteLocation>{}, Variables2d(x, y),
-            [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(all_locations_canvas, selected_projection, euclidean);
-            });
+                                  [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
+                                      PavingDrawing::draw(all_locations_canvas, selected_projection, euclidean);
+                                  });
         ARIADNE_TESTING_EXPECT_EQUAL(all_locations_canvas.boundaries, canvas.boundaries);
 
         FlattenedPavingCanvas excluded_canvas;
         for_each_flattened_paving(graph, Set<DiscreteLocation>{DiscreteLocation(1)},
-                                 Variables2d(x, y),
-            [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
-                PavingDrawing::draw(excluded_canvas, selected_projection, euclidean);
-            });
+                                  Variables2d(x, y),
+                                  [&](const Projection2d& selected_projection, const SubPavingInterface& euclidean) {
+                                      PavingDrawing::draw(excluded_canvas, selected_projection, euclidean);
+                                  });
         ARIADNE_TESTING_EXPECT_EQUAL(excluded_canvas.boundaries, 0u);
     }
 

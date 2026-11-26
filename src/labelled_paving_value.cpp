@@ -69,31 +69,31 @@ RealSpace state_auxiliary_space(const LabelledAugmentedPavingValue& paving) {
 }
 
 Void adjoin(LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right) {
+            const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     left.value().adjoin(right.value());
 }
 
 Void restrict(LabelledAugmentedPavingValue& left,
-                     const LabelledAugmentedPavingValue& right) {
+              const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     left.value().restrict(right.value());
 }
 
 Void remove(LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right) {
+            const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     left.value().remove(right.value());
 }
 
 Bool subset(const LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right) {
+            const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     return subset(left.value(), right.value());
 }
 
 Bool intersect(const LabelledAugmentedPavingValue& left,
-                      const LabelledAugmentedPavingValue& right) {
+               const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     return intersect(left.value(), right.value());
 }

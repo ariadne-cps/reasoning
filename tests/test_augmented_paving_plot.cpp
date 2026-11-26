@@ -74,7 +74,11 @@ class TestAugmentedPavingPlot : public Ariadne::Testing::ContextFixture {
         const Paving robdd_storage(new RobddPaving(robdd));
         AugmentedPaving robdd_value(robdd_storage, mapping);
 
-        Figure plotted(ApproximateBoxType({{-2, 2}, {-2, 2}, {-2, 2}}),
+        Figure plotted(ApproximateBoxType({
+                           {-2, 2},
+                           {-2, 2},
+                           {-2, 2}
+        }),
                        Projection2d(3u, 0u, 2u));
         PavingDrawing::draw_coloured_pavings(plotted,
                                              Colour(0.25, 0.0, 0.0), tree_value,
@@ -87,7 +91,7 @@ class TestAugmentedPavingPlot : public Ariadne::Testing::ContextFixture {
         // must be rendered in insertion order regardless of their backend.
         bool seen_tree = false;
         bool seen_robdd = false;
-        for (double red_component : rendered.rendered_colours) {
+        for (double red_component: rendered.rendered_colours) {
             if (red_component == 0.25) {
                 ARIADNE_TESTING_PROVE(not seen_robdd);
                 seen_tree = true;

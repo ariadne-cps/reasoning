@@ -27,10 +27,10 @@
  */
 
 // Verify the continuous and hybrid enclosure-to-augmented-paving adapters.
-#include "reasoning/enclosure_augmented_paving.hpp"
 #include "function/taylor_function.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/paver.hpp"
+#include "reasoning/enclosure_augmented_paving.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -108,7 +108,10 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         const DiscreteLocation q(1);
         const RealVariable x("x"), y("y");
         const RealSpace state_space({x, y});
-        const ExactBoxType domain({{-1, 1}, {-1, 1}});
+        const ExactBoxType domain({
+            {-1, 1},
+            {-1, 1}
+        });
         const EnclosureConfiguration config(TaylorFunctionFactory(ThresholdSweeper<FloatDP>(dp, 1e-8)));
         const HybridEnclosure initial(HybridExactBox(q, state_space, domain), config);
 

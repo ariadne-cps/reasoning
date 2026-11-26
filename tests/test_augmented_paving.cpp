@@ -33,7 +33,6 @@
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
 #include "evolution/enclosure.hpp"
-#include "reasoning/enclosure_augmented_paving.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "function/function.hpp"
@@ -41,14 +40,15 @@
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
-#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
-#include "reasoning/labelled_paving_drawing.hpp"
-#include "reasoning/labelled_paving_value.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/enclosure_augmented_paving.hpp"
+#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
+#include "reasoning/labelled_paving_drawing.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "rendering/null_rendering.hpp"
 #include "set/function_set.hpp"
 #include "set/list_set.hpp"
@@ -326,7 +326,6 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
     }
 
-
     Void test_labelled_legacy_drawing_after_provider_cutover() {
         RealVariable state_x("x"), state_y("y"), aux_z("z");
         RealSpace state({state_x, state_y}), auxiliary({aux_z});
@@ -337,7 +336,11 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         LabelledGrid labelled_grid(Grid(2u), state);
         LabelledAugmentedPaving paving(labelled_grid, labelled_mapping);
         ARIADNE_TESTING_PROVE(paving.is_empty());
-        paving.adjoin_outer_approximation(ExactBoxType({{-1, 1}, {-1, 1}}), 2u);
+        paving.adjoin_outer_approximation(ExactBoxType({
+                                              {-1, 1},
+                                              {-1, 1}
+        }),
+                                          2u);
         ARIADNE_TESTING_PROVE(paving.size() > 0u);
         ARIADNE_TESTING_EXPECT_EQUAL(paving.state_space(), state);
         ARIADNE_TESTING_EXPECT_EQUAL(paving.auxiliary_space(), auxiliary);
@@ -350,7 +353,11 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         std::unique_ptr<LabelledDrawable2dInterface> clone(drawable.labelled_clone());
         clone->draw(canvas, Variables2d(state_x, state_y));
 
-        Figure figure(ExactBoxType({{-2, 2}, {-2, 2}, {-2, 2}}),
+        Figure figure(ExactBoxType({
+                          {-2, 2},
+                          {-2, 2},
+                          {-2, 2}
+        }),
                       Projection2d(3u, 0u, 1u));
         PavingDrawing::draw_to_figure(figure, paving);
         PavingDrawing::draw(figure, paving);

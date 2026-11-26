@@ -38,7 +38,7 @@ namespace Ariadne::PavingDrawing {
 // its AugmentedPaving representation must not enter the Drawing module.
 // Figure stores an owned drawable snapshot, just as with the legacy class.
 Void draw(CanvasInterface& canvas, const Variables2d& axes,
-                 const LabelledAugmentedPavingValue& paving);
+          const LabelledAugmentedPavingValue& paving);
 
 class LabelledAugmentedPavingValueDrawable final : public LabelledDrawable2dInterface {
   public:

@@ -26,14 +26,15 @@
  *  @brief Implement the generic and legacy labelled paving drawing adapters.
  */
 
-#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
 #include "reasoning/labelled_paving_drawing.hpp"
+
+#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
 
 namespace Ariadne::PavingDrawing {
 
 // Generic value adapters.
 Void draw(CanvasInterface& canvas, const Variables2d& axes,
-                 const LabelledAugmentedPavingValue& paving) {
+          const LabelledAugmentedPavingValue& paving) {
     const Projection2d proj = Ariadne::projection(state_auxiliary_space(paving), axes);
     PavingDrawing::draw(canvas, proj, paving.value());
 }
@@ -51,7 +52,7 @@ LabelledAugmentedPavingValueDrawable::LabelledAugmentedPavingValueDrawable(
     : _paving(paving) {}
 
 LabelledAugmentedPavingValueDrawable*
-LabelledAugmentedPavingValueDrawable::labelled_clone() const {
+    LabelledAugmentedPavingValueDrawable::labelled_clone() const {
     return new LabelledAugmentedPavingValueDrawable(*this);
 }
 
@@ -102,7 +103,7 @@ LabelledAugmentedPavingDrawable::LabelledAugmentedPavingDrawable(
     : _paving(paving) {}
 
 LabelledAugmentedPavingDrawable*
-LabelledAugmentedPavingDrawable::labelled_clone() const {
+    LabelledAugmentedPavingDrawable::labelled_clone() const {
     return new LabelledAugmentedPavingDrawable(*this);
 }
 

@@ -51,7 +51,6 @@ Grid grid_from_scalings(const HybridScalings& policy,
 // lazily, without materialising all valid locations.
 Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings);
 
-
 // Materialize only the variables belonging to the requested location.
 // A shared HybridScalings policy may depend on both the location and the
 // variable; resolving it lazily preserves that behavior for Hybrid<Scalings>.

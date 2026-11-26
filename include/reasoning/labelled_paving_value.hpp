@@ -81,19 +81,19 @@ RealSpace state_auxiliary_space(const LabelledAugmentedPavingValue& paving);
 // ordered state space; the underlying paving implements geometric operations.
 // Requiring equal auxiliary spaces here would alter the old set semantics.
 Void adjoin(LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right);
+            const LabelledAugmentedPavingValue& right);
 
 Void restrict(LabelledAugmentedPavingValue& left,
-                     const LabelledAugmentedPavingValue& right);
+              const LabelledAugmentedPavingValue& right);
 
 Void remove(LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right);
+            const LabelledAugmentedPavingValue& right);
 
 Bool subset(const LabelledAugmentedPavingValue& left,
-                   const LabelledAugmentedPavingValue& right);
+            const LabelledAugmentedPavingValue& right);
 
 Bool intersect(const LabelledAugmentedPavingValue& left,
-                      const LabelledAugmentedPavingValue& right);
+               const LabelledAugmentedPavingValue& right);
 
 } // namespace Ariadne
 

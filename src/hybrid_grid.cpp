@@ -29,9 +29,8 @@
 #include <utility>
 
 #include "algebra/vector.hpp"
-
-#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
 
@@ -54,33 +53,33 @@ Grid grid_from_scalings(const HybridScalings& policy,
 
 Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalings) {
     return Hybrid<Grid>(std::move(space),
-        [scalings = std::move(scalings)](const DiscreteLocation& location,
-                                        const RealSpace& real_space) mutable {
-            return grid_from_scalings(scalings[location], real_space);
-        });
+                        [scalings = std::move(scalings)](const DiscreteLocation& location,
+                                                         const RealSpace& real_space) mutable {
+                            return grid_from_scalings(scalings[location], real_space);
+                        });
 }
 
 Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings) {
     return Hybrid<Grid>(std::move(space),
-        [scalings = std::move(scalings)](const DiscreteLocation& location,
-                                        const RealSpace& real_space) {
-            return grid_from_scalings(scalings, location, real_space);
-        });
+                        [scalings = std::move(scalings)](const DiscreteLocation& location,
+                                                         const RealSpace& real_space) {
+                            return grid_from_scalings(scalings, location, real_space);
+                        });
 }
 
 Hybrid<Scalings> make_hybrid_scalings(HybridSpace space, HybridScalings policy) {
     return Hybrid<Scalings>(std::move(space),
-        [policy = std::move(policy)](const DiscreteLocation& location,
-                                     const RealSpace& real_space) {
-            Map<RealVariable, ExactDouble> entries;
-            for (SizeType index = 0; index < real_space.dimension(); ++index) {
-                const RealVariable& variable = real_space[index];
-                entries.insert(variable, policy.scaling(location, variable));
-            }
-            // All variables of this location have explicit scaling values.
-            // The fallback is only used for names outside its RealSpace.
-            return Scalings(1.0_x, entries);
-        });
+                            [policy = std::move(policy)](const DiscreteLocation& location,
+                                                         const RealSpace& real_space) {
+                                Map<RealVariable, ExactDouble> entries;
+                                for (SizeType index = 0; index < real_space.dimension(); ++index) {
+                                    const RealVariable& variable = real_space[index];
+                                    entries.insert(variable, policy.scaling(location, variable));
+                                }
+                                // All variables of this location have explicit scaling values.
+                                // The fallback is only used for names outside its RealSpace.
+                                return Scalings(1.0_x, entries);
+                            });
 }
 
 } // namespace Ariadne

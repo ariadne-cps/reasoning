@@ -28,8 +28,8 @@
 
 #include "hybrid/hybrid_grid.hpp"
 #include "logging/test_runner.hpp"
-#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -133,7 +133,10 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EXCEPTION(provider.grid(absent));
         ARIADNE_TESTING_EXPECT_EXCEPTION(generic[absent]);
 
-        const Map<Identifier, ExactDouble> named{{x.name(), 2.0_x}, {y.name(), 3.0_x}};
+        const Map<Identifier, ExactDouble> named{
+            {x.name(), 2.0_x},
+            {y.name(), 3.0_x}
+        };
         const HybridScalings fallback{SimpleHybridScalings(4.0_x, named)};
         const RealSpace auxiliary({z, y, x});
         const Grid expected(Vector<ExactDouble>{4.0_x, 3.0_x, 2.0_x});
@@ -145,13 +148,14 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
     Void test_grid_materialization_from_euclidean_scalings() {
         const RealVariable x("x"), y("y");
         const RealSpace reordered({y, x});
-        const Map<RealVariable, ExactDouble> entries{{x, 2.0_x}};
+        const Map<RealVariable, ExactDouble> entries{
+            {x, 2.0_x}
+        };
         const Scalings named(3.0_x, entries);
         const Grid named_grid = grid_from_scalings(named, reordered);
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.dimension(), 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[0].get_d(), 3.0);
         ARIADNE_TESTING_EXPECT_EQUAL(named_grid.lengths()[1].get_d(), 2.0);
-
 
         Scalings uniform(ApproximateDouble(2.0));
         const RealSpace natural({x, y});
@@ -164,10 +168,8 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[0].get_d(), 4.0);
         ARIADNE_TESTING_EXPECT_EQUAL(modified.lengths()[1].get_d(), 2.0);
 
-
         const Scalings empty(1.0_x, Map<RealVariable, ExactDouble>{});
         ARIADNE_TESTING_EXPECT_EQUAL(grid_from_scalings(empty, RealSpace()).dimension(), 0u);
-
     }
 };
 

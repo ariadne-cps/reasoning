@@ -29,9 +29,9 @@
 #include <memory>
 #include <type_traits>
 
+#include "evolution/located_projection.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
-#include "evolution/located_projection.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -66,7 +66,8 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         Figure figure(ApproximateBoxType({
                           {-2, +2},
                           {-2, +2}
-        }), projection);
+        }),
+                      projection);
         Paving handle(new BinaryTreePaving(tree));
         SubPaving borrowed(static_cast<const SubPavingInterface&>(tree));
         PavingDrawing::draw(figure, static_cast<const SubPavingInterface&>(tree));
@@ -106,7 +107,8 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         Figure figure(ApproximateBoxType({
                           {-2, +2},
                           {-2, +2}
-        }), projection);
+        }),
+                      projection);
         PavingDrawing::draw(figure, *product_set.begin());
         PavingDrawing::draw(figure, subpaving);
         PavingDrawing::draw(figure, *product_set.begin());
@@ -125,7 +127,8 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         paving.adjoin_outer_approximation(ExactBoxType({
                                               {-1, 1},
                                               {-1, 1}
-                                          }), 2u);
+        }),
+                                          2u);
         Projection2d projection(4u, 0u, 1u);
         PavingDrawingCanvas canvas;
         PavingDrawing::draw(canvas, projection, paving);
@@ -146,7 +149,8 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
                           {-2, +2},
                           {-2, +2},
                           {-2, +2}
-        }), projection);
+        }),
+                      projection);
         PavingDrawing::draw(figure, paving);
         PavingDrawing::draw(figure, paving);
         const Nat previous = canvas.boundaries;
@@ -167,10 +171,10 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
 
         PavingDrawingCanvas canvas;
         with_projected_location(located, space, x, y,
-            [&](const Projection2d& projection, const BinaryTreePaving& value) {
-                PavingDrawing::draw(canvas, projection,
-                                    static_cast<const SubPavingInterface&>(value));
-            });
+                                [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                                    PavingDrawing::draw(canvas, projection,
+                                                        static_cast<const SubPavingInterface&>(value));
+                                });
         ARIADNE_TESTING_EXPECT_EQUAL(canvas.boundaries, 1u);
     }
 
@@ -194,10 +198,10 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
 
         PavingDrawingCanvas canvas;
         with_projected_location(selected_family, q1, x, y,
-            [&](const Projection2d& projection, const BinaryTreePaving& value) {
-                PavingDrawing::draw(canvas, projection,
-                                    static_cast<const SubPavingInterface&>(value));
-            });
+                                [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                                    PavingDrawing::draw(canvas, projection,
+                                                        static_cast<const SubPavingInterface&>(value));
+                                });
         ARIADNE_TESTING_EXPECT_EQUAL(canvas.boundaries, 1u);
         ARIADNE_TESTING_PROVE(not selected_family.has_value(q2));
 
@@ -206,10 +210,10 @@ class TestPavingDrawing : public Ariadne::Testing::ContextFixture {
         PavingDrawingCanvas explicit_space_canvas;
         with_projected_location(selected_family, q1, RealSpace({x, y}),
                                 x, y,
-            [&](const Projection2d& projection, const BinaryTreePaving& value) {
-                PavingDrawing::draw(explicit_space_canvas, projection,
-                                    static_cast<const SubPavingInterface&>(value));
-            });
+                                [&](const Projection2d& projection, const BinaryTreePaving& value) {
+                                    PavingDrawing::draw(explicit_space_canvas, projection,
+                                                        static_cast<const SubPavingInterface&>(value));
+                                });
         ARIADNE_TESTING_EXPECT_EQUAL(explicit_space_canvas.boundaries, 1u);
     }
 

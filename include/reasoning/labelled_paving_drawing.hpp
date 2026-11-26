@@ -30,9 +30,9 @@
 #ifndef ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP
 #define ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP
 
-#include "reasoning/paving_drawing.hpp"
 #include "labelled/figure.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
+#include "reasoning/paving_drawing.hpp"
 
 namespace Ariadne::PavingDrawing {
 

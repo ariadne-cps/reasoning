@@ -36,6 +36,7 @@
 #endif
 
 #include "logging/test_runner.hpp"
+
 #include "ariadne-testing.hpp"
 
 using namespace Ariadne;
@@ -46,7 +47,10 @@ class TestGenericHybridGridAdapters : public Ariadne::Testing::ContextFixture {
 
     Void test_generic_scalings_respect_defaults_and_permutations() {
         const RealVariable x("x"), y("y"), z("z");
-        const Map<RealVariable, ExactDouble> named{{x, 2.0_x}, {y, 3.0_x}};
+        const Map<RealVariable, ExactDouble> named{
+            {x, 2.0_x},
+            {y, 3.0_x}
+        };
         const Scalings scalings(4.0_x, named);
         const Grid result = grid_from_scalings(scalings, RealSpace({y, z, x}));
         ARIADNE_TESTING_EXPECT_EQUAL(result.dimension(), 3u);
@@ -63,14 +67,14 @@ class TestGenericHybridGridAdapters : public Ariadne::Testing::ContextFixture {
 
         unsigned materializations = 0u;
         Hybrid<Scalings> scalings(space,
-            [&materializations, x, y](const DiscreteLocation& location,
-                                     const RealSpace&) {
-                ++materializations;
-                Map<RealVariable, ExactDouble> entries;
-                entries.insert(x, location == DiscreteLocation(1) ? 2.0_x : 5.0_x);
-                entries.insert(y, 3.0_x);
-                return Scalings(1.0_x, entries);
-            });
+                                  [&materializations, x, y](const DiscreteLocation& location,
+                                                            const RealSpace&) {
+                                      ++materializations;
+                                      Map<RealVariable, ExactDouble> entries;
+                                      entries.insert(x, location == DiscreteLocation(1) ? 2.0_x : 5.0_x);
+                                      entries.insert(y, 3.0_x);
+                                      return Scalings(1.0_x, entries);
+                                  });
 
         Hybrid<Grid> grids = make_hybrid_grids(space, std::move(scalings));
         ARIADNE_TESTING_PROVE(grids.has_location(first));

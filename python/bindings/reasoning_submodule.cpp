@@ -50,25 +50,23 @@ using namespace Ariadne;
 Void export_labelled_paving_values(pybind11::module& module) {
     pybind11::class_<LabelledValue<Grid>> grid_value_class(module, "LabelledGridValue");
     grid_value_class.def(pybind11::init([](const Grid& grid, const RealSpace& space) {
-        return make_labelled_grid(grid, space);
-    }), pybind11::arg("grid"), pybind11::arg("space"));
+                             return make_labelled_grid(grid, space);
+                         }),
+                         pybind11::arg("grid"), pybind11::arg("space"));
     grid_value_class.def("space", [](const LabelledValue<Grid>& value) {
         return value.space();
     });
-    grid_value_class.def("value", [](LabelledValue<Grid>& value) -> Grid& {
-        return value.value();
-    }, pybind11::return_value_policy::reference_internal);
+    grid_value_class.def("value", [](LabelledValue<Grid>& value) -> Grid& { return value.value(); }, pybind11::return_value_policy::reference_internal);
 
     pybind11::class_<LabelledValue<Paving>> paving_value_class(module, "LabelledPavingValue");
     paving_value_class.def(pybind11::init([](const Paving& paving, const RealSpace& space) {
-        return make_labelled_paving(paving, space);
-    }), pybind11::arg("paving"), pybind11::arg("space"));
+                               return make_labelled_paving(paving, space);
+                           }),
+                           pybind11::arg("paving"), pybind11::arg("space"));
     paving_value_class.def("space", [](const LabelledValue<Paving>& value) {
         return value.space();
     });
-    paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& {
-        return value.value();
-    }, pybind11::return_value_policy::reference_internal);
+    paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& { return value.value(); }, pybind11::return_value_policy::reference_internal);
 
     // Generic, owning snapshots returned by continuous safety certificates.
     // Keep the legacy certificate fields and the old LabelledAugmentedPaving
@@ -93,9 +91,7 @@ Void export_labelled_paving_values(pybind11::module& module) {
     augmented_value_class.def("clear", [](LabelledAugmentedPavingValue& paving) {
         paving.value().clear();
     });
-    augmented_value_class.def("state_paving", [](LabelledAugmentedPavingValue& paving) -> Paving& {
-        return paving.value().state_paving();
-    }, pybind11::return_value_policy::reference_internal);
+    augmented_value_class.def("state_paving", [](LabelledAugmentedPavingValue& paving) -> Paving& { return paving.value().state_paving(); }, pybind11::return_value_policy::reference_internal);
 
     module.def("make_labelled_grid", &make_labelled_grid,
                pybind11::arg("grid"), pybind11::arg("space"));
@@ -156,37 +152,37 @@ Void export_reachability_analyser(pybind11::module& module, const char* name) {
 
     if constexpr (std::is_same_v<typename RA::StateSpaceType, EuclideanSpace>) {
         reachability_analyser_class.def("lower_evolve_value",
-            [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                return a.lower_evolve_value(s, t);
-            });
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_evolve_value(s, t);
+                                        });
         reachability_analyser_class.def("lower_reach_evolve_values",
-            [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                return a.lower_reach_evolve_values(s, t);
-            });
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_reach_evolve_values(s, t);
+                                        });
         reachability_analyser_class.def("lower_reach_value",
-            [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                return a.lower_reach_value(s, t);
-            });
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_reach_value(s, t);
+                                        });
         reachability_analyser_class.def("lower_reach_value",
-            [](const RA& a, const OvertSetType& s) {
-                return a.lower_reach_value(s);
-            });
+                                        [](const RA& a, const OvertSetType& s) {
+                                            return a.lower_reach_value(s);
+                                        });
         reachability_analyser_class.def("upper_evolve_value",
-            [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                return a.upper_evolve_value(s, t);
-            });
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_evolve_value(s, t);
+                                        });
         reachability_analyser_class.def("upper_reach_evolve_values",
-            [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                return a.upper_reach_evolve_values(s, t);
-            });
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_reach_evolve_values(s, t);
+                                        });
         reachability_analyser_class.def("upper_reach_value",
-            [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                return a.upper_reach_value(s, t);
-            });
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_reach_value(s, t);
+                                        });
         reachability_analyser_class.def("outer_chain_reach_value",
-            [](const RA& a, const CompactSetType& s) {
-                return a.outer_chain_reach_value(s);
-            });
+                                        [](const RA& a, const CompactSetType& s) {
+                                            return a.outer_chain_reach_value(s);
+                                        });
     }
 
     pybind11::class_<Configuration> reachability_analyser_configuration_class(module, "ReachabilityAnalyserConfiguration");

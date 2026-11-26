@@ -28,13 +28,13 @@
 
 // Hybrid paving operations depending on a system specification.
 #include "reasoning/hybrid_paving.hpp"
-#include "reasoning/hybrid_paving_value.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
 
 #include <utility>
 
 #include "function/functional.hpp"
 #include "paving/binary_tree_paving.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
@@ -52,7 +52,7 @@ Void adjoin_auxiliary_skew_product(
         tree.adjoin(*cell);
     const BinaryTreePaving product =
         outer_skew_product(tree, auxiliary_grid, auxiliary_function);
-    for (const auto& cell : product)
+    for (const auto& cell: product)
         destination.adjoin(cell);
 }
 } // namespace
@@ -62,15 +62,15 @@ Hybrid<Paving> make_hybrid_pavings(
     std::function<Paving(const Grid&)> backend) {
     ARIADNE_PRECONDITION(static_cast<bool>(backend));
     return Hybrid<Paving>(std::move(space),
-        [grids = std::move(grids), backend = std::move(backend)](
-            const DiscreteLocation& location, const RealSpace& real_space) mutable {
-            ARIADNE_PRECONDITION(grids.has_location(location));
-            ARIADNE_PRECONDITION(grids.space()[location] == real_space);
-            const Grid& grid = grids[location];
-            Paving result = backend(grid);
-            ARIADNE_PRECONDITION(result.grid() == grid);
-            return result;
-        });
+                          [grids = std::move(grids), backend = std::move(backend)](
+                              const DiscreteLocation& location, const RealSpace& real_space) mutable {
+                              ARIADNE_PRECONDITION(grids.has_location(location));
+                              ARIADNE_PRECONDITION(grids.space()[location] == real_space);
+                              const Grid& grid = grids[location];
+                              Paving result = backend(grid);
+                              ARIADNE_PRECONDITION(result.grid() == grid);
+                              return result;
+                          });
 }
 
 Void adjoin(Hybrid<Paving>& left, const Hybrid<Paving>& right) {

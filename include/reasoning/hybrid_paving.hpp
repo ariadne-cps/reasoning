@@ -63,8 +63,8 @@ inline LabelledAugmentedPavingValue make_labelled_augmented_slice(
 // materialised locations, as with the legacy HybridPaving::draw.
 template<class Visitor>
 Void for_each_flattened_paving(const HybridPaving& storage,
-                              const Set<DiscreteLocation>& locations,
-                              const Variables2d& axes, Visitor&& visitor) {
+                               const Set<DiscreteLocation>& locations,
+                               const Variables2d& axes, Visitor&& visitor) {
     for (auto it = storage.locations_begin(); it != storage.locations_end(); ++it) {
         if (locations.empty() || locations.contains(it->first)) {
             const RealSpace space = storage.space(it->first);
@@ -74,7 +74,6 @@ Void for_each_flattened_paving(const HybridPaving& storage,
         }
     }
 }
-
 
 } // namespace Ariadne
 

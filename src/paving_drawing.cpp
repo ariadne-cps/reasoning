@@ -33,19 +33,19 @@ namespace Ariadne::PavingDrawing {
 Void draw_coloured_pavings(Figure&) {}
 
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const SubPavingInterface& paving) {
+          const SubPavingInterface& paving) {
     for (auto cell = paving.begin(), end = paving.end(); cell != end; ++cell) {
         Ariadne::draw(canvas, projection, cell->box());
     }
 }
 
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const GridCell& cell) {
+          const GridCell& cell) {
     Ariadne::draw(canvas, projection, cell.box());
 }
 
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const AugmentedPaving& paving) {
+          const AugmentedPaving& paving) {
     const BinaryTreePaving graph = paving.state_auxiliary_paving();
     PavingDrawing::draw(canvas, projection, static_cast<const SubPavingInterface&>(graph));
 }

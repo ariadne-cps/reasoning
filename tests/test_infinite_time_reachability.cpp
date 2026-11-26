@@ -38,9 +38,9 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "reasoning/paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
+#include "reasoning/paving_drawing.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "set/function_set.hpp"
 
@@ -148,7 +148,7 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_infinite_time_lower_reach.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, lower_reach_set);
+                            reach_set_colour, lower_reach_set);
 
         // Zero transient time and no bounding domain: both restriction and
         // transient steps are skipped.
@@ -173,7 +173,7 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_outer_chain_reach.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, outer_chain_reach_set);
+                            reach_set_colour, outer_chain_reach_set);
 
         cout << "Recomputing with tight restriction" << endl;
 

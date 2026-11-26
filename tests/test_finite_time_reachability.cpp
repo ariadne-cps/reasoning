@@ -38,9 +38,9 @@
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"
-#include "reasoning/paving_drawing.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
+#include "reasoning/paving_drawing.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "set/function_set.hpp"
 
@@ -154,7 +154,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-lower_reach_lower_evolve.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
+                            reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
     Void test_lower_reach_evolve() {
@@ -170,7 +170,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(lower_evolve.size() > 0);
 
         PavingDrawing::plot("test_reachability_analyser-map_lower_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
+                            reach_set_colour, lower_reach, evolve_set_colour, lower_evolve);
     }
 
     Void test_upper_reach_upper_evolve() {
@@ -187,7 +187,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_upper_reach_upper_evolve.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, upper_reach_set, evolve_set_colour, upper_evolve_set);
+                            reach_set_colour, upper_reach_set, evolve_set_colour, upper_evolve_set);
     }
 
     Void test_upper_reach_evolve() {
@@ -202,7 +202,7 @@ class TestFiniteTimeReachability : public Ariadne::Testing::ContextFixture {
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_upper_reach_evolve.png", Projection2d(2, 0, 1), graphics_box,
-             reach_set_colour, reach_evolve_set.first, final_set_colour, reach_evolve_set.second);
+                            reach_set_colour, reach_evolve_set.first, final_set_colour, reach_evolve_set.second);
     }
 
     Void test_analyser_accessors() {

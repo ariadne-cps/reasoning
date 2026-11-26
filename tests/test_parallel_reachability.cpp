@@ -39,9 +39,9 @@
 #include "evolution/vector_field_evolver.hpp"
 #include "integration/integrator.hpp"
 #include "logging/test_runner.hpp"
+#include "parallel_reachability.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
-#include "parallel_reachability.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "threading/thread_manager.hpp"
 

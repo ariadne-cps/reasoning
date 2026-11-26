@@ -58,7 +58,8 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         const DiscreteLocation first(1), absent(9);
         const RealVariable x("x"), y("y"), z("z");
         const Map<Identifier, ExactDouble> named{
-            {x.name(), 2.0_x}, {y.name(), 3.0_x}
+            {x.name(), 2.0_x},
+            {y.name(), 3.0_x}
         };
         const HybridScalings policy{SimpleHybridScalings(4.0_x, named)};
 

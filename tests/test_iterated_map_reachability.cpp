@@ -284,7 +284,7 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
     Void test_generic_continuous_result_paths() {
         // Test the two actual backends, not just construction of an API wrapper.
         const Grid grid(2u);
-        for (bool use_robdd : {false, true}) {
+        for (bool use_robdd: {false, true}) {
             const auto manager = std::make_shared<RobddManager>();
             analyser.set_paving_factory([use_robdd, manager](const Grid& candidate) -> Paving {
                 if (use_robdd)

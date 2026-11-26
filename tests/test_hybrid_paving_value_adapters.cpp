@@ -61,12 +61,13 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         spaces.new_location(second, RealSpace({y, x}));
         const HybridSpace space(spaces);
         const Map<Identifier, ExactDouble> scale_values{
-            {x.name(), 2.0_x}, {y.name(), 3.0_x}
+            {x.name(), 2.0_x},
+            {y.name(), 3.0_x}
         };
         const HybridScalings policy(scale_values);
         const HybridGrid legacy_grid(space, policy);
 
-        for (Bool use_robdd : {false, true}) {
+        for (Bool use_robdd: {false, true}) {
             auto manager = std::make_shared<RobddManager>();
             Nat backend_creations = 0u;
             auto create_backend = [manager, use_robdd, &backend_creations](
@@ -126,14 +127,14 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             ARIADNE_TESTING_PROVE(copy[second].superset(cell_second));
             if (use_robdd) {
                 ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
-                    &static_cast<const PavingInterface&>(copy[first])) != nullptr);
+                                          &static_cast<const PavingInterface&>(copy[first])) != nullptr);
                 ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
-                    &static_cast<const PavingInterface&>(copy[second])) != nullptr);
+                                          &static_cast<const PavingInterface&>(copy[second])) != nullptr);
             } else {
                 ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
-                    &static_cast<const PavingInterface&>(copy[first])) != nullptr);
+                                          &static_cast<const PavingInterface&>(copy[first])) != nullptr);
                 ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
-                    &static_cast<const PavingInterface&>(copy[second])) != nullptr);
+                                          &static_cast<const PavingInterface&>(copy[second])) != nullptr);
             }
         }
     }
@@ -159,19 +160,18 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
         };
 
-        for (Bool use_robdd : {false, true}) {
+        for (Bool use_robdd: {false, true}) {
             auto manager = std::make_shared<RobddManager>();
             std::function<Paving(const Grid&)> backend =
                 [manager, use_robdd](const Grid& selected) -> Paving {
-                    if (use_robdd)
-                        return Paving(new RobddPaving(manager, selected));
-                    return Paving(new BinaryTreePaving(selected));
-                };
+                if (use_robdd)
+                    return Paving(new RobddPaving(manager, selected));
+                return Paving(new BinaryTreePaving(selected));
+            };
 
             HybridPaving legacy(legacy_grid, backend);
             Hybrid<Paving> generic = make_hybrid_pavings(
-                state_space, make_hybrid_grids(
-                    state_space, Hybrid<Scalings>(state_space, unit_scalings)),
+                state_space, make_hybrid_grids(state_space, Hybrid<Scalings>(state_space, unit_scalings)),
                 backend);
             generic[first].adjoin(cell);
             legacy[first].adjoin(cell);
@@ -192,23 +192,23 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             const Paving& actual = constant_expanded[first];
             const Paving& expected = legacy_expanded[first];
             ARIADNE_TESTING_PROVE(actual.grid() == expected.grid());
-            for (const auto& selected_cell : actual)
+            for (const auto& selected_cell: actual)
                 ARIADNE_TESTING_PROVE(expected.superset(selected_cell));
-            for (const auto& selected_cell : expected)
+            for (const auto& selected_cell: expected)
                 ARIADNE_TESTING_PROVE(actual.superset(selected_cell));
             ARIADNE_TESTING_PROVE(not actual.is_empty());
 
             const Hybrid<Paving> copied(expanded);
             ARIADNE_TESTING_PROVE(not copied.has_value(second));
             const Paving& snapshot = copied[first];
-            for (const auto& selected_cell : expected)
+            for (const auto& selected_cell: expected)
                 ARIADNE_TESTING_PROVE(snapshot.superset(selected_cell));
             if (use_robdd) {
                 ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
-                    &static_cast<const PavingInterface&>(snapshot)) != nullptr);
+                                          &static_cast<const PavingInterface&>(snapshot)) != nullptr);
             } else {
                 ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
-                    &static_cast<const PavingInterface&>(snapshot)) != nullptr);
+                                          &static_cast<const PavingInterface&>(snapshot)) != nullptr);
             }
         }
     }
@@ -225,7 +225,10 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             second, List<RealAssignment>{let(a) = x + 2},
             List<DottedRealAssignment>{dot(x) = -x}));
 
-        const Map<Identifier, ExactDouble> named{{x.name(), 2.0_x}, {a.name(), 3.0_x}};
+        const Map<Identifier, ExactDouble> named{
+            {x.name(), 2.0_x},
+            {a.name(), 3.0_x}
+        };
         const HybridScalings policy(named);
         const HybridSpace state_space = automaton.state_space();
         const HybridGrid legacy_grid(state_space, policy);
@@ -233,14 +236,14 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const GridCell root(state_grid, 0u, BinaryWord{});
         const HybridSpace expanded_space = automaton.state_auxiliary_space();
 
-        for (Bool use_robdd : {false, true}) {
+        for (Bool use_robdd: {false, true}) {
             auto manager = std::make_shared<RobddManager>();
             std::function<Paving(const Grid&)> backend =
                 [manager, use_robdd](const Grid& selected) -> Paving {
-                    if (use_robdd)
-                        return Paving(new RobddPaving(manager, selected));
-                    return Paving(new BinaryTreePaving(selected));
-                };
+                if (use_robdd)
+                    return Paving(new RobddPaving(manager, selected));
+                return Paving(new BinaryTreePaving(selected));
+            };
 
             HybridPaving legacy(legacy_grid, backend);
             legacy[first].adjoin(root);
@@ -282,21 +285,19 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const GridCell cell_left(grid, 0u, BinaryWord("0"));
         const GridCell cell_right(grid, 0u, BinaryWord("1"));
 
-        for (Bool use_robdd : {false, true}) {
+        for (Bool use_robdd: {false, true}) {
             auto manager = std::make_shared<RobddManager>();
             std::function<Paving(const Grid&)> backend =
                 [manager, use_robdd](const Grid& selected) -> Paving {
-                    if (use_robdd)
-                        return Paving(new RobddPaving(manager, selected));
-                    return Paving(new BinaryTreePaving(selected));
-                };
+                if (use_robdd)
+                    return Paving(new RobddPaving(manager, selected));
+                return Paving(new BinaryTreePaving(selected));
+            };
             const auto make_generic = [&]() {
                 return make_hybrid_pavings(
-                    space, make_hybrid_grids(
-                        space, Hybrid<Scalings>(space,
-                            [](const DiscreteLocation&, const RealSpace&) {
-                                return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
-                            })),
+                    space, make_hybrid_grids(space, Hybrid<Scalings>(space, [](const DiscreteLocation&, const RealSpace&) {
+                                                 return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+                                             })),
                     backend);
             };
             Hybrid<Paving> original_left = make_generic();
@@ -338,10 +339,10 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
                         static_cast<const PavingInterface&>(lhs)));
                     if (use_robdd) {
                         ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
-                            &static_cast<const PavingInterface&>(lhs)) != nullptr);
+                                                  &static_cast<const PavingInterface&>(lhs)) != nullptr);
                     } else {
                         ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
-                            &static_cast<const PavingInterface&>(lhs)) != nullptr);
+                                                  &static_cast<const PavingInterface&>(lhs)) != nullptr);
                     }
                 }
             };
@@ -350,7 +351,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             HybridPaving legacy_joined = legacy_left;
             adjoin(joined, original_right);
             legacy_joined.adjoin(legacy_right);
-            for (const auto& location : {first, second, third})
+            for (const auto& location: {first, second, third})
                 check_slice(joined, legacy_joined, location);
             ARIADNE_TESTING_EXPECT_EQUAL(joined.size(), 3u);
             ARIADNE_TESTING_PROVE(joined[first].superset(cell_left));
@@ -362,7 +363,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             HybridPaving legacy_difference = legacy_left;
             remove(difference, original_right);
             legacy_difference.remove(legacy_right);
-            for (const auto& location : {first, second, third})
+            for (const auto& location: {first, second, third})
                 check_slice(difference, legacy_difference, location);
             ARIADNE_TESTING_PROVE(difference.has_value(third));
             ARIADNE_TESTING_PROVE(difference[third].is_empty());
@@ -373,7 +374,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             HybridPaving legacy_restricted = legacy_left;
             restrict(restricted, original_right);
             legacy_restricted.restrict(legacy_right);
-            for (const auto& location : {first, second, third})
+            for (const auto& location: {first, second, third})
                 check_slice(restricted, legacy_restricted, location);
             ARIADNE_TESTING_PROVE(restricted[first].is_empty());
             ARIADNE_TESTING_PROVE(restricted[second].is_empty());
@@ -397,9 +398,9 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const HybridSpace space(spaces);
 
         Hybrid<Grid> grids(space,
-            [](const DiscreteLocation&, const RealSpace& coordinates) {
-                return Grid(coordinates.dimension());
-            });
+                           [](const DiscreteLocation&, const RealSpace& coordinates) {
+                               return Grid(coordinates.dimension());
+                           });
         ARIADNE_TESTING_EXPECT_EXCEPTION(
             make_hybrid_pavings(space, grids, std::function<Paving(const Grid&)>{}));
 

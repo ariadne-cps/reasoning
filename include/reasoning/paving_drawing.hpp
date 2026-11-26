@@ -42,14 +42,14 @@ namespace Ariadne::PavingDrawing {
 // Render the mathematical union of cells, independently of its storage
 // representation (binary tree, ROBDD or a borrowed subpaving view).
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const SubPavingInterface& paving);
+          const SubPavingInterface& paving);
 
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const GridCell& cell);
+          const GridCell& cell);
 
 // The auxiliary graph is a derived paving, not the authoritative state store.
 Void draw(CanvasInterface& canvas, const Projection2d& projection,
-                 const AugmentedPaving& paving);
+          const AugmentedPaving& paving);
 
 // Figure keeps independent copies, including borrowed subpaving views.
 class SubPavingDrawable final : public Drawable2dInterface {
@@ -100,8 +100,8 @@ Void draw_coloured_pavings(Figure&);
 
 template<class... Remaining>
 Void draw_coloured_pavings(Figure& figure, const Colour& colour,
-                          const AugmentedPaving& paving,
-                          const Remaining&... remaining) {
+                           const AugmentedPaving& paving,
+                           const Remaining&... remaining) {
     figure.set_fill_colour(colour);
     PavingDrawing::draw(figure, paving);
     draw_coloured_pavings(figure, remaining...);

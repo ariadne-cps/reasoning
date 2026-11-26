@@ -92,7 +92,11 @@ class TestGenericLabelledPavingDrawing : public Ariadne::Testing::ContextFixture
         labelled_figure._paint_all(figure_canvas);
         ARIADNE_TESTING_EXPECT_EQUAL(figure_canvas.boundaries, tree_canvas.boundaries);
 
-        Figure figure(ApproximateBoxType({{-2, 2}, {-2, 2}, {-2, 2}}),
+        Figure figure(ApproximateBoxType({
+                          {-2, 2},
+                          {-2, 2},
+                          {-2, 2}
+        }),
                       Projection2d(3u, 0u, 2u));
         PavingDrawing::draw(figure, labelled_robdd);
         CountingPavingCanvas euclidean_canvas;
