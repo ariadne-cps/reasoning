@@ -26,6 +26,8 @@
  *  @brief Expose reachability analysers and paving orbits to Python.
  */
 
+#include <type_traits>
+
 #include "evolution/hybrid_evolver.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
@@ -68,6 +70,33 @@ Void export_labelled_paving_values(pybind11::module& module) {
         return value.value();
     }, pybind11::return_value_policy::reference_internal);
 
+    // Generic, owning snapshots returned by continuous safety certificates.
+    // Keep the legacy certificate fields and the old LabelledAugmentedPaving
+    // Python class available while their remaining consumers are migrated.
+    pybind11::class_<LabelledAugmentedPavingValue> augmented_value_class(
+        module, "LabelledAugmentedPavingValue");
+    augmented_value_class.def("state_space", [](const LabelledAugmentedPavingValue& paving) {
+        return state_space(paving);
+    });
+    augmented_value_class.def("auxiliary_space", [](const LabelledAugmentedPavingValue& paving) {
+        return auxiliary_space(paving);
+    });
+    augmented_value_class.def("state_auxiliary_space", [](const LabelledAugmentedPavingValue& paving) {
+        return state_auxiliary_space(paving);
+    });
+    augmented_value_class.def("size", [](const LabelledAugmentedPavingValue& paving) {
+        return paving.value().size();
+    });
+    augmented_value_class.def("is_empty", [](const LabelledAugmentedPavingValue& paving) {
+        return paving.value().is_empty();
+    });
+    augmented_value_class.def("clear", [](LabelledAugmentedPavingValue& paving) {
+        paving.value().clear();
+    });
+    augmented_value_class.def("state_paving", [](LabelledAugmentedPavingValue& paving) -> Paving& {
+        return paving.value().state_paving();
+    }, pybind11::return_value_policy::reference_internal);
+
     module.def("make_labelled_grid", &make_labelled_grid,
                pybind11::arg("grid"), pybind11::arg("space"));
     module.def("make_labelled_paving", &make_labelled_paving,
@@ -98,6 +127,10 @@ Void export_safety_certificate(pybind11::module& module, const char* name) {
     });
     safety_certificate_class.def_readonly("chain_reach_set", &SafetyCertificateType::chain_reach_set);
     safety_certificate_class.def_readonly("safe_set", &SafetyCertificateType::safe_set);
+    if constexpr (std::is_same_v<StateSpaceType, EuclideanSpace>) {
+        safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
+        safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
+    }
 }
 
 template<class RA, class... Params>

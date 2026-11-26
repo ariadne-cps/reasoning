@@ -2,12 +2,17 @@
 import pyariadne_reasoning as a
 
 def test_reasoning_bindings():
-    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPaving", "HybridAugmentedPaving",
+    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPaving",
+                 "LabelledAugmentedPavingValue", "HybridAugmentedPaving",
                  "ContinuousReachabilityAnalyser", "SafetyCertificate", "GeneralHybridEvolver",
                  "HybridBoundedConstraintSet", "HybridSafetyCertificate",
                  "HybridReachabilityAnalyser", "HybridReachabilityAnalyserConfiguration",
                  "ReachabilityAnalyserConfiguration"):
         assert hasattr(a, name), name
+    # Binding-level coverage only: C++ regression exercises the snapshots'
+    # geometry and ownership; the Release workflows already run the tutorial.
+    for method in ("chain_reach_value", "safe_value"):
+        assert callable(getattr(a.SafetyCertificate, method))
 
 def test_generic_labelled_paving_values():
     """Use generic labelled values from Python without legacy subclass APIs."""
