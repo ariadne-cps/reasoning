@@ -9,6 +9,49 @@ def test_reasoning_bindings():
                  "ReachabilityAnalyserConfiguration"):
         assert hasattr(a, name), name
 
+def test_generic_labelled_paving_values():
+    """Use generic labelled values from Python without legacy subclass APIs."""
+    x = a.RealVariable("x")
+    y = a.RealVariable("y")
+    space = a.RealSpace([y, x])
+    grid = a.Grid(2)
+
+    labelled_grid = a.make_labelled_grid(grid, space)
+    assert isinstance(labelled_grid, a.LabelledGridValue)
+    assert labelled_grid.space().dimension() == 2
+    assert labelled_grid.value().dimension() == 2
+    assert a.LabelledGridValue(grid, space).value().dimension() == 2
+
+    cell = a.GridCell(grid, 0, a.BinaryWord(""))
+    original_tree = a.Paving.tree(grid)
+    labelled_tree = a.make_labelled_paving(original_tree, space)
+    assert isinstance(labelled_tree, a.LabelledPavingValue)
+    assert labelled_tree.value().is_empty()
+    labelled_tree.value().adjoin(cell)
+    assert labelled_tree.value().superset(cell)
+    assert original_tree.is_empty()  # The labelled wrapper owns its backend.
+    assert labelled_tree.space().dimension() == 2
+
+    manager = a.RobddManager()
+    original_robdd = a.Paving.robdd(grid, manager)
+    labelled_robdd = a.LabelledPavingValue(original_robdd, space)
+    assert labelled_robdd.value().is_empty()
+    labelled_robdd.value().adjoin(cell)
+    assert labelled_robdd.value().superset(cell)
+    assert original_robdd.is_empty()
+
+    # Both constructors enforce the ordered space dimension as in C++.
+    wrong_space = a.RealSpace([x])
+    for create in (lambda: a.make_labelled_grid(grid, wrong_space),
+                   lambda: a.make_labelled_paving(original_tree, wrong_space)):
+        try:
+            create()
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Mismatched labelled space dimension was accepted")
+
+
 def test_neural_symbolic_expansion():
     x = a.RealVariable("x")
     for activation in (a.NeuralActivation.Identity, a.NeuralActivation.Relu,
@@ -73,5 +116,6 @@ def test_hybrid_reachability_analyser():
 
 if __name__ == "__main__":
     test_reasoning_bindings()
+    test_generic_labelled_paving_values()
     test_neural_symbolic_expansion()
     test_hybrid_reachability_analyser()

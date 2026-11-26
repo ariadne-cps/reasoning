@@ -34,6 +34,7 @@
 #include "paving/augmented_paving.hpp"
 #include "pybind11.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/neural_symbolic.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton.hpp"
@@ -41,6 +42,37 @@
 #include "function-utilities.hpp"
 
 using namespace Ariadne;
+
+// Export the representation-independent alternatives without removing the
+// existing Python names for legacy labelled paving subclasses.
+Void export_labelled_paving_values(pybind11::module& module) {
+    pybind11::class_<LabelledValue<Grid>> grid_value_class(module, "LabelledGridValue");
+    grid_value_class.def(pybind11::init([](const Grid& grid, const RealSpace& space) {
+        return make_labelled_grid(grid, space);
+    }), pybind11::arg("grid"), pybind11::arg("space"));
+    grid_value_class.def("space", [](const LabelledValue<Grid>& value) {
+        return value.space();
+    });
+    grid_value_class.def("value", [](LabelledValue<Grid>& value) -> Grid& {
+        return value.value();
+    }, pybind11::return_value_policy::reference_internal);
+
+    pybind11::class_<LabelledValue<Paving>> paving_value_class(module, "LabelledPavingValue");
+    paving_value_class.def(pybind11::init([](const Paving& paving, const RealSpace& space) {
+        return make_labelled_paving(paving, space);
+    }), pybind11::arg("paving"), pybind11::arg("space"));
+    paving_value_class.def("space", [](const LabelledValue<Paving>& value) {
+        return value.space();
+    });
+    paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& {
+        return value.value();
+    }, pybind11::return_value_policy::reference_internal);
+
+    module.def("make_labelled_grid", &make_labelled_grid,
+               pybind11::arg("grid"), pybind11::arg("space"));
+    module.def("make_labelled_paving", &make_labelled_paving,
+               pybind11::arg("paving"), pybind11::arg("space"));
+}
 
 Void export_augmented_paving(pybind11::module& module) {
     pybind11::class_<AugmentedPaving> storage_class(module, "AugmentedPaving");
@@ -193,6 +225,7 @@ Void export_hybrid_reasoning(pybind11::module& module) {
 
 void reasoning_submodule(pybind11::module& module) {
     module.def("make_expression", [](const NeuralParameterSnapshot& snapshot, const Space<Real>& space) { return make_expression(snapshot, space); }, pybind11::arg("snapshot"), pybind11::arg("space"));
+    export_labelled_paving_values(module);
     export_augmented_paving(module);
     pybind11::class_<HybridAugmentedPaving>(module, "HybridAugmentedPaving");
     export_hybrid_reasoning(module);
