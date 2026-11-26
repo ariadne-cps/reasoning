@@ -48,6 +48,7 @@
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -198,6 +199,24 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
                                      system.continuous_state_space(q));
         ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(snapshot),
                                      system.continuous_auxiliary_space(q));
+        // The whole-family snapshot keeps every materialised location, its
+        // backend and its auxiliary mapping; generic set operations mirror
+        // the legacy ones without mutating the original storage.
+        const HybridAugmentedPavingValue family = make_hybrid_augmented_paving_value(const_storage);
+        ARIADNE_TESTING_PROVE(family.size() == from_grid.state_paving().values().size());
+        ARIADNE_TESTING_PROVE(family.has_value(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(family[q].size(), snapshot.value().size());
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(family[q].state_paving())) != nullptr);
+        ARIADNE_TESTING_PROVE(subset(family, family));
+        ARIADNE_TESTING_PROVE(intersect(family, family));
+        HybridAugmentedPavingValue family_copy = family;
+        remove(family_copy, family);
+        ARIADNE_TESTING_PROVE(family_copy.has_value(q));
+        ARIADNE_TESTING_PROVE(family_copy[q].is_empty());
+        ARIADNE_TESTING_PROVE(not from_grid.is_empty());
+
         auto element = from_grid[q];
         element.clear();
         ARIADNE_TESTING_PROVE(from_grid.is_empty());

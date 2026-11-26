@@ -130,4 +130,12 @@ Void HybridReachabilityAnalyserConfiguration::set_grid(const std::shared_ptr<Hyb
     _grid_ptr = value_ptr;
 }
 
+HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::chain_reach_value() const {
+    return make_hybrid_augmented_paving_value(chain_reach_set);
+}
+
+HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::safe_value() const {
+    return make_hybrid_augmented_paving_value(safe_set);
+}
+
 } // namespace Ariadne

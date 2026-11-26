@@ -45,6 +45,7 @@
 #include "paving/paver.hpp"
 #include "paving/paving_interface.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 #include "set/function_set.hpp"
@@ -287,6 +288,68 @@ class ReachabilityAnalyser
         requires std::is_same_v<StorageType, LabelledAugmentedPaving>
     {
         return make_labelled_augmented_paving_value(outer_chain_reach(initial_set));
+    }
+
+    // Non-breaking generic results for hybrid analysers. The virtual methods
+    // still return the legacy HybridAugmentedPaving storage; each result is
+    // converted into an independent, backend-preserving location-indexed value.
+    HybridAugmentedPavingValue lower_evolve_value(
+        const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(lower_evolve(initial_set, time));
+    }
+
+    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+        lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        auto values = lower_reach_evolve(initial_set, time);
+        return {make_hybrid_augmented_paving_value(values.first),
+                make_hybrid_augmented_paving_value(values.second)};
+    }
+
+    HybridAugmentedPavingValue lower_reach_value(
+        const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(lower_reach(initial_set, time));
+    }
+
+    HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(lower_reach(initial_set));
+    }
+
+    HybridAugmentedPavingValue upper_evolve_value(
+        const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(upper_evolve(initial_set, time));
+    }
+
+    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+        upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        auto values = upper_reach_evolve(initial_set, time);
+        return {make_hybrid_augmented_paving_value(values.first),
+                make_hybrid_augmented_paving_value(values.second)};
+    }
+
+    HybridAugmentedPavingValue upper_reach_value(
+        const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(upper_reach(initial_set, time));
+    }
+
+    HybridAugmentedPavingValue outer_chain_reach_value(
+        const CompactSetInterfaceType& initial_set) const
+        requires std::is_same_v<StorageType, HybridAugmentedPaving>
+    {
+        return make_hybrid_augmented_paving_value(outer_chain_reach(initial_set));
     }
 
   protected:

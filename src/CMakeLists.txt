@@ -2,6 +2,7 @@ add_library(REASONING_SRC OBJECT
     reachability_analyser.cpp
     hybrid_reachability_analyser.cpp
     hybrid_augmented_paving_adapter.cpp
+    hybrid_augmented_paving_value.cpp
     hybrid_grid.cpp
     labelled_paving_value.cpp
     labelled_paving_drawing.cpp

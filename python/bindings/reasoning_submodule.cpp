@@ -35,6 +35,7 @@
 #include "labelled/labelled_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
 #include "pybind11.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/neural_symbolic.hpp"
@@ -99,6 +100,15 @@ Void export_labelled_paving_values(pybind11::module& module) {
                pybind11::arg("paving"), pybind11::arg("space"));
 }
 
+// Generic, owning location-indexed snapshots returned by hybrid analyses.
+Void export_hybrid_augmented_paving_value(pybind11::module& module) {
+    pybind11::class_<HybridAugmentedPavingValue> value_class(module, "HybridAugmentedPavingValue");
+    value_class.def("size", &HybridAugmentedPavingValue::size);
+    value_class.def("__len__", &HybridAugmentedPavingValue::size);
+    value_class.def("has_value", &HybridAugmentedPavingValue::has_value);
+    value_class.def("__getitem__", [](const HybridAugmentedPavingValue& value, const DiscreteLocation& location) -> const AugmentedPaving& { return value[location]; }, pybind11::return_value_policy::reference_internal);
+}
+
 Void export_augmented_paving(pybind11::module& module) {
     pybind11::class_<AugmentedPaving> storage_class(module, "AugmentedPaving");
     pybind11::class_<LabelledAugmentedPaving, pybind11::bases<AugmentedPaving>> labelled_storage_class(module, "LabelledAugmentedPaving");
@@ -124,6 +134,9 @@ Void export_safety_certificate(pybind11::module& module, const char* name) {
     safety_certificate_class.def_readonly("chain_reach_set", &SafetyCertificateType::chain_reach_set);
     safety_certificate_class.def_readonly("safe_set", &SafetyCertificateType::safe_set);
     if constexpr (std::is_same_v<StateSpaceType, EuclideanSpace>) {
+        safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
+        safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
+    } else if constexpr (std::is_same_v<StateSpaceType, HybridSpace>) {
         safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
         safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
     }
@@ -277,6 +290,32 @@ Void export_hybrid_reasoning(pybind11::module& module) {
         return a.verify_safety(initial, safe);
     });
 
+    // Generic owning snapshots; the legacy storage methods above are unchanged.
+    analyser_class.def("lower_evolve_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_evolve_value(s, t);
+    });
+    analyser_class.def("lower_reach_evolve_values", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_reach_evolve_values(s, t);
+    });
+    analyser_class.def("lower_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_reach_value(s, t);
+    });
+    analyser_class.def("lower_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s) {
+        return a.lower_reach_value(s);
+    });
+    analyser_class.def("upper_evolve_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_evolve_value(s, t);
+    });
+    analyser_class.def("upper_reach_evolve_values", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_reach_evolve_values(s, t);
+    });
+    analyser_class.def("upper_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_reach_value(s, t);
+    });
+    analyser_class.def("outer_chain_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s) {
+        return a.outer_chain_reach_value(s);
+    });
+
     pybind11::class_<Configuration> configuration_class(module, "HybridReachabilityAnalyserConfiguration");
     configuration_class.def("set_transient_time", &Configuration::set_transient_time);
     configuration_class.def("set_transient_steps", &Configuration::set_transient_steps);
@@ -290,6 +329,7 @@ Void export_hybrid_reasoning(pybind11::module& module) {
 void reasoning_submodule(pybind11::module& module) {
     module.def("make_expression", [](const NeuralParameterSnapshot& snapshot, const Space<Real>& space) { return make_expression(snapshot, space); }, pybind11::arg("snapshot"), pybind11::arg("space"));
     export_labelled_paving_values(module);
+    export_hybrid_augmented_paving_value(module);
     export_augmented_paving(module);
     pybind11::class_<HybridAugmentedPaving>(module, "HybridAugmentedPaving");
     export_hybrid_reasoning(module);

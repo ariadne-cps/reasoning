@@ -44,6 +44,7 @@
 #include "logging/logging.hpp"
 #include "paving/paver.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton_interface.hpp"
@@ -73,6 +74,11 @@ struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
     HybridAugmentedPaving chain_reach_set;
     HybridAugmentedPaving safe_set;
+
+    /** @brief Return an owning generic snapshot of the chain-reachable set. */
+    HybridAugmentedPavingValue chain_reach_value() const;
+    /** @brief Return an owning generic snapshot of the safe set. */
+    HybridAugmentedPavingValue safe_value() const;
 };
 
 using HybridSafetyCertificate = SafetyCertificate<HybridSpace>;

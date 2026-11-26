@@ -304,6 +304,16 @@ Void TestHybridReachability::test_verify_safety() {
     ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
     ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
 
+    // Owning generic snapshots mirror the legacy certificate members and
+    // preserve the per-location backend without aliasing the original.
+    const HybridAugmentedPavingValue chain_value = certificate.chain_reach_value();
+    const HybridAugmentedPavingValue safe_value = certificate.safe_value();
+    ARIADNE_TESTING_PROVE(chain_value.size() == certificate.chain_reach_set.state_paving().values().size());
+    ARIADNE_TESTING_PROVE(safe_value.size() == certificate.safe_set.state_paving().values().size());
+    ARIADNE_TESTING_PROVE(chain_value.has_value(q));
+    ARIADNE_TESTING_PROVE(chain_value[q].size() == certificate.chain_reach_set.state_paving()[q].size());
+    ARIADNE_TESTING_PROVE(subset(chain_value, safe_value));
+
     analyser->configuration().set_transient_time(1.0);
     auto transient_certificate = analyser->verify_safety(initial, safe);
     ARIADNE_TESTING_PROVE(definitely(transient_certificate.is_safe));

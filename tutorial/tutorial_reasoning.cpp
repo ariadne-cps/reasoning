@@ -56,7 +56,10 @@ int main() {
         return 1;
     }
 
+    // The owning generic snapshot exposes the same chain-reachable cells
+    // without the legacy labelled-paving subclass.
+    const auto chain_value = certificate.chain_reach_value();
     std::cout << "Safety verified for all time.\n"
-              << "Chain-reachable grid cells: " << certificate.chain_reach_set.size() << '\n';
+              << "Chain-reachable grid cells: " << chain_value.value().size() << '\n';
     return 0;
 }
