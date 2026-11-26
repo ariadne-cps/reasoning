@@ -80,6 +80,15 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         robdd.adjoin(cell);
         const Paving robdd_storage(new RobddPaving(robdd));
         const LabelledAugmentedPaving legacy_robdd(robdd_storage, state, mapping, auxiliary);
+        auto converted_robdd = make_labelled_augmented_paving_value(legacy_robdd);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(converted_robdd), state);
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(converted_robdd), auxiliary);
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(converted_robdd.value().state_paving())) != nullptr);
+        converted_robdd.value().clear();
+        ARIADNE_TESTING_PROVE(converted_robdd.value().is_empty());
+        ARIADNE_TESTING_PROVE(legacy_robdd.state_paving().superset(cell));
         const auto generic_robdd = make_labelled_augmented_paving(
             AugmentedPaving(robdd_storage, mapping), state, auxiliary);
         ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_robdd), legacy_robdd.state_space());

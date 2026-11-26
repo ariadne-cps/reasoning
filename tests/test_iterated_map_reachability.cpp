@@ -37,6 +37,7 @@
 #include "logging/test_runner.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/binary_tree_paving.hpp"
+#include "paving/robdd_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "set/function_set.hpp"
 #include "system/iterated_map.hpp"
@@ -280,6 +281,60 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
     }
 
+    Void test_generic_continuous_result_paths() {
+        // Test the two actual backends, not just construction of an API wrapper.
+        const Grid grid(2u);
+        for (bool use_robdd : {false, true}) {
+            const auto manager = std::make_shared<RobddManager>();
+            analyser.set_paving_factory([use_robdd, manager](const Grid& candidate) -> Paving {
+                if (use_robdd)
+                    return Paving(new RobddPaving(manager, candidate));
+                return Paving(new BinaryTreePaving(candidate));
+            });
+            const auto legacy_reach = analyser.upper_reach(initial_set, Integer(1));
+            const auto generic_reach = analyser.upper_reach_value(initial_set, Integer(1));
+            const auto legacy_snapshot = make_labelled_augmented_paving_value(legacy_reach);
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_reach), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(generic_reach),
+                                         legacy_reach.auxiliary_space());
+            ARIADNE_TESTING_PROVE(subset(generic_reach, legacy_snapshot));
+            ARIADNE_TESTING_PROVE(subset(legacy_snapshot, generic_reach));
+            ARIADNE_TESTING_PROVE(generic_reach.value().size() > 0u);
+            const auto& backend = static_cast<const PavingInterface&>(
+                generic_reach.value().state_paving());
+            if (use_robdd) {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(&backend) != nullptr);
+            } else {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(&backend) != nullptr);
+            }
+            auto detached = generic_reach;
+            detached.value().clear();
+            ARIADNE_TESTING_PROVE(detached.value().is_empty());
+            ARIADNE_TESTING_PROVE(generic_reach.value().size() > 0u);
+
+            const auto lower = analyser.lower_reach_value(initial_set, Integer(1));
+            const auto lower_evolved = analyser.lower_evolve_value(initial_set, Integer(1));
+            const auto upper_evolved = analyser.upper_evolve_value(initial_set, Integer(1));
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_evolved), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_evolved), system.state_space());
+            const auto lower_pair = analyser.lower_reach_evolve_values(initial_set, Integer(1));
+            const auto upper_pair = analyser.upper_reach_evolve_values(initial_set, Integer(1));
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_pair.first), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_pair.second), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_pair.first), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_pair.second), system.state_space());
+        }
+
+        // Both unbounded-time entry points retain labelled state coordinates.
+        analyser.configuration().set_transient_time(Integer(0));
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        ARIADNE_TESTING_EXPECT_EQUAL(
+            state_space(analyser.lower_reach_value(initial_set)), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(
+            state_space(analyser.outer_chain_reach_value(initial_set)), system.state_space());
+    }
+
     Void test_verbose_logging() {
         // With high verbosity the LOGGING_* branches in the analyser are
         // all executed.
@@ -328,5 +383,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_break);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety_reach_escapes);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verbose_logging);
+    ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_generic_continuous_result_paths);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

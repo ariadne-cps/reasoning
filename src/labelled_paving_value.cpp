@@ -28,6 +28,8 @@
 
 #include "reasoning/labelled_paving_value.hpp"
 
+#include "labelled/labelled_augmented_paving.hpp"
+
 namespace Ariadne {
 
 LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space) {
@@ -45,6 +47,13 @@ LabelledAugmentedPavingValue make_labelled_augmented_paving(
     ARIADNE_PRECONDITION(paving.auxiliary_mapping().result_size() == auxiliary_space.dimension());
     return LabelledAugmentedPavingValue(
         std::move(paving), std::make_pair(std::move(state_space), std::move(auxiliary_space)));
+}
+
+LabelledAugmentedPavingValue make_labelled_augmented_paving_value(
+    const LabelledAugmentedPaving& legacy) {
+    return make_labelled_augmented_paving(
+        static_cast<const AugmentedPaving&>(legacy),
+        legacy.state_space(), legacy.auxiliary_space());
 }
 
 const RealSpace& state_space(const LabelledAugmentedPavingValue& paving) {

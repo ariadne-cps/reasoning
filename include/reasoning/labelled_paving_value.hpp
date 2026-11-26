@@ -38,6 +38,8 @@
 
 namespace Ariadne {
 
+class LabelledAugmentedPaving;
+
 // Keep grid-specific composition in Reasoning, while LabelledValue<T>
 // remains a geometry-independent value/metadata wrapper.
 LabelledValue<Grid> make_labelled_grid(const Grid& grid, const RealSpace& space);
@@ -58,6 +60,13 @@ using LabelledAugmentedPavingValue =
  */
 LabelledAugmentedPavingValue make_labelled_augmented_paving(
     AugmentedPaving paving, RealSpace state_space, RealSpace auxiliary_space);
+
+/** @brief Make an owning generic value from legacy continuous analysis storage.
+ *  @details Keeps the original tree or ROBDD backend and ordered coordinates.
+ *  Legacy class definitions remain private to the implementation.
+ */
+LabelledAugmentedPavingValue make_labelled_augmented_paving_value(
+    const LabelledAugmentedPaving& legacy);
 
 /** @brief Access the labelled augmented paving's state coordinates. */
 const RealSpace& state_space(const LabelledAugmentedPavingValue& paving);

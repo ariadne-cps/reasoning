@@ -13,6 +13,13 @@ def test_reasoning_bindings():
     # geometry and ownership; the Release workflows already run the tutorial.
     for method in ("chain_reach_value", "safe_value"):
         assert callable(getattr(a.SafetyCertificate, method))
+    # The C++ regressions verify actual set, backend and snapshot semantics;
+    # this import test verifies the public Python entry points, not the tutorial.
+    for method in ("lower_evolve_value", "lower_reach_evolve_values",
+                   "lower_reach_value", "upper_evolve_value",
+                   "upper_reach_evolve_values", "upper_reach_value",
+                   "outer_chain_reach_value"):
+        assert callable(getattr(a.ContinuousReachabilityAnalyser, method))
 
 def test_generic_labelled_paving_values():
     """Use generic labelled values from Python without legacy subclass APIs."""

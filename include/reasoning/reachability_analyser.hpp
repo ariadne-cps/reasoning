@@ -228,6 +228,60 @@ class ReachabilityAnalyser
 
     //!@}
 
+    // Non-breaking generic results for continuous analysers. Existing virtual
+    // methods and AnalysisTraits still use their legacy storage; each result
+    // is converted into an independent, backend-preserving labelled value.
+    LabelledAugmentedPavingValue lower_evolve_value(
+        const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(lower_evolve(initial_set, time));
+    }
+
+    Pair<LabelledAugmentedPavingValue, LabelledAugmentedPavingValue>
+    lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        auto values = lower_reach_evolve(initial_set, time);
+        return {make_labelled_augmented_paving_value(values.first),
+                make_labelled_augmented_paving_value(values.second)};
+    }
+
+    LabelledAugmentedPavingValue lower_reach_value(
+        const OvertSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(lower_reach(initial_set, time));
+    }
+
+    LabelledAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(lower_reach(initial_set));
+    }
+
+    LabelledAugmentedPavingValue upper_evolve_value(
+        const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(upper_evolve(initial_set, time));
+    }
+
+    Pair<LabelledAugmentedPavingValue, LabelledAugmentedPavingValue>
+    upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        auto values = upper_reach_evolve(initial_set, time);
+        return {make_labelled_augmented_paving_value(values.first),
+                make_labelled_augmented_paving_value(values.second)};
+    }
+
+    LabelledAugmentedPavingValue upper_reach_value(
+        const CompactSetInterfaceType& initial_set, const TimeType& time) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(upper_reach(initial_set, time));
+    }
+
+    LabelledAugmentedPavingValue outer_chain_reach_value(
+        const CompactSetInterfaceType& initial_set) const
+        requires std::is_same_v<StorageType, LabelledAugmentedPaving> {
+        return make_labelled_augmented_paving_value(outer_chain_reach(initial_set));
+    }
+
   protected:
     // Helper functions for operators on lists of sets.
     Pair<StorageType, StorageType> _reach_evolve_resume(const ListSet<EnclosureType>& initial_enclosures,

@@ -118,6 +118,10 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.size());
         ARIADNE_TESTING_NOTE(safety_certificate.safe_set.size());
         ARIADNE_TESTING_PROVE(definitely(safety_certificate.is_safe));
+        const auto generic_chain =
+            make_labelled_augmented_paving_value(safety_certificate.chain_reach_set);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_chain), system.state_space());
+        ARIADNE_TESTING_PROVE(subset(generic_chain, safety_certificate.chain_reach_value()));
     }
 
     Void test_verify_safety_crossing_bounding() {

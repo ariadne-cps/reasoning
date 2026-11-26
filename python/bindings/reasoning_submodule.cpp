@@ -154,6 +154,41 @@ Void export_reachability_analyser(pybind11::module& module, const char* name) {
     reachability_analyser_class.def("outer_chain_reach", (StorageType (RA::*)(const CompactSetType&) const) & RA::outer_chain_reach);
     reachability_analyser_class.def("verify_safety", (SafetyCertificateType (RA::*)(const CompactSetType&, const OpenSetType&) const) & RA::verify_safety);
 
+    if constexpr (std::is_same_v<typename RA::StateSpaceType, EuclideanSpace>) {
+        reachability_analyser_class.def("lower_evolve_value",
+            [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                return a.lower_evolve_value(s, t);
+            });
+        reachability_analyser_class.def("lower_reach_evolve_values",
+            [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                return a.lower_reach_evolve_values(s, t);
+            });
+        reachability_analyser_class.def("lower_reach_value",
+            [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                return a.lower_reach_value(s, t);
+            });
+        reachability_analyser_class.def("lower_reach_value",
+            [](const RA& a, const OvertSetType& s) {
+                return a.lower_reach_value(s);
+            });
+        reachability_analyser_class.def("upper_evolve_value",
+            [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                return a.upper_evolve_value(s, t);
+            });
+        reachability_analyser_class.def("upper_reach_evolve_values",
+            [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                return a.upper_reach_evolve_values(s, t);
+            });
+        reachability_analyser_class.def("upper_reach_value",
+            [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                return a.upper_reach_value(s, t);
+            });
+        reachability_analyser_class.def("outer_chain_reach_value",
+            [](const RA& a, const CompactSetType& s) {
+                return a.outer_chain_reach_value(s);
+            });
+    }
+
     pybind11::class_<Configuration> reachability_analyser_configuration_class(module, "ReachabilityAnalyserConfiguration");
     reachability_analyser_configuration_class.def("set_transient_time", &Configuration::set_transient_time);
     reachability_analyser_configuration_class.def("set_maximum_grid_fineness", &Configuration::set_maximum_grid_fineness);
