@@ -51,7 +51,7 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const HybridAugmen
          iter != end; ++iter) {
         result.insert(iter->first,
                       AugmentedPaving(legacy.state_paving()[iter->first],
-                                       legacy.auxiliary_mapping(iter->first).mapping()));
+                                      legacy.auxiliary_mapping(iter->first).mapping()));
     }
     return result;
 }

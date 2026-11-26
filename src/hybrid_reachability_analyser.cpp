@@ -130,6 +130,13 @@ Void HybridReachabilityAnalyserConfiguration::set_grid(const std::shared_ptr<Hyb
     _grid_ptr = value_ptr;
 }
 
+Void HybridReachabilityAnalyserConfiguration::set_grid(const Hybrid<Scalings>& scalings) {
+    ARIADNE_ASSERT_MSG(possibly(scalings.space() == _analyser.system().state_space()),
+                       "The scalings to set have a different hybrid space than the system.");
+
+    _grid_ptr = std::make_shared<HybridGrid>(scalings.space(), make_hybrid_scalings_policy(scalings));
+}
+
 HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::chain_reach_value() const {
     return make_hybrid_augmented_paving_value(chain_reach_set);
 }

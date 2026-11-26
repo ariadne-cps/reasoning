@@ -50,6 +50,7 @@
 #include "logging/test_runner.hpp"
 #include "numeric/rational.hpp"
 #include "paving/robdd_paving.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"
@@ -188,6 +189,21 @@ Void TestHybridReachability::test_analyser_configuration() {
                                   config.set_grid(std::make_shared<HybridGrid>(other_system.state_space())));
 
     config.set_scaling(x, ApproximateDouble(0.5));
+
+    // Generic location-indexed access round-trips the legacy grid and scalings.
+    Hybrid<Scalings> scalings_value = config.scalings_value();
+    ARIADNE_TESTING_PROVE(scalings_value.has_location(q));
+    ARIADNE_TESTING_EXPECT_EQUAL(scalings_value[q].scaling(x), 0.5_x);
+    Hybrid<Grid> grid_value = config.grid_value();
+    ARIADNE_TESTING_PROVE(grid_value.has_location(q));
+    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], config.grid().grid(q));
+
+    scalings_value[q].set_scaling(x, ApproximateDouble(0.25));
+    config.set_grid(scalings_value);
+    ARIADNE_TESTING_EXPECT_EQUAL(config.grid().scalings().scaling(q, x), 0.25_x);
+    ARIADNE_TESTING_EXPECT_EQUAL(config.grid().grid(q),
+                                 grid_from_scalings(config.grid().scalings(), q,
+                                                    system.continuous_state_space(q)));
 
     ARIADNE_TESTING_NOTE(const_analyser.configuration().transient_time());
     ARIADNE_TESTING_NOTE(const_analyser.configuration().lock_to_grid_steps());

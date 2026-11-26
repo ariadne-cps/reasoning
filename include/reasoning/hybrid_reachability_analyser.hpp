@@ -45,6 +45,7 @@
 #include "paving/paver.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton_interface.hpp"
@@ -269,6 +270,19 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     Void set_paver(Paver paver) { _paver = std::move(paver); }
     //! \brief Check the consistency in respect to the system space, then set the grid.
     Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
+
+    // Generic location-indexed grid and scaling access for hybrid analysers.
+    // The legacy SharedPointer<HybridGrid> API above is retained during staging.
+    Hybrid<Grid> grid_value() const {
+        HybridGrid grid_copy = *_grid_ptr;
+        return make_hybrid_grids(grid_copy.space(), grid_copy.scalings());
+    }
+    Hybrid<Scalings> scalings_value() const {
+        HybridGrid grid_copy = *_grid_ptr;
+        return make_hybrid_scalings(grid_copy.space(), grid_copy.scalings());
+    }
+    //! \brief Check the consistency in respect to the system space, then set the grid from generic scalings.
+    Void set_grid(const Hybrid<Scalings>& scalings);
 
     Void set_scaling(const RealVariable& v, ApproximateDouble s) {
         dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(this->grid().scalings())).set_scaling(v, s);

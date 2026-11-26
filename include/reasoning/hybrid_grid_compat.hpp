@@ -56,6 +56,13 @@ Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings);
 // variable; resolving it lazily preserves that behavior for Hybrid<Scalings>.
 Hybrid<Scalings> make_hybrid_scalings(HybridSpace space, HybridScalings policy);
 
+/** @brief Adapt a generic location-indexed scaling family back to a legacy policy.
+ *  @details The policy resolves scaling(location, variable) through the
+ *  generic values, materializing lazily via the family's own factory when
+ *  present. The family must carry its HybridSpace.
+ */
+HybridScalings make_hybrid_scalings_policy(Hybrid<Scalings> scalings);
+
 } // namespace Ariadne
 
 #endif // ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP

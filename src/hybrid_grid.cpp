@@ -82,4 +82,25 @@ Hybrid<Scalings> make_hybrid_scalings(HybridSpace space, HybridScalings policy) 
                             });
 }
 
+namespace {
+// Legacy policy backed by a generic location-indexed scaling family. Reads
+// materialize lazily through the family's own factory when present.
+class ValueBackedHybridScalings final : public HybridScalingsInterface {
+    mutable Hybrid<Scalings> _values;
+
+  public:
+    explicit ValueBackedHybridScalings(Hybrid<Scalings> values) : _values(std::move(values)) {}
+    ValueBackedHybridScalings* clone() const override { return new ValueBackedHybridScalings(*this); }
+    ExactDouble scaling(const DiscreteLocation& location, const RealVariable& variable) const override {
+        ARIADNE_PRECONDITION(_values.has_location(location));
+        return _values[location].scaling(variable);
+    }
+    Void _write(OutputStream& os) const override { os << _values; }
+};
+} // namespace
+
+HybridScalings make_hybrid_scalings_policy(Hybrid<Scalings> scalings) {
+    return HybridScalings(ValueBackedHybridScalings(std::move(scalings)));
+}
+
 } // namespace Ariadne
