@@ -352,6 +352,18 @@ class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
     const GridType& grid() const { return *_grid_ptr; }
     Void set_grid(const GridType& grid);
 
+    // Generic coordinate-labelled grid access for continuous analysers.
+    // Hybrid configurations retain their existing HybridGrid API.
+    LabelledValue<Grid> grid_value() const
+        requires std::is_same_v<GridType, LabelledGrid> {
+        return make_labelled_grid(grid().euclidean_grid(), grid().space());
+    }
+
+    Void set_grid(const LabelledValue<Grid>& labelled_grid)
+        requires std::is_same_v<GridType, LabelledGrid> {
+        set_grid(GridType(labelled_grid.value(), labelled_grid.space()));
+    }
+
     //! \brief Algorithm used for approximating evolved enclosures on the grid.
     const Paver& paver() const { return _paver; }
     Void set_paver(Paver paver) { _paver = std::move(paver); }

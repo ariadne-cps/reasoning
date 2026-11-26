@@ -133,6 +133,16 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(const_config.bounding_domain_ptr() != nullptr);
         config.set_grid(LabelledGrid(Grid(2), system.state_space()));
         ARIADNE_TESTING_PROVE(const_config.grid().space() == system.state_space());
+
+        // Generic configuration path: the coordinate labels and grid are
+        // round-tripped without changing the legacy GridType contract.
+        const auto generic_grid = make_labelled_grid(Grid(2u), system.state_space());
+        config.set_grid(generic_grid);
+        const auto grid_snapshot = const_config.grid_value();
+        ARIADNE_TESTING_EXPECT_EQUAL(grid_snapshot.space(), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(grid_snapshot.value(), generic_grid.value());
+        ARIADNE_TESTING_EXPECT_EQUAL(config.grid().euclidean_grid(), grid_snapshot.value());
+        ARIADNE_TESTING_EXPECT_EQUAL(config.grid().space(), grid_snapshot.space());
         config.set_outer_overspill_policy(ChainOverspillPolicy::WARNING);
         ARIADNE_TESTING_PROVE(const_config.outer_overspill_policy() == ChainOverspillPolicy::WARNING);
         config.set_outer_overspill_policy(ChainOverspillPolicy::ERROR);
