@@ -246,6 +246,24 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
         ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
 
+        // Migrate certificate consumers to generic owned labelled values.
+        // The algorithm still uses legacy storage internally.
+        auto chain_value = certificate.chain_reach_value();
+        const auto safe_value = certificate.safe_value();
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(chain_value), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(chain_value),
+                                     certificate.chain_reach_set.auxiliary_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(safe_value), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(chain_value.value().size(),
+                                     certificate.chain_reach_set.size());
+        ARIADNE_TESTING_PROVE(subset(chain_value, safe_value));
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(chain_value.value().state_paving())) != nullptr);
+        chain_value.value().clear();
+        ARIADNE_TESTING_PROVE(chain_value.value().is_empty());
+        ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
+
         SymbolicSetType outside_symbolic_safe_set({2_dec <= x <= 3_dec, 2_dec <= y <= 3_dec});
         auto outside_safe_set = outside_symbolic_safe_set.euclidean_set(system.state_space());
         auto negative_certificate = analyser.verify_safety(initial_set, outside_safe_set);

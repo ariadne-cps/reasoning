@@ -59,6 +59,19 @@
 
 namespace Ariadne {
 
+LabelledAugmentedPavingValue SafetyCertificate<EuclideanSpace>::chain_reach_value() const {
+    // Copy the underlying augmented paving, preserving tree/ROBDD storage.
+    return make_labelled_augmented_paving(
+        static_cast<const AugmentedPaving&>(chain_reach_set),
+        chain_reach_set.state_space(), chain_reach_set.auxiliary_space());
+}
+
+LabelledAugmentedPavingValue SafetyCertificate<EuclideanSpace>::safe_value() const {
+    return make_labelled_augmented_paving(
+        static_cast<const AugmentedPaving&>(safe_set),
+        safe_set.state_space(), safe_set.auxiliary_space());
+}
+
 template class ReachabilityAnalyser<IteratedMap>;
 template class ReachabilityAnalyserConfiguration<IteratedMap>;
 

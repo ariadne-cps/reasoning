@@ -45,6 +45,7 @@
 #include "paving/paving_interface.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 #include "set/function_set.hpp"
 
@@ -87,6 +88,11 @@ struct SafetyCertificate<EuclideanSpace> {
     const ValidatedSierpinskian is_safe;
     const LabelledAugmentedPaving chain_reach_set;
     const LabelledAugmentedPaving safe_set;
+
+    /** @brief Return an owning generic snapshot of the chain-reachable set. */
+    LabelledAugmentedPavingValue chain_reach_value() const;
+    /** @brief Return an owning generic snapshot of the safe set. */
+    LabelledAugmentedPavingValue safe_value() const;
 };
 
 //! \ingroup DynamicsModule
