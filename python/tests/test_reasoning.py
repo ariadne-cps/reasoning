@@ -46,8 +46,8 @@ def test_generic_labelled_paving_values():
                    lambda: a.make_labelled_paving(original_tree, wrong_space)):
         try:
             create()
-        except ValueError:
-            pass
+        except RuntimeError as error:
+            assert "Precondition" in str(error) and "dimension" in str(error)
         else:
             raise AssertionError("Mismatched labelled space dimension was accepted")
 

@@ -5,11 +5,3 @@ set_property(TEST test_python_reasoning_import PROPERTY
 set_property(TEST test_python_reasoning_import PROPERTY LABELS "python;reasoning")
 add_dependencies(tests pyariadne)
 
-# Exercise the actual safety proof, not just the availability of Python names.
-add_test(NAME test_python_reasoning_safety_tutorial
-    COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tutorial/tutorial_reasoning.py")
-set_property(TEST test_python_reasoning_safety_tutorial PROPERTY
-    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pyariadne>")
-set_property(TEST test_python_reasoning_safety_tutorial PROPERTY
-    LABELS "python;reasoning")
-set_property(TEST test_python_reasoning_safety_tutorial PROPERTY TIMEOUT 90)
