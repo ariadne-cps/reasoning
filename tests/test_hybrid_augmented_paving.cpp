@@ -45,7 +45,6 @@
 #include "numeric/numeric.hpp"
 #include "analysis_paving_factory.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
-#include "reasoning/hybrid_augmented_paving_slice.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"

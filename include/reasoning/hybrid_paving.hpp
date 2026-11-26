@@ -29,9 +29,11 @@
 #ifndef ARIADNE_REASONING_HYBRID_PAVING_HPP
 #define ARIADNE_REASONING_HYBRID_PAVING_HPP
 
+#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "labelled/figure.hpp"
 #include "paving/paving_interface.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 
 namespace Ariadne {
 
@@ -41,6 +43,19 @@ class HybridAutomatonInterface;
 //! Extend a hybrid state paving with the auxiliary variables of a system.
 HybridPaving extend_auxiliary(const HybridPaving& hgtp,
                               const HybridAutomatonInterface& ha);
+
+/** @brief Snapshot one hybrid location without the legacy labelled-paving conversion.
+ *  @details Retains the original tree or ROBDD state backend. The state and
+ *  auxiliary coordinate spaces come from the location-specific mapping.
+ *  This is an owned read-only snapshot, not the mutable hybrid element proxy.
+ */
+inline LabelledAugmentedPavingValue make_labelled_augmented_slice(
+    const HybridAugmentedPaving& hybrid, const DiscreteLocation& location) {
+    const LabelledMapping labelled_mapping = hybrid.auxiliary_mapping(location);
+    return make_labelled_augmented_paving(
+        AugmentedPaving(hybrid.state_paving()[location], labelled_mapping.mapping()),
+        labelled_mapping.argument_space(), labelled_mapping.result_space());
+}
 
 // Flatten location-indexed storage into ordinary continuous sets before any
 // rendering. No hybrid drawing object, backend conversion or new dependency
