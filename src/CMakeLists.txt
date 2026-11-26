@@ -5,6 +5,7 @@ add_library(REASONING_SRC OBJECT
     hybrid_grid.cpp
     labelled_paving_value.cpp
     labelled_paving_drawing.cpp
+    paving_drawing.cpp
     hybrid_paving.cpp
     hybrid_augmented_paving_orbit.cpp
     augmented_paving_orbit.cpp
