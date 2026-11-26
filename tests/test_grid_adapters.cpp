@@ -54,6 +54,32 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_grid(Grid(1u), space));
     }
 
+    Void test_legacy_location_scalings_preserve_coordinate_order() {
+        const DiscreteLocation first(1), absent(9);
+        const RealVariable x("x"), y("y"), z("z");
+        const Map<Identifier, ExactDouble> named{
+            {x.name(), 2.0_x}, {y.name(), 3.0_x}
+        };
+        const HybridScalings policy{SimpleHybridScalings(4.0_x, named)};
+
+        const Grid permuted = grid_from_scalings(policy, first, RealSpace({y, z, x}));
+        ARIADNE_TESTING_EXPECT_EQUAL(permuted.dimension(), 3u);
+        ARIADNE_TESTING_PROVE(permuted == Grid(Vector<ExactDouble>{3.0_x, 4.0_x, 2.0_x}));
+        const Grid reversed = grid_from_scalings(policy, first, RealSpace({x, y}));
+        ARIADNE_TESTING_PROVE(reversed == Grid(Vector<ExactDouble>{2.0_x, 3.0_x}));
+
+        MonolithicHybridSpace known;
+        known.new_location(first, RealSpace({x, y}));
+        const HybridSpace space(known);
+        Hybrid<Grid> generic = make_hybrid_grids(space, policy);
+        ARIADNE_TESTING_PROVE(generic.has_location(first));
+        ARIADNE_TESTING_PROVE(not generic.has_location(absent));
+        ARIADNE_TESTING_PROVE(not generic.has_value(first));
+        ARIADNE_TESTING_PROVE(generic[first] == reversed);
+        ARIADNE_TESTING_PROVE(not generic.has_value(absent));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(generic[absent]);
+    }
+
     Void test_labelled_pavings_preserve_tree_and_robdd() {
         const RealVariable x("x"), y("y");
         const RealSpace space({y, x});
@@ -134,5 +160,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_grid_matches_legacy);
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_pavings_preserve_tree_and_robdd);
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_hybrid_grids_match_legacy_and_are_lazy);
+    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_legacy_location_scalings_preserve_coordinate_order);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

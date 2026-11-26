@@ -44,6 +44,15 @@ class TestGenericHybridGridAdapters : public Ariadne::Testing::ContextFixture {
   public:
     using ContextFixture::ContextFixture;
 
+    Void test_generic_scalings_respect_defaults_and_permutations() {
+        const RealVariable x("x"), y("y"), z("z");
+        const Map<RealVariable, ExactDouble> named{{x, 2.0_x}, {y, 3.0_x}};
+        const Scalings scalings(4.0_x, named);
+        const Grid result = grid_from_scalings(scalings, RealSpace({y, z, x}));
+        ARIADNE_TESTING_EXPECT_EQUAL(result.dimension(), 3u);
+        ARIADNE_TESTING_PROVE(result == Grid(Vector<ExactDouble>{3.0_x, 4.0_x, 2.0_x}));
+    }
+
     Void test_lazy_scalings_and_ordered_grids() {
         const DiscreteLocation first(1), second(2), absent(3);
         const RealVariable x("x"), y("y");
@@ -97,5 +106,6 @@ class TestGenericHybridGridAdapters : public Ariadne::Testing::ContextFixture {
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_generic_hybrid_grid_adapters");
     ARIADNE_TESTING_ADD_TEST(TestGenericHybridGridAdapters, test_lazy_scalings_and_ordered_grids);
+    ARIADNE_TESTING_ADD_TEST(TestGenericHybridGridAdapters, test_generic_scalings_respect_defaults_and_permutations);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

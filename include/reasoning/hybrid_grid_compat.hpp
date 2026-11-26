@@ -36,6 +36,15 @@
 
 namespace Ariadne {
 
+/** @brief Materialize a concrete grid from a legacy location-aware scaling policy.
+ *  @details The supplied RealSpace determines coordinate order, also when the
+ *  auxiliary coordinates differ from the location's state coordinates.
+ *  This adapter uses scaling(location, variable), not the removed legacy
+ *  HybridScalings::grid method, and is independent of HybridGrid internals.
+ */
+Grid grid_from_scalings(const HybridScalings& policy,
+                        const DiscreteLocation& location, const RealSpace& space);
+
 // Legacy HybridGrid and its scaling policy are currently paving-dependent.
 // This factory preserves the policy while storing the grids in Hybrid<Grid>,
 // lazily, without materialising all valid locations.

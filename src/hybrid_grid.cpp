@@ -28,6 +28,8 @@
 
 #include <utility>
 
+#include "algebra/vector.hpp"
+
 #include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
 
@@ -37,6 +39,15 @@ Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
     Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
     for (SizeType axis = 0; axis < space.dimension(); ++axis) {
         lengths[axis] = scalings.scaling(space[axis]);
+    }
+    return Grid(lengths);
+}
+
+Grid grid_from_scalings(const HybridScalings& policy,
+                        const DiscreteLocation& location, const RealSpace& space) {
+    Vector<ExactDouble> lengths(space.dimension());
+    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
+        lengths[axis] = policy.scaling(location, space[axis]);
     }
     return Grid(lengths);
 }
@@ -53,7 +64,7 @@ Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings) {
     return Hybrid<Grid>(std::move(space),
         [scalings = std::move(scalings)](const DiscreteLocation& location,
                                         const RealSpace& real_space) {
-            return scalings.grid(location, real_space);
+            return grid_from_scalings(scalings, location, real_space);
         });
 }
 

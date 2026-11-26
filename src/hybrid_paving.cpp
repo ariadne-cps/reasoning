@@ -29,6 +29,7 @@
 // Hybrid paving operations depending on a system specification.
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/hybrid_paving_value.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
 
 #include <utility>
 
@@ -137,7 +138,7 @@ HybridPaving extend_auxiliary(const HybridPaving& hybrid_paving,
         const Paving& state_paving = iter->second;
         RealSpace auxiliary_space = hybrid_automaton.continuous_auxiliary_space(location);
         EffectiveVectorMultivariateFunction auxiliary_function = hybrid_automaton.auxiliary_function(location);
-        Grid auxiliary_grid = scalings.grid(location, auxiliary_space);
+        Grid auxiliary_grid = grid_from_scalings(scalings, location, auxiliary_space);
         Paving& destination = result[location];
         adjoin_auxiliary_skew_product(
             destination, state_paving, auxiliary_grid, auxiliary_function);
