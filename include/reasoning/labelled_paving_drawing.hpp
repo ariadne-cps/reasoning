@@ -37,25 +37,17 @@
 namespace Ariadne::PavingDrawing {
 
 /** @brief Render the object in the selected coordinate system. */
-inline Void draw(CanvasInterface& canvas, const Variables2d& axes, const LabelledAugmentedPaving& paving) {
-    /** @brief Project coordinates into the requested variable space. */
-    Projection2d proj = Ariadne::projection(paving.state_auxiliary_space(), axes);
-    PavingDrawing::draw(canvas, proj, static_cast<const AugmentedPaving&>(paving));
-}
+Void draw(CanvasInterface& canvas, const Variables2d& axes, const LabelledAugmentedPaving& paving);
 
 /** @brief LabelledAugmentedPavingDrawable: drawing adapters for labelled augmented pavings. */
 class LabelledAugmentedPavingDrawable final : public LabelledDrawable2dInterface {
   public:
     /** @brief Construct a LabelledAugmentedPavingDrawable instance. */
-    explicit LabelledAugmentedPavingDrawable(const LabelledAugmentedPaving& paving) : _paving(paving) {}
+    explicit LabelledAugmentedPavingDrawable(const LabelledAugmentedPaving& paving);
     /** @brief Create a copy of the labelled drawable. */
-    LabelledAugmentedPavingDrawable* labelled_clone() const override {
-        return new LabelledAugmentedPavingDrawable(*this);
-    }
+    LabelledAugmentedPavingDrawable* labelled_clone() const override;
     /** @brief Render the object in the selected coordinate system. */
-    Void draw(CanvasInterface& canvas, const Variables2d& axes) const override {
-        PavingDrawing::draw(canvas, axes, _paving);
-    }
+    Void draw(CanvasInterface& canvas, const Variables2d& axes) const override;
 
   private:
     LabelledAugmentedPaving _paving;
@@ -64,36 +56,18 @@ class LabelledAugmentedPavingDrawable final : public LabelledDrawable2dInterface
 // Projection-based figures use the same auxiliary graph as AugmentedPaving.
 // A dedicated overload avoids reliance on implicit conversions or on
 // mathematical types inheriting rendering interfaces.
-inline Void draw_to_figure(Figure& figure, const LabelledAugmentedPaving& paving) {
-    PavingDrawing::draw(figure, static_cast<const AugmentedPaving&>(paving));
-}
+Void draw_to_figure(Figure& figure, const LabelledAugmentedPaving& paving);
 /** @brief Render the object in the selected coordinate system. */
-inline Void draw(Figure& figure, const LabelledAugmentedPaving& paving) {
-    /** @brief Perform the labelled geometric operation. */
-    PavingDrawing::draw_to_figure(figure, paving);
-}
+Void draw(Figure& figure, const LabelledAugmentedPaving& paving);
 /** @brief Write or compare labelled objects. */
-inline Figure& operator<<(Figure& figure, const LabelledAugmentedPaving& paving) {
-    /** @brief Perform the labelled geometric operation. */
-    PavingDrawing::draw_to_figure(figure, paving);
-    return figure;
-}
+Figure& operator<<(Figure& figure, const LabelledAugmentedPaving& paving);
 
 /** @brief Render the object in the selected coordinate system. */
-inline Void draw_to_figure(LabelledFigure& figure, const LabelledAugmentedPaving& paving) {
-    figure.draw(LabelledAugmentedPavingDrawable(paving));
-}
+Void draw_to_figure(LabelledFigure& figure, const LabelledAugmentedPaving& paving);
 /** @brief Render the object in the selected coordinate system. */
-inline Void draw(LabelledFigure& figure, const LabelledAugmentedPaving& paving) {
-    /** @brief Perform the labelled geometric operation. */
-    PavingDrawing::draw_to_figure(figure, paving);
-}
+Void draw(LabelledFigure& figure, const LabelledAugmentedPaving& paving);
 /** @brief Write or compare labelled objects. */
-inline LabelledFigure& operator<<(LabelledFigure& figure, const LabelledAugmentedPaving& paving) {
-    /** @brief Perform the labelled geometric operation. */
-    PavingDrawing::draw_to_figure(figure, paving);
-    return figure;
-}
+LabelledFigure& operator<<(LabelledFigure& figure, const LabelledAugmentedPaving& paving);
 
 } // namespace Ariadne::PavingDrawing
 #endif // ARIADNE_REASONING_LABELLED_PAVING_DRAWING_HPP

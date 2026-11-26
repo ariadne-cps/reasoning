@@ -37,36 +37,24 @@ namespace Ariadne::PavingDrawing {
 // Generic value counterpart: the drawing logic remains in Reasoning because
 // its AugmentedPaving representation must not enter the Drawing module.
 // Figure stores an owned drawable snapshot, just as with the legacy class.
-inline Void draw(CanvasInterface& canvas, const Variables2d& axes,
-                 const LabelledAugmentedPavingValue& paving) {
-    const Projection2d proj = Ariadne::projection(state_auxiliary_space(paving), axes);
-    PavingDrawing::draw(canvas, proj, paving.value());
-}
+Void draw(CanvasInterface& canvas, const Variables2d& axes,
+                 const LabelledAugmentedPavingValue& paving);
 
 class LabelledAugmentedPavingValueDrawable final : public LabelledDrawable2dInterface {
   public:
-    explicit LabelledAugmentedPavingValueDrawable(const LabelledAugmentedPavingValue& paving)
-        : _paving(paving) {}
+    explicit LabelledAugmentedPavingValueDrawable(const LabelledAugmentedPavingValue& paving);
 
-    LabelledAugmentedPavingValueDrawable* labelled_clone() const override {
-        return new LabelledAugmentedPavingValueDrawable(*this);
-    }
+    LabelledAugmentedPavingValueDrawable* labelled_clone() const override;
 
-    Void draw(CanvasInterface& canvas, const Variables2d& axes) const override {
-        PavingDrawing::draw(canvas, axes, _paving);
-    }
+    Void draw(CanvasInterface& canvas, const Variables2d& axes) const override;
 
   private:
     LabelledAugmentedPavingValue _paving;
 };
 
-inline Void draw(Figure& figure, const LabelledAugmentedPavingValue& paving) {
-    PavingDrawing::draw(figure, paving.value());
-}
+Void draw(Figure& figure, const LabelledAugmentedPavingValue& paving);
 
-inline Void draw(LabelledFigure& figure, const LabelledAugmentedPavingValue& paving) {
-    figure.draw(LabelledAugmentedPavingValueDrawable(paving));
-}
+Void draw(LabelledFigure& figure, const LabelledAugmentedPavingValue& paving);
 
 } // namespace Ariadne::PavingDrawing
 
