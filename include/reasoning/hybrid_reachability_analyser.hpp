@@ -95,6 +95,9 @@ class HybridReachabilityAnalyser
     : public ReachabilityAnalyser<HybridAutomatonInterface> {
   public:
     typedef HybridReachabilityAnalyserConfiguration ConfigurationType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::CompactSetInterfaceType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::OvertSetInterfaceType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::TimeType;
 
   public:
     //!@{
@@ -105,6 +108,63 @@ class HybridReachabilityAnalyser
 
     //! \brief Make a dynamically-allocated copy.
     virtual HybridReachabilityAnalyser* clone() const;
+    //!@}
+
+    //!@{
+    //! \name Non-breaking generic results
+    //! The virtual methods still return the legacy HybridAugmentedPaving
+    //! storage; each result is converted into an independent,
+    //! backend-preserving location-indexed value.
+
+    //! \brief Generic snapshot of a lower-approximation to the evolved set.
+    HybridAugmentedPavingValue lower_evolve_value(const OvertSetInterfaceType& initial_set,
+                                                  const TimeType& time) const {
+        return make_hybrid_augmented_paving_value(lower_evolve(initial_set, time));
+    }
+
+    //! \brief Generic snapshots of lower reachable and evolved sets.
+    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+        lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const {
+        auto values = lower_reach_evolve(initial_set, time);
+        return {make_hybrid_augmented_paving_value(values.first),
+                make_hybrid_augmented_paving_value(values.second)};
+    }
+
+    //! \brief Generic snapshot of a lower-approximation to the reachable set up to \a time.
+    HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set,
+                                                 const TimeType& time) const {
+        return make_hybrid_augmented_paving_value(lower_reach(initial_set, time));
+    }
+
+    //! \brief Generic snapshot of an infinite-time lower reachable set.
+    HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const {
+        return make_hybrid_augmented_paving_value(lower_reach(initial_set));
+    }
+
+    //! \brief Generic snapshot of an upper-approximation to the evolved set.
+    HybridAugmentedPavingValue upper_evolve_value(const CompactSetInterfaceType& initial_set,
+                                                  const TimeType& time) const {
+        return make_hybrid_augmented_paving_value(upper_evolve(initial_set, time));
+    }
+
+    //! \brief Generic snapshots of upper reachable and evolved sets.
+    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+        upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const {
+        auto values = upper_reach_evolve(initial_set, time);
+        return {make_hybrid_augmented_paving_value(values.first),
+                make_hybrid_augmented_paving_value(values.second)};
+    }
+
+    //! \brief Generic snapshot of an upper-approximation to the reachable set up to \a time.
+    HybridAugmentedPavingValue upper_reach_value(const CompactSetInterfaceType& initial_set,
+                                                 const TimeType& time) const {
+        return make_hybrid_augmented_paving_value(upper_reach(initial_set, time));
+    }
+
+    //! \brief Generic snapshot of the outer chain-reachable set.
+    HybridAugmentedPavingValue outer_chain_reach_value(const CompactSetInterfaceType& initial_set) const {
+        return make_hybrid_augmented_paving_value(outer_chain_reach(initial_set));
+    }
     //!@}
 };
 
