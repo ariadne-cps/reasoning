@@ -29,8 +29,6 @@
 #ifndef ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
 #define ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
 
-#include <utility>
-
 #include "evolution/scalings.hpp"
 #include "hybrid/value.hpp"
 #include "paving/grid.hpp"
@@ -38,26 +36,14 @@
 namespace Ariadne {
 
 /** @brief Materialize the ordered grid lengths for a location-independent scaling. */
-inline Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
-    Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
-    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
-        lengths[axis] = scalings.scaling(space[axis]);
-    }
-    return Grid(lengths);
-}
+Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space);
 
 /** @brief Lazily build one grid per location from generic scaling values.
  *  @details The captured scaling family is copied into the provider. Neither
  *  scaling policies nor grids are eagerly materialized. Location-dependent
  *  coordinate order is supplied by the requested HybridSpace.
  */
-inline Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalings) {
-    return Hybrid<Grid>(std::move(space),
-        [scalings = std::move(scalings)](const DiscreteLocation& location,
-                                        const RealSpace& real_space) mutable {
-            return grid_from_scalings(scalings[location], real_space);
-        });
-}
+Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalings);
 
 } // namespace Ariadne
 
