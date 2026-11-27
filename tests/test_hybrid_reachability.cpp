@@ -193,9 +193,11 @@ Void TestHybridReachability::test_analyser_configuration() {
     // Generic location-indexed access round-trips the legacy grid and scalings.
     Hybrid<Scalings> scalings_value = config.scalings_value();
     ARIADNE_TESTING_PROVE(scalings_value.has_location(q));
+    ARIADNE_TESTING_PROVE(scalings_value.space() == system.state_space());
     ARIADNE_TESTING_EXPECT_EQUAL(scalings_value[q].scaling(x), 0.5_x);
     Hybrid<Grid> grid_value = config.grid_value();
     ARIADNE_TESTING_PROVE(grid_value.has_location(q));
+    ARIADNE_TESTING_PROVE(grid_value.space() == system.state_space());
     ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], config.grid().grid(q));
 
     scalings_value[q].set_scaling(x, ApproximateDouble(0.25));

@@ -276,9 +276,19 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     //! This property is only used in the chain_reach() routines.
     SharedPointer<HybridExactBoxes> _bounding_domain_ptr;
 
-    //! \brief The grid used for approximation.
-    //! \details Provided as a pointer in order to avoid double construction. It must always be defined.
+    //! \brief The hybrid space of the configured grid.
+    HybridSpace _space;
+    //! \brief The scaling policy; source of the derived legacy grid view.
+    HybridScalings _scalings_policy;
+    //! \brief Primary generic location-indexed scalings (lazy per location).
+    Hybrid<Scalings> _scalings;
+    //! \brief Primary generic location-indexed grids (lazy per location).
+    Hybrid<Grid> _grids;
+    //! \brief Derived legacy grid view, kept in sync by _sync_views(). Must always be defined.
     SharedPointer<HybridGrid> _grid_ptr;
+
+    //! \brief Rebuild the generic value families and the legacy grid view from the policy.
+    Void _sync_views();
 
     //! \brief Algorithm used to approximate evolved hybrid enclosures.
     Paver _paver;
@@ -331,21 +341,17 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     //! \brief Check the consistency in respect to the system space, then set the grid.
     Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
 
-    // Generic location-indexed grid and scaling access for hybrid analysers.
-    // The legacy SharedPointer<HybridGrid> API above is retained during staging.
-    Hybrid<Grid> grid_value() const {
-        HybridGrid grid_copy = *_grid_ptr;
-        return make_hybrid_grids(grid_copy.space(), grid_copy.scalings());
-    }
-    Hybrid<Scalings> scalings_value() const {
-        HybridGrid grid_copy = *_grid_ptr;
-        return make_hybrid_scalings(grid_copy.space(), grid_copy.scalings());
-    }
+    // Generic location-indexed grid and scaling access: these stored families
+    // are the primary configuration state. The legacy SharedPointer<HybridGrid>
+    // API above is a derived view kept in sync on every mutation.
+    const Hybrid<Grid>& grid_value() const { return _grids; }
+    const Hybrid<Scalings>& scalings_value() const { return _scalings; }
     //! \brief Check the consistency in respect to the system space, then set the grid from generic scalings.
     Void set_grid(const Hybrid<Scalings>& scalings);
 
     Void set_scaling(const RealVariable& v, ApproximateDouble s) {
-        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(this->grid().scalings())).set_scaling(v, s);
+        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(_scalings_policy)).set_scaling(v, s);
+        _sync_views();
     }
 
     const ChainOverspillPolicy& outer_overspill_policy() const { return _outer_overspill_policy; }
