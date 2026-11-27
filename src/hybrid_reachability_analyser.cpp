@@ -100,7 +100,7 @@ Hybrid<Scalings> HybridReachabilityAnalyserConfiguration::_make_scalings() const
     return Hybrid<Scalings>(_space,
                             [overrides = _variable_scalings](const DiscreteLocation&, const RealSpace&) {
                                 Map<RealVariable, ExactDouble> entries;
-                                for (const auto& entry : overrides)
+                                for (const auto& entry: overrides)
                                     entries.insert(RealVariable(entry.first), entry.second);
                                 return Scalings(1.0_x, entries);
                             });
