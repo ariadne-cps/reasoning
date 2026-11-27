@@ -30,8 +30,11 @@
 
 #include <utility>
 
+#include "geometry/box.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/hybrid_paving.hpp"
+#include "hybrid/hybrid_set.hpp"
+#include "labelled/set.hpp"
 
 namespace Ariadne {
 
@@ -98,6 +101,43 @@ Bool intersect(const HybridAugmentedPavingValue& left, const HybridAugmentedPavi
             return true;
     }
     return false;
+}
+
+Void adjoin_lower_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridOvertSetInterface& set, Nat extent, Nat fineness) {
+    const Set<DiscreteLocation> locations =
+        dynamic_cast<const EffectiveHybridBoundedSetInterface&>(set).locations();
+    for (const DiscreteLocation& location: locations) {
+        ARIADNE_PRECONDITION(pavings.has_location(location));
+        const RealSpace space = pavings.space()[location];
+        pavings[location].state_paving().adjoin_lower_approximation(set.euclidean_set(location, space), extent, fineness);
+    }
+}
+
+Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridCompactSetInterface& set, Nat fineness) {
+    for (const DiscreteLocation& location: set.locations()) {
+        ARIADNE_PRECONDITION(pavings.has_location(location));
+        const RealSpace space = pavings.space()[location];
+        pavings[location].state_paving().adjoin_outer_approximation(set.euclidean_set(location, space), fineness);
+    }
+}
+
+Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+                                const HybridExactBoxes& boxes, Nat fineness) {
+    for (auto iter = boxes.begin(); iter != boxes.end(); ++iter) {
+        const DiscreteLocation& location = iter->first;
+        const LabelledSet<ExactBoxType>& location_boxes = iter->second;
+        ARIADNE_PRECONDITION(pavings.has_location(location));
+        ARIADNE_PRECONDITION(location_boxes.space() == pavings.space()[location]);
+        pavings[location].state_paving().adjoin_outer_approximation(ExactBoxSetType(location_boxes.euclidean_set()), fineness);
+    }
+}
+
+Void restrict_to_extent(HybridAugmentedPavingValue& pavings, Nat extent) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        iter->second.state_paving().restrict_to_extent(extent);
+    }
 }
 
 } // namespace Ariadne

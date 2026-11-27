@@ -37,10 +37,17 @@
 #error Generic paving adapter must not import legacy HybridScalings
 #endif
 
+#include "analysis_paving_factory.hpp"
+#include "function/function.hpp"
+#include "geometry/box.hpp"
+#include "hybrid/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
+#include "hybrid/hybrid_set.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "system/hybrid_automaton.hpp"
@@ -412,6 +419,83 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EXCEPTION(invalid[first]);
         ARIADNE_TESTING_PROVE(not invalid.has_value(first));
     }
+
+    Void test_generic_approximation_matches_legacy() {
+        const DiscreteLocation first(1), second(2);
+        const RealVariable x("x"), y("y");
+        MonolithicHybridSpace spaces;
+        spaces.new_location(first, RealSpace({x}));
+        spaces.new_location(second, RealSpace({y, x}));
+        const HybridSpace space(spaces);
+        const Map<Identifier, ExactDouble> scale_values{
+            {x.name(), 2.0_x},
+            {y.name(), 3.0_x}
+        };
+        const HybridScalings policy(scale_values);
+        const HybridGrid legacy_grid(space, policy);
+        auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
+        auto generic_grids = [&] { return make_hybrid_grids(space, make_hybrid_scalings(space, policy)); };
+
+        // Outer approximation of a hybrid compact set: identical slices.
+        const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
+        HybridPaving legacy(legacy_grid, create_tree);
+        Hybrid<Paving> generic = make_hybrid_pavings(space, generic_grids(), create_tree);
+        legacy.adjoin_outer_approximation(compact_set, 2u);
+        adjoin_outer_approximation(generic, compact_set, 2u);
+        ARIADNE_TESTING_PROVE(legacy[first].size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
+        ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(legacy[first])));
+        ARIADNE_TESTING_PROVE(legacy[first].subset(static_cast<const PavingInterface&>(generic[first])));
+        ARIADNE_TESTING_PROVE(not generic.has_value(second));
+
+        // Lower approximation matches the legacy per-location call.
+        HybridPaving legacy_lower(legacy_grid, create_tree);
+        Hybrid<Paving> generic_lower = make_hybrid_pavings(space, generic_grids(), create_tree);
+        legacy_lower.adjoin_lower_approximation(compact_set, 4u, 6u);
+        adjoin_lower_approximation(generic_lower, compact_set, 4u, 6u);
+        ARIADNE_TESTING_PROVE(legacy_lower[first].size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_lower[first].size(), legacy_lower[first].size());
+        ARIADNE_TESTING_PROVE(generic_lower[first].subset(static_cast<const PavingInterface&>(legacy_lower[first])));
+        ARIADNE_TESTING_PROVE(legacy_lower[first].subset(static_cast<const PavingInterface&>(generic_lower[first])));
+
+        // Extent restriction matches as well.
+        legacy.restrict_to_extent(3u);
+        restrict_to_extent(generic, 3u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
+
+        // Outer approximation of exact boxes on both locations.
+        HybridExactBoxes boxes;
+        boxes.insert(first, RealSpace({
+                                x
+        }),
+                     ExactBoxType({{-1, 1}}));
+        boxes.insert(second, RealSpace({
+                                 y, x
+        }),
+                     ExactBoxType({{-2, 2}, {-2, 2}}));
+        HybridPaving legacy_boxes(legacy_grid, create_tree);
+        Hybrid<Paving> generic_boxes = make_hybrid_pavings(space, generic_grids(), create_tree);
+        legacy_boxes.adjoin_outer_approximation(boxes, 2u);
+        adjoin_outer_approximation(generic_boxes, boxes, 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[first].size(), legacy_boxes[first].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[second].size(), legacy_boxes[second].size());
+        ARIADNE_TESTING_PROVE(generic_boxes[first].subset(static_cast<const PavingInterface&>(legacy_boxes[first])));
+        ARIADNE_TESTING_PROVE(legacy_boxes[first].subset(static_cast<const PavingInterface&>(generic_boxes[first])));
+
+        // Augmented values delegate to the state paving, as the legacy class.
+        HybridAutomaton system;
+        system.new_mode(first, {dot(x) = -x});
+        system.new_mode(second, {dot(y) = -y, dot(x) = -x});
+        HybridAugmentedPaving legacy_aug = make_analysis_paving<HybridAugmentedPaving>(legacy_grid, system);
+        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(legacy_aug);
+        legacy_aug.adjoin_outer_approximation(compact_set, 2u);
+        adjoin_outer_approximation(generic_aug, compact_set, 2u);
+        ARIADNE_TESTING_PROVE(generic_aug[first].size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_aug[first].size(), legacy_aug.state_paving()[first].size());
+        const HybridAugmentedPavingValue legacy_aug_snapshot = make_hybrid_augmented_paving_value(legacy_aug);
+        ARIADNE_TESTING_PROVE(subset(generic_aug, legacy_aug_snapshot));
+        ARIADNE_TESTING_PROVE(subset(legacy_aug_snapshot, generic_aug));
+    }
 };
 
 int main(int argc, char** argv) {
@@ -421,5 +505,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_legacy_auxiliary_extension_preserves_named_grid_scalings);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_set_operations_match_legacy_without_unwanted_materialization);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_rejects_empty_or_wrong_grid_backend);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_generic_approximation_matches_legacy);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

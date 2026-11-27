@@ -31,6 +31,7 @@
 
 #include <functional>
 
+#include "hybrid/hybrid_set_interface.hpp"
 #include "hybrid/value.hpp"
 #include "paving/paving_interface.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
@@ -90,6 +91,24 @@ Hybrid<Paving> extend_auxiliary(
     Hybrid<Scalings> scalings,
     std::function<Paving(const Grid&)> backend,
     const HybridAutomatonInterface& automaton);
+
+/** @brief Adjoin the per-location lower approximation of a hybrid overt set.
+ *  @details Mirrors legacy HybridPaving::adjoin_lower_approximation: locations
+ *  of the set are materialized through the family's lazy factory.
+ */
+Void adjoin_lower_approximation(Hybrid<Paving>& pavings,
+                                const EffectiveHybridOvertSetInterface& set, Nat extent, Nat fineness);
+
+/** @brief Adjoin the per-location outer approximation of a hybrid compact set. */
+Void adjoin_outer_approximation(Hybrid<Paving>& pavings,
+                                const EffectiveHybridCompactSetInterface& set, Nat fineness);
+
+/** @brief Adjoin the per-location outer approximation of hybrid exact boxes. */
+Void adjoin_outer_approximation(Hybrid<Paving>& pavings,
+                                const HybridExactBoxes& boxes, Nat fineness);
+
+/** @brief Restrict every materialized slice to the given grid extent. */
+Void restrict_to_extent(Hybrid<Paving>& pavings, Nat extent);
 
 } // namespace Ariadne
 

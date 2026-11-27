@@ -30,6 +30,7 @@
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_HPP
 
 #include "hybrid/hybrid_augmented_paving.hpp"
+#include "hybrid/hybrid_set_interface.hpp"
 #include "hybrid/value.hpp"
 #include "paving/augmented_paving.hpp"
 
@@ -72,6 +73,23 @@ Bool subset(const HybridAugmentedPavingValue& left, const HybridAugmentedPavingV
 
 /** @brief Check set intersection without materializing either family. */
 Bool intersect(const HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right);
+
+/** @brief Adjoin the per-location lower approximation of a hybrid overt set
+ *  to each slice's state paving, as in legacy HybridAugmentedPaving.
+ */
+Void adjoin_lower_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridOvertSetInterface& set, Nat extent, Nat fineness);
+
+/** @brief Adjoin the per-location outer approximation of a hybrid compact set. */
+Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridCompactSetInterface& set, Nat fineness);
+
+/** @brief Adjoin the per-location outer approximation of hybrid exact boxes. */
+Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+                                const HybridExactBoxes& boxes, Nat fineness);
+
+/** @brief Restrict every materialized state paving to the given grid extent. */
+Void restrict_to_extent(HybridAugmentedPavingValue& pavings, Nat extent);
 
 } // namespace Ariadne
 
