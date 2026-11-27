@@ -30,7 +30,6 @@
 
 #include "evolution/hybrid_evolver.hpp"
 #include "evolution/vector_field_evolver.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
@@ -244,13 +243,6 @@ Void export_hybrid_reasoning(pybind11::module& module) {
     evolver_configuration_class.def("__repr__", &__cstr__<EvolverConfiguration>);
 
     // The returned storage and certificate must be inspectable from Python.
-    auto hybrid_augmented_paving_class = pybind11::reinterpret_borrow<pybind11::class_<HybridAugmentedPaving>>(
-        module.attr("HybridAugmentedPaving"));
-    hybrid_augmented_paving_class.def("size", &HybridAugmentedPaving::size);
-    hybrid_augmented_paving_class.def("__len__", &HybridAugmentedPaving::size);
-    hybrid_augmented_paving_class.def("is_empty", &HybridAugmentedPaving::is_empty);
-    hybrid_augmented_paving_class.def("__str__", &__cstr__<HybridAugmentedPaving>);
-
     export_safety_certificate<Analyser>(module, "HybridSafetyCertificate");
 
     pybind11::class_<Analyser> analyser_class(module, "HybridReachabilityAnalyser");
@@ -331,7 +323,6 @@ void reasoning_submodule(pybind11::module& module) {
     export_labelled_paving_values(module);
     export_hybrid_augmented_paving_value(module);
     export_augmented_paving(module);
-    pybind11::class_<HybridAugmentedPaving>(module, "HybridAugmentedPaving");
     export_hybrid_reasoning(module);
     export_safety_certificate<ContinuousReachabilityAnalyser>(module, "SafetyCertificate");
     export_reachability_analyser<ContinuousReachabilityAnalyser, VectorFieldEvolver>(module, "ContinuousReachabilityAnalyser");
