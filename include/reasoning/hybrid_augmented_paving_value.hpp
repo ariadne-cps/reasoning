@@ -29,12 +29,20 @@
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_HPP
 
+#include <functional>
+
 #include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
 #include "hybrid/value.hpp"
 #include "paving/augmented_paving.hpp"
 
 namespace Ariadne {
+
+class HybridAutomatonInterface;
+class HybridAuxiliaryMapping;
+
+/** @brief Adapt an automaton into a lazy, location-indexed auxiliary mapping. */
+HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterface& system);
 
 /** @brief Owning location-indexed family of augmented pavings. */
 using HybridAugmentedPavingValue = Hybrid<AugmentedPaving>;
@@ -46,6 +54,23 @@ using HybridAugmentedPavingValue = Hybrid<AugmentedPaving>;
  *  operations never convert the authoritative representation.
  */
 HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const HybridAugmentedPaving& legacy);
+
+/** @brief Make an empty hybrid augmented paving value on a generic grid family,
+ *  using the automaton's auxiliary mapping and a binary-tree backend.
+ */
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
+                                                              const HybridAutomatonInterface& system);
+
+/** @brief Make an empty hybrid augmented paving value on a generic grid family,
+ *  using the automaton's auxiliary mapping and the given backend factory.
+ */
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
+                                                              const HybridAutomatonInterface& system,
+                                                              std::function<Paving(const Grid&)> backend);
+
+/** @brief Lift a generic hybrid state paving to augmented values with the given auxiliary mapping. */
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Paving>& state,
+                                                              const HybridAuxiliaryMapping& mapping);
 
 /** @brief Union materialized slices, providing missing left-hand slices only
  *  for locations materialized on the right.

@@ -73,8 +73,8 @@ class HybridAutomaton;
 template<>
 struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
-    HybridAugmentedPaving chain_reach_set;
-    HybridAugmentedPaving safe_set;
+    HybridAugmentedPavingValue chain_reach_set;
+    HybridAugmentedPavingValue safe_set;
 
     /** @brief Return an owning generic snapshot of the chain-reachable set. */
     HybridAugmentedPavingValue chain_reach_value() const;
@@ -112,58 +112,53 @@ class HybridReachabilityAnalyser
 
     //!@{
     //! \name Non-breaking generic results
-    //! The virtual methods still return the legacy HybridAugmentedPaving
-    //! storage; each result is converted into an independent,
-    //! backend-preserving location-indexed value.
+    //! The storage is already the generic location-indexed value, so these
+    //! accessors return the analyser results directly.
 
     //! \brief Generic snapshot of a lower-approximation to the evolved set.
     HybridAugmentedPavingValue lower_evolve_value(const OvertSetInterfaceType& initial_set,
                                                   const TimeType& time) const {
-        return make_hybrid_augmented_paving_value(lower_evolve(initial_set, time));
+        return lower_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshots of lower reachable and evolved sets.
     Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
         lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const {
-        auto values = lower_reach_evolve(initial_set, time);
-        return {make_hybrid_augmented_paving_value(values.first),
-                make_hybrid_augmented_paving_value(values.second)};
+        return lower_reach_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshot of a lower-approximation to the reachable set up to \a time.
     HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set,
                                                  const TimeType& time) const {
-        return make_hybrid_augmented_paving_value(lower_reach(initial_set, time));
+        return lower_reach(initial_set, time);
     }
 
     //! \brief Generic snapshot of an infinite-time lower reachable set.
     HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const {
-        return make_hybrid_augmented_paving_value(lower_reach(initial_set));
+        return lower_reach(initial_set);
     }
 
     //! \brief Generic snapshot of an upper-approximation to the evolved set.
     HybridAugmentedPavingValue upper_evolve_value(const CompactSetInterfaceType& initial_set,
                                                   const TimeType& time) const {
-        return make_hybrid_augmented_paving_value(upper_evolve(initial_set, time));
+        return upper_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshots of upper reachable and evolved sets.
     Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
         upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const {
-        auto values = upper_reach_evolve(initial_set, time);
-        return {make_hybrid_augmented_paving_value(values.first),
-                make_hybrid_augmented_paving_value(values.second)};
+        return upper_reach_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshot of an upper-approximation to the reachable set up to \a time.
     HybridAugmentedPavingValue upper_reach_value(const CompactSetInterfaceType& initial_set,
                                                  const TimeType& time) const {
-        return make_hybrid_augmented_paving_value(upper_reach(initial_set, time));
+        return upper_reach(initial_set, time);
     }
 
     //! \brief Generic snapshot of the outer chain-reachable set.
     HybridAugmentedPavingValue outer_chain_reach_value(const CompactSetInterfaceType& initial_set) const {
-        return make_hybrid_augmented_paving_value(outer_chain_reach(initial_set));
+        return outer_chain_reach(initial_set);
     }
     //!@}
 };
@@ -332,8 +327,10 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     const HybridExactBoxes& bounding_domain() const { return *_bounding_domain_ptr; }
     Void set_bounding_domain(const HybridExactBoxes& bounding_domain);
 
-    const HybridGrid& grid() const { return *_grid_ptr; }
-    HybridGrid& grid() { return *_grid_ptr; }
+    const Hybrid<Grid>& grid() const { return _grids; }
+    //! \brief Derived legacy grid view, kept in sync by _sync_views().
+    const HybridGrid& hybrid_grid() const { return *_grid_ptr; }
+    HybridGrid& hybrid_grid() { return *_grid_ptr; }
 
     //! \brief Algorithm used for approximating evolved enclosures on the grid.
     const Paver& paver() const { return _paver; }

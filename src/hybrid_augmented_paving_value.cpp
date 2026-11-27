@@ -28,6 +28,7 @@
 
 #include "reasoning/hybrid_augmented_paving_value.hpp"
 
+#include <stdexcept>
 #include <utility>
 
 #include "geometry/box.hpp"
@@ -35,6 +36,8 @@
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "labelled/set.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
 
@@ -56,6 +59,44 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const HybridAugmen
                       AugmentedPaving(legacy.state_paving()[iter->first],
                                       legacy.auxiliary_mapping(iter->first).mapping()));
     }
+    return result;
+}
+
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
+                                                              const HybridAutomatonInterface& system) {
+    return make_hybrid_augmented_paving_value(
+        grids, system, [](const Grid& grid) { return Paving(new BinaryTreePaving(grid)); });
+}
+
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
+                                                              const HybridAutomatonInterface& system,
+                                                              std::function<Paving(const Grid&)> backend) {
+    if (not backend)
+        throw std::invalid_argument("Empty paving backend factory");
+    const HybridSpace space = system.state_space();
+    ARIADNE_PRECONDITION(possibly(grids.space() == space));
+    HybridAuxiliaryMapping mapping = make_hybrid_auxiliary_mapping(system);
+    return HybridAugmentedPavingValue(
+        space,
+        [grids, mapping = std::move(mapping), backend = std::move(backend)](
+            const DiscreteLocation& location, const RealSpace& real_space) mutable {
+            ARIADNE_PRECONDITION(grids.space()[location] == real_space);
+            return AugmentedPaving(backend(grids[location]), mapping(location).mapping());
+        });
+}
+
+HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Paving>& state,
+                                                              const HybridAuxiliaryMapping& mapping) {
+    const HybridSpace space = state.space();
+    HybridAugmentedPavingValue result(
+        space,
+        [state, mapping](const DiscreteLocation& location, const RealSpace& real_space) mutable {
+            ARIADNE_PRECONDITION(state.space()[location] == real_space);
+            return AugmentedPaving(state[location], mapping(location).mapping());
+        });
+    for (auto iter = state.begin(), end = state.end(); iter != end; ++iter)
+        result.insert(iter->first,
+                      AugmentedPaving(state[iter->first], mapping(iter->first).mapping()));
     return result;
 }
 

@@ -29,6 +29,9 @@
 #ifndef ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
 #define ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
 
+#include "hybrid/value.hpp"
+#include "paving/paving_interface.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/reachability_analyser.hpp"
 
 namespace Ariadne {
@@ -51,6 +54,19 @@ struct AnalysisPavingFactory<HybridAugmentedPaving> {
     template<class GRID>
     static HybridAugmentedPaving make(GRID const& grid, const HybridAutomatonInterface& system) {
         return HybridAugmentedPaving(grid, make_hybrid_auxiliary_mapping(system));
+    }
+};
+
+/** @brief Construct generic hybrid augmented paving values with location-dependent auxiliary mappings. */
+template<>
+struct AnalysisPavingFactory<HybridAugmentedPavingValue> {
+    /** @brief Construct an empty value on a generic grid family, with a binary-tree backend. */
+    static HybridAugmentedPavingValue make(const Hybrid<Grid>& grids, const HybridAutomatonInterface& system) {
+        return make_hybrid_augmented_paving_value(grids, system);
+    }
+    /** @brief Lift a generic hybrid state paving to augmented values using the automaton's auxiliary mapping. */
+    static HybridAugmentedPavingValue make(const Hybrid<Paving>& state, const HybridAutomatonInterface& system) {
+        return make_hybrid_augmented_paving_value(state, make_hybrid_auxiliary_mapping(system));
     }
 };
 

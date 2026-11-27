@@ -39,6 +39,15 @@
 
 using namespace Ariadne;
 
+// Free is_empty for the generic hybrid value storage, member call for legacy storage.
+template<class SYS>
+Bool storage_is_empty(const typename ReachabilityAnalyser<SYS>::StorageType& storage) {
+    if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
+        return is_empty(storage);
+    else
+        return storage.is_empty();
+}
+
 template<class SYS>
 struct ContractAnalyser : ReachabilityAnalyser<SYS> {
     using Base = ReachabilityAnalyser<SYS>;
@@ -61,7 +70,10 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         analyser.configuration().set_maximum_grid_extent(4u);
         auto certificate = analyser.verify_safety(initial, safe);
         auto initial_cells = analyser.storage();
-        initial_cells.adjoin_outer_approximation(initial, 3u);
+        if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
+            adjoin_outer_approximation(initial_cells, initial, 3u);
+        else
+            initial_cells.adjoin_outer_approximation(initial, 3u);
         ARIADNE_TESTING_PROVE(subset(initial_cells, certificate.safe_set));
         ARIADNE_TESTING_PROVE(is_indeterminate(certificate.is_safe));
         ARIADNE_TESTING_PROVE(not subset(certificate.chain_reach_set, certificate.safe_set));
@@ -162,21 +174,21 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         else
             analyser.configuration().set_lock_to_grid_time(exact);
         for (const AnalyserTime& time: {AnalyserTime(0), partial, exact}) {
-            ARIADNE_TESTING_PROVE(not analyser.upper_evolve(initial, time).is_empty());
-            ARIADNE_TESTING_PROVE(not analyser.upper_reach(initial, time).is_empty());
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.upper_evolve(initial, time)));
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.upper_reach(initial, time)));
             auto pair = analyser.upper_reach_evolve(initial, time);
-            ARIADNE_TESTING_PROVE(not pair.first.is_empty());
-            ARIADNE_TESTING_PROVE(not pair.second.is_empty());
-            ARIADNE_TESTING_PROVE(analyser.upper_evolve(empty, time).is_empty());
-            ARIADNE_TESTING_PROVE(analyser.upper_reach(empty, time).is_empty());
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(pair.first));
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(pair.second));
+            ARIADNE_TESTING_PROVE(storage_is_empty<SYS>(analyser.upper_evolve(empty, time)));
+            ARIADNE_TESTING_PROVE(storage_is_empty<SYS>(analyser.upper_reach(empty, time)));
             auto empty_pair = analyser.upper_reach_evolve(empty, time);
-            ARIADNE_TESTING_PROVE(empty_pair.first.is_empty());
-            ARIADNE_TESTING_PROVE(empty_pair.second.is_empty());
+            ARIADNE_TESTING_PROVE(storage_is_empty<SYS>(empty_pair.first));
+            ARIADNE_TESTING_PROVE(storage_is_empty<SYS>(empty_pair.second));
         }
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto certificate = analyser.verify_safety(initial, far_safe);
         ARIADNE_TESTING_PROVE(not definitely(certificate.is_safe));
-        ARIADNE_TESTING_PROVE(not certificate.chain_reach_set.is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(certificate.chain_reach_set));
         ARIADNE_TESTING_PROVE(definitely(analyser.verify_safety(empty, far_safe).is_safe));
     }
 
@@ -233,15 +245,15 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         auto input = analyser.storage();
         auto bounding = analyser.storage();
         auto empty = analyser.storage();
-        auto& input_state = input.state_paving();
-        auto& bounding_state = bounding.state_paving();
         Grid grid(1u);
         GridCell root(grid, 0u, BinaryWord{});
         if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>) {
             DiscreteLocation q;
-            input_state.adjoin(HybridGridCell(q, analyser.system().continuous_state_space(q), root));
-            bounding_state.adjoin(HybridGridCell(q, analyser.system().continuous_state_space(q), root.split(false)));
+            input[q].state_paving().adjoin(root);
+            bounding[q].state_paving().adjoin(root.split(false));
         } else {
+            auto& input_state = input.state_paving();
+            auto& bounding_state = bounding.state_paving();
             input_state.adjoin(root);
             bounding_state.adjoin(root.split(false));
         }

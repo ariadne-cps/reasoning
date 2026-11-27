@@ -39,9 +39,15 @@
 namespace Ariadne {
 
 class HybridSpace;
+class LabelledGrid;
 class LabelledAugmentedPaving;
 class HybridAugmentedPaving;
 class BinaryTreePaving;
+class Grid;
+class Paving;
+class AugmentedPaving;
+template<class T>
+class Hybrid;
 
 /** @brief Associate a dynamical system type with its reachability storage type. */
 template<class SYS>
@@ -51,24 +57,32 @@ struct AnalysisTraits;
 template<>
 struct AnalysisTraits<IteratedMap> {
     using StorageType = LabelledAugmentedPaving;
+    using GridType = LabelledGrid;
+    using PavingType = Paving;
 };
 
 /** @brief Use labelled augmented pavings for vector fields. */
 template<>
 struct AnalysisTraits<VectorField> {
     using StorageType = LabelledAugmentedPaving;
+    using GridType = LabelledGrid;
+    using PavingType = Paving;
 };
 
 /** @brief Use labelled augmented pavings for differential inclusions. */
 template<>
 struct AnalysisTraits<DifferentialInclusion> {
     using StorageType = LabelledAugmentedPaving;
+    using GridType = LabelledGrid;
+    using PavingType = Paving;
 };
 
-/** @brief Use hybrid augmented pavings for hybrid automata. */
+/** @brief Use generic location-indexed augmented paving values for hybrid automata. */
 template<>
 struct AnalysisTraits<HybridAutomatonInterface> {
-    using StorageType = HybridAugmentedPaving;
+    using StorageType = Hybrid<AugmentedPaving>;
+    using GridType = Hybrid<Grid>;
+    using PavingType = Paving;
 };
 
 /** @brief Select set and approximation interfaces for a state space. */

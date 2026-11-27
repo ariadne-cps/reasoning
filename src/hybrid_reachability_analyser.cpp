@@ -152,11 +152,11 @@ Void HybridReachabilityAnalyserConfiguration::set_grid(const Hybrid<Scalings>& s
 }
 
 HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::chain_reach_value() const {
-    return make_hybrid_augmented_paving_value(chain_reach_set);
+    return chain_reach_set;
 }
 
 HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::safe_value() const {
-    return make_hybrid_augmented_paving_value(safe_set);
+    return safe_set;
 }
 
 } // namespace Ariadne

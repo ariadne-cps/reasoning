@@ -45,6 +45,7 @@
 #include "paving/paver.hpp"
 #include "paving/paving_interface.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 #include "set/function_set.hpp"
@@ -119,8 +120,8 @@ class ReachabilityAnalyser
 
     typedef typename Interface::EnclosureType EnclosureType;
     typedef typename Interface::StorageType StorageType;
-    using GridType = typename StorageType::GridType;
-    using PavingType = typename StorageType::PavingType;
+    using GridType = typename AnalysisTraits<SYS>::GridType;
+    using PavingType = typename AnalysisTraits<SYS>::PavingType;
 
   private:
 
@@ -164,13 +165,12 @@ class ReachabilityAnalyser
                                    const GridType& grid, const SystemType& system) -> StorageType {
                 return StorageType(factory(grid.euclidean_grid()), system);
             };
-        } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
+        } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPavingValue>) {
             // The same factory creates the continuous paving on demand in
             // every hybrid location. Captured managers survive all copies.
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
-                return StorageType(HybridPaving(grid, factory),
-                                   make_hybrid_auxiliary_mapping(system));
+                return make_hybrid_augmented_paving_value(grid, system, factory);
             };
         } else {
             throw std::logic_error("Unsupported storage for paving factory");
