@@ -49,6 +49,7 @@
 #include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_augmented_paving_value_drawing.hpp"
 #include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -241,6 +242,12 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         FlattenedPavingCanvas legacy_canvas;
         draw(legacy_canvas, locations, Variables2d(x, y), from_grid);
         ARIADNE_TESTING_EXPECT_EQUAL(migrated_canvas.boundaries, legacy_canvas.boundaries);
+        // The generic value draws the same flattened state-auxiliary pavings.
+        const HybridAugmentedPavingValue drawn_value = make_hybrid_augmented_paving_value(from_grid);
+        FlattenedPavingCanvas generic_canvas;
+        PavingDrawing::draw(generic_canvas, locations, Variables2d(x, y), drawn_value);
+        ARIADNE_TESTING_PROVE(generic_canvas.boundaries > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_canvas.boundaries, legacy_canvas.boundaries);
         HybridAugmentedPavingDrawable drawable(from_grid);
         const HybridDrawableInterface& drawable_interface = drawable;
         drawable_interface.draw(canvas, locations, Variables2d(x, y));
