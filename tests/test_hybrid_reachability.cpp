@@ -185,8 +185,9 @@ Void TestHybridReachability::test_analyser_configuration() {
     DiscreteLocation other_q;
     RealVariable u("u");
     other_system.new_mode(other_q, {dot(u) = -u});
-    ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error,
-                                  config.set_grid(std::make_shared<HybridGrid>(other_system.state_space())));
+    Hybrid<Scalings> other_scalings(other_system.state_space(),
+                                    [](const DiscreteLocation&, const RealSpace&) { return Scalings(ApproximateDouble(1.0)); });
+    ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error, config.set_grid(other_scalings));
 
     config.set_scaling(x, ApproximateDouble(0.5));
 
@@ -198,14 +199,16 @@ Void TestHybridReachability::test_analyser_configuration() {
     Hybrid<Grid> grid_value = config.grid_value();
     ARIADNE_TESTING_PROVE(grid_value.has_location(q));
     ARIADNE_TESTING_PROVE(grid_value.space() == system.state_space());
-    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], config.hybrid_grid().grid(q));
+    Hybrid<Grid> configured_grids = config.grid();
+    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], configured_grids[q]);
     ARIADNE_TESTING_PROVE(config.grid().space() == system.state_space());
     ARIADNE_TESTING_PROVE(not config.grid().has_value(q));
 
     scalings_value[q].set_scaling(x, ApproximateDouble(0.25));
     config.set_grid(scalings_value);
     ARIADNE_TESTING_EXPECT_EQUAL(config.scalings_value()[q].scaling(x), 0.25_x);
-    ARIADNE_TESTING_EXPECT_EQUAL(config.hybrid_grid().grid(q),
+    configured_grids = config.grid();
+    ARIADNE_TESTING_EXPECT_EQUAL(configured_grids[q],
                                  grid_from_scalings(config.scalings_value()[q],
                                                     system.continuous_state_space(q)));
 
@@ -410,13 +413,13 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
     ExposedHybridAnalyser exposed_analyser(evolver);
     const Hybrid<Grid>& grids = exposed_analyser.configuration().grid();
-    const HybridGrid& legacy_grid = exposed_analyser.configuration().hybrid_grid();
     auto fresh = [&] {
         return make_hybrid_augmented_paving_value(grids, system);
     };
 
     HybridAugmentedPavingValue input = fresh();
-    GridCell root(legacy_grid[q], 0u, BinaryWord{});
+    Hybrid<Grid> materialized_grids = grids;
+    GridCell root(materialized_grids[q], 0u, BinaryWord{});
     const GridCell first = root.split(false).split(false);
     const GridCell second = root.split(true).split(true);
     input[q].state_paving().adjoin(first);

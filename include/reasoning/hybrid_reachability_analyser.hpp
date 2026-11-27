@@ -36,7 +36,6 @@
 #include "evolution/hybrid_evolver_interface.hpp"
 #include "evolution/hybrid_orbit.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
-#include "hybrid/hybrid_grid.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/hybrid_set.hpp"
@@ -58,8 +57,6 @@ class Orbit;
 class DiscreteLocation;
 class HybridAutomatonInterface;
 
-class HybridGrid;
-class HybridGridCell;
 class HybridPaving;
 class HybridAugmentedPaving;
 
@@ -273,17 +270,15 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
 
     //! \brief The hybrid space of the configured grid.
     HybridSpace _space;
-    //! \brief The scaling policy; source of the derived legacy grid view.
-    HybridScalings _scalings_policy;
+    //! \brief Per-variable scaling overrides applied by the scalings factory (default scaling 1.0).
+    Map<Identifier, ExactDouble> _variable_scalings;
     //! \brief Primary generic location-indexed scalings (lazy per location).
     Hybrid<Scalings> _scalings;
     //! \brief Primary generic location-indexed grids (lazy per location).
     Hybrid<Grid> _grids;
-    //! \brief Derived legacy grid view, kept in sync by _sync_views(). Must always be defined.
-    SharedPointer<HybridGrid> _grid_ptr;
 
-    //! \brief Rebuild the generic value families and the legacy grid view from the policy.
-    Void _sync_views();
+    //! \brief Build the lazy scalings family from the recorded variable overrides.
+    Hybrid<Scalings> _make_scalings() const;
 
     //! \brief Algorithm used to approximate evolved hybrid enclosures.
     Paver _paver;
@@ -328,27 +323,22 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     Void set_bounding_domain(const HybridExactBoxes& bounding_domain);
 
     const Hybrid<Grid>& grid() const { return _grids; }
-    //! \brief Derived legacy grid view, kept in sync by _sync_views().
-    const HybridGrid& hybrid_grid() const { return *_grid_ptr; }
-    HybridGrid& hybrid_grid() { return *_grid_ptr; }
 
     //! \brief Algorithm used for approximating evolved enclosures on the grid.
     const Paver& paver() const { return _paver; }
     Void set_paver(Paver paver) { _paver = std::move(paver); }
-    //! \brief Check the consistency in respect to the system space, then set the grid.
-    Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
 
     // Generic location-indexed grid and scaling access: these stored families
-    // are the primary configuration state. The legacy SharedPointer<HybridGrid>
-    // API above is a derived view kept in sync on every mutation.
+    // are the primary and only configuration state.
     const Hybrid<Grid>& grid_value() const { return _grids; }
     const Hybrid<Scalings>& scalings_value() const { return _scalings; }
     //! \brief Check the consistency in respect to the system space, then set the grid from generic scalings.
     Void set_grid(const Hybrid<Scalings>& scalings);
 
     Void set_scaling(const RealVariable& v, ApproximateDouble s) {
-        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(_scalings_policy)).set_scaling(v, s);
-        _sync_views();
+        _variable_scalings[v.name()] = cast_exact(s);
+        _scalings = _make_scalings();
+        _grids = make_hybrid_grids(_space, _scalings);
     }
 
     const ChainOverspillPolicy& outer_overspill_policy() const { return _outer_overspill_policy; }

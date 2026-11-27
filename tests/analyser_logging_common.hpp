@@ -113,7 +113,8 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
         auto input = analyser.storage();
         if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>) {
             DiscreteLocation q;
-            GridCell root(analyser.configuration().hybrid_grid()[q], 0u, BinaryWord{});
+            Hybrid<Grid> materialized_grids = analyser.configuration().grid();
+            GridCell root(materialized_grids[q], 0u, BinaryWord{});
             input[q].state_paving().adjoin(root);
         } else
             input.state_paving().adjoin(GridCell(Grid(1u), 0u, BinaryWord{}));
