@@ -217,8 +217,9 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(family_copy[q].is_empty());
         ARIADNE_TESTING_PROVE(not from_grid.is_empty());
 
-        auto element = from_grid[q];
-        element.clear();
+        // Clear the location directly on the state paving instead of going
+        // through the legacy mutable HybridAugmentedPaving element proxy.
+        from_grid.state_paving()[q].clear();
         ARIADNE_TESTING_PROVE(from_grid.is_empty());
         ARIADNE_TESTING_EXPECT_EQUAL(snapshot.value().size(), snapshot_size);
         ARIADNE_TESTING_PROVE(not snapshot.value().is_empty());
