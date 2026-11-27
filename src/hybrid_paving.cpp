@@ -163,6 +163,44 @@ Void restrict_to_extent(Hybrid<Paving>& pavings, Nat extent) {
     }
 }
 
+Void mince(Hybrid<Paving>& pavings, Nat fineness) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        iter->second.mince(fineness);
+    }
+}
+
+Void recombine(Hybrid<Paving>& pavings) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        iter->second.recombine();
+    }
+}
+
+Bool is_empty(const Hybrid<Paving>& pavings) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        if (not iter->second.is_empty())
+            return false;
+    }
+    return true;
+}
+
+Void adjoin_inner_approximation(Hybrid<Paving>& pavings,
+                                const EffectiveHybridSetInterface& set, Nat fineness) {
+    for (const DiscreteLocation& location: set.locations()) {
+        ARIADNE_PRECONDITION(pavings.has_location(location));
+        const RealSpace space = pavings.space()[location];
+        pavings[location].adjoin_inner_approximation(set.euclidean_set(location, space), fineness);
+    }
+}
+
+Hybrid<Paving> inner_approximation(const EffectiveHybridSetInterface& set,
+                                   const Hybrid<Grid>& grids,
+                                   std::function<Paving(const Grid&)> backend,
+                                   Nat fineness) {
+    Hybrid<Paving> result = make_hybrid_pavings(grids.space(), grids, std::move(backend));
+    adjoin_inner_approximation(result, set, fineness);
+    return result;
+}
+
 HybridPaving extend_auxiliary(const HybridPaving& hybrid_paving,
                               const HybridAutomatonInterface& hybrid_automaton) {
     HybridGrid hybrid_state_grid = hybrid_paving.grid();

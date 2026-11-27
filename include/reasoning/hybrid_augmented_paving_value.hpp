@@ -91,6 +91,19 @@ Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
 /** @brief Restrict every materialized state paving to the given grid extent. */
 Void restrict_to_extent(HybridAugmentedPavingValue& pavings, Nat extent);
 
+/** @brief Mince every materialized slice to the given fineness. */
+Void mince(HybridAugmentedPavingValue& pavings, Nat fineness);
+
+/** @brief Recombine every materialized slice. */
+Void recombine(HybridAugmentedPavingValue& pavings);
+
+/** @brief Check whether every materialized slice is empty. */
+Bool is_empty(const HybridAugmentedPavingValue& pavings);
+
+/** @brief Adjoin the per-location inner approximation of a hybrid set. */
+Void adjoin_inner_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridSetInterface& set, Nat fineness);
+
 } // namespace Ariadne
 
 #endif // ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_HPP

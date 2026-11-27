@@ -140,4 +140,33 @@ Void restrict_to_extent(HybridAugmentedPavingValue& pavings, Nat extent) {
     }
 }
 
+Void mince(HybridAugmentedPavingValue& pavings, Nat fineness) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        iter->second.mince(fineness);
+    }
+}
+
+Void recombine(HybridAugmentedPavingValue& pavings) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        iter->second.recombine();
+    }
+}
+
+Bool is_empty(const HybridAugmentedPavingValue& pavings) {
+    for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
+        if (not iter->second.is_empty())
+            return false;
+    }
+    return true;
+}
+
+Void adjoin_inner_approximation(HybridAugmentedPavingValue& pavings,
+                                const EffectiveHybridSetInterface& set, Nat fineness) {
+    for (const DiscreteLocation& location: set.locations()) {
+        ARIADNE_PRECONDITION(pavings.has_location(location));
+        const RealSpace space = pavings.space()[location];
+        pavings[location].adjoin_inner_approximation(set.euclidean_set(location, space), fineness);
+    }
+}
+
 } // namespace Ariadne
