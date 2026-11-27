@@ -285,7 +285,6 @@ Void ReachabilityAnalyser<SYS>::
                                const Nat accuracy,
                                const EvolverType& evolver) const {
     LOGGING_SCOPE_CREATE;
-    const GridType& grid = this->_configuration->grid();
     StorageType cells = set;
     ReasoningDetail::storage_mince(cells, accuracy);
 

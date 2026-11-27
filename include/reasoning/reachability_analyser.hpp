@@ -54,9 +54,6 @@ namespace Ariadne {
 
 class HybridAutomatonInterface;
 
-/** @brief Adapt an automaton into a lazy, location-indexed auxiliary mapping. */
-HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterface& system);
-
 template<class ES>
 class Orbit;
 
