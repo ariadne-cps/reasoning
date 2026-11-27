@@ -281,6 +281,22 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(full_orbit.intermediate().size() == intermediate.size());
         ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
 
+        // The generic location-indexed orbit mirrors the legacy one.
+        const HybridAugmentedPavingValue initial_value = make_hybrid_augmented_paving_value(initial);
+        Orbit<HybridAugmentedPavingValue> generic_orbit(initial_value);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_orbit.initial().size(), 1u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_orbit.initial()[q].size(), initial.size());
+        ARIADNE_TESTING_PROVE(generic_orbit.reach().size() == 0u);
+        ARIADNE_TESTING_PROVE(generic_orbit.intermediate().size() == 0u);
+        ARIADNE_TESTING_PROVE(generic_orbit.final().size() == 0u);
+
+        Orbit<HybridAugmentedPavingValue> generic_full_orbit(
+            initial_value, make_hybrid_augmented_paving_value(reach),
+            make_hybrid_augmented_paving_value(intermediate), make_hybrid_augmented_paving_value(final_set));
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_full_orbit.reach()[q].size(), reach.size());
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_full_orbit.final()[q].size(), final_set.size());
+        ARIADNE_TESTING_PROVE(subset(generic_full_orbit.initial(), generic_full_orbit.reach()));
+
         // Location selection precedes drawing. Compare the resulting
         // Euclidean projection with the same selected subpaving drawn directly.
         FlattenedPavingCanvas canvas;

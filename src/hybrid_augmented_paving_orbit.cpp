@@ -81,4 +81,53 @@ const HybridAugmentedPaving&
     return this->_data->final;
 }
 
+struct Orbit<HybridAugmentedPavingValue>::Data {
+    HybridAugmentedPavingValue initial;
+    HybridAugmentedPavingValue reach;
+    HybridAugmentedPavingValue intermediate;
+    HybridAugmentedPavingValue final;
+};
+
+Orbit<HybridAugmentedPavingValue>::
+    Orbit(const HybridAugmentedPavingValue& initial_set)
+    : _data(new Data()) {
+    this->_data->initial = initial_set;
+}
+
+Orbit<HybridAugmentedPavingValue>::
+    Orbit(const HybridAugmentedPavingValue& initial_set,
+          const HybridAugmentedPavingValue& reach_set,
+          const HybridAugmentedPavingValue& intermediate_set,
+          const HybridAugmentedPavingValue& final_set)
+    : _data(new Data()) {
+    this->_data->initial = initial_set;
+    this->_data->reach = reach_set;
+    this->_data->intermediate = intermediate_set;
+    this->_data->final = final_set;
+}
+
+const HybridAugmentedPavingValue&
+    Orbit<HybridAugmentedPavingValue>::
+        initial() const {
+    return this->_data->initial;
+}
+
+const HybridAugmentedPavingValue&
+    Orbit<HybridAugmentedPavingValue>::
+        reach() const {
+    return this->_data->reach;
+}
+
+const HybridAugmentedPavingValue&
+    Orbit<HybridAugmentedPavingValue>::
+        intermediate() const {
+    return this->_data->intermediate;
+}
+
+const HybridAugmentedPavingValue&
+    Orbit<HybridAugmentedPavingValue>::
+        final() const {
+    return this->_data->final;
+}
+
 } // namespace Ariadne

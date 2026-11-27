@@ -31,6 +31,7 @@
 
 #include "evolution/hybrid_orbit.hpp"
 #include "hybrid/hybrid_augmented_paving.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 
 namespace Ariadne {
 
@@ -56,6 +57,33 @@ class Orbit<HybridAugmentedPaving> {
     const HybridAugmentedPaving& intermediate() const;
     /** @brief Return the final hybrid paving. */
     const HybridAugmentedPaving& final() const;
+
+  private:
+    SharedPointer<Data> _data;
+};
+
+/** @brief Store initial, reachable, intermediate and final generic hybrid paving values. */
+template<>
+class Orbit<HybridAugmentedPavingValue> {
+    struct Data;
+
+  public:
+    typedef HybridAugmentedPavingValue EnclosureListType;
+
+    /** @brief Initialize a hybrid orbit from its initial generic value. */
+    Orbit(const HybridAugmentedPavingValue& initial_set);
+    /** @brief Initialize all four phases of a hybrid orbit. */
+    Orbit(const HybridAugmentedPavingValue& initial_set, const HybridAugmentedPavingValue& reach_set,
+          const HybridAugmentedPavingValue& intermediate_set, const HybridAugmentedPavingValue& final_set);
+
+    /** @brief Return the initial hybrid paving value. */
+    const HybridAugmentedPavingValue& initial() const;
+    /** @brief Return the reach hybrid paving value. */
+    const HybridAugmentedPavingValue& reach() const;
+    /** @brief Return the intermediate hybrid paving value. */
+    const HybridAugmentedPavingValue& intermediate() const;
+    /** @brief Return the final hybrid paving value. */
+    const HybridAugmentedPavingValue& final() const;
 
   private:
     SharedPointer<Data> _data;
