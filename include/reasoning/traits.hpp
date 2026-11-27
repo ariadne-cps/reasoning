@@ -127,7 +127,7 @@ struct SpaceAnalysisTraits<HybridSpace> {
     using LocatedSetInterfaceType = EffectiveHybridLocatedSetInterface;
     using RegularSetInterfaceType = EffectiveHybridRegularSetInterface;
     using RegularLocatedSetInterfaceType = EffectiveHybridRegularLocatedSetInterface;
-    using SetApproximationType = HybridPaving;
+    using SetApproximationType = Hybrid<AugmentedPaving>;
 };
 
 } // namespace Ariadne

@@ -38,7 +38,9 @@
 namespace Ariadne {
 
 class HybridAutomatonInterface;
-class HybridPaving;
+class AugmentedPaving;
+template<class T>
+class Hybrid;
 
 //! \ingroup AnalysisModule
 //! \ingroup HybridDynamicsSubModule
@@ -53,7 +55,7 @@ class HybridReachabilityAnalyserInterface
     typedef EffectiveHybridCompactSetInterface CompactSetInterfaceType;
     typedef EffectiveHybridLocatedSetInterface LocatedSetInterfaceType;
     typedef EffectiveHybridRegularSetInterface RegularSetInterfaceType;
-    typedef HybridPaving SetApproximationType;
+    typedef Hybrid<AugmentedPaving> SetApproximationType;
 
   public:
     //!@{

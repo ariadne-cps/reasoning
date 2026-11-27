@@ -57,9 +57,6 @@ class Orbit;
 class DiscreteLocation;
 class HybridAutomatonInterface;
 
-class HybridPaving;
-class HybridAugmentedPaving;
-
 template<class ES>
 class HybridListSet;
 
