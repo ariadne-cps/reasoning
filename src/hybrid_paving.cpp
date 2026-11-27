@@ -201,29 +201,6 @@ Hybrid<Paving> inner_approximation(const EffectiveHybridSetInterface& set,
     return result;
 }
 
-HybridPaving extend_auxiliary(const HybridPaving& hybrid_paving,
-                              const HybridAutomatonInterface& hybrid_automaton) {
-    HybridGrid hybrid_state_grid = hybrid_paving.grid();
-    HybridSpace hybrid_state_space = hybrid_state_grid.space();
-    HybridScalings scalings = hybrid_state_grid.scalings();
-
-    HybridSpace hybrid_state_auxiliary_space = hybrid_automaton.state_auxiliary_space();
-    HybridGrid hybrid_state_auxiliary_grid(hybrid_state_auxiliary_space, scalings);
-
-    HybridPaving result = hybrid_paving.with_grid(hybrid_state_auxiliary_grid);
-    for (auto iter = hybrid_paving.locations_begin(); iter != hybrid_paving.locations_end(); ++iter) {
-        const DiscreteLocation& location = iter->first;
-        const Paving& state_paving = iter->second;
-        RealSpace auxiliary_space = hybrid_automaton.continuous_auxiliary_space(location);
-        EffectiveVectorMultivariateFunction auxiliary_function = hybrid_automaton.auxiliary_function(location);
-        Grid auxiliary_grid = grid_from_scalings(scalings, location, auxiliary_space);
-        Paving& destination = result[location];
-        adjoin_auxiliary_skew_product(
-            destination, state_paving, auxiliary_grid, auxiliary_function);
-    }
-    return result;
-}
-
 Hybrid<Paving> extend_auxiliary(
     const Hybrid<Paving>& state_pavings,
     Hybrid<Scalings> scalings,

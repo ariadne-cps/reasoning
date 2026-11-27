@@ -37,13 +37,6 @@
 
 namespace Ariadne {
 
-/** @brief HybridAutomatonInterface for auxiliary-variable extensions for hybrid pavings. */
-class HybridAutomatonInterface;
-
-//! Extend a hybrid state paving with the auxiliary variables of a system.
-HybridPaving extend_auxiliary(const HybridPaving& hgtp,
-                              const HybridAutomatonInterface& ha);
-
 /** @brief Snapshot one hybrid location without the legacy labelled-paving conversion.
  *  @details Retains the original tree or ROBDD state backend. The state and
  *  auxiliary coordinate spaces come from the location-specific mapping.
