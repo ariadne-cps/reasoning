@@ -514,10 +514,11 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         auto generic_grids = [&] { return make_hybrid_grids(space, make_hybrid_scalings(space, policy)); };
 
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
+        const HybridBoundedConstraintSet wide_set(first, {-1.0_dec <= x <= 3.0_dec});
 
         // Factory inner approximation: identical slices, only the set locations materialize.
-        const HybridPaving legacy_inner = inner_approximation(compact_set, legacy_grid, 2u);
-        const Hybrid<Paving> generic_inner = inner_approximation(compact_set, generic_grids(), create_tree, 2u);
+        const HybridPaving legacy_inner = inner_approximation(wide_set, legacy_grid, 2u);
+        const Hybrid<Paving> generic_inner = inner_approximation(wide_set, generic_grids(), create_tree, 2u);
         ARIADNE_TESTING_PROVE(legacy_inner.nontrivial_location(first));
         ARIADNE_TESTING_PROVE(generic_inner.has_value(first));
         ARIADNE_TESTING_PROVE(not generic_inner.has_value(second));
@@ -532,11 +533,12 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         Hybrid<Paving> generic = make_hybrid_pavings(space, generic_grids(), create_tree);
         ARIADNE_TESTING_PROVE(is_empty(generic));
         ARIADNE_TESTING_PROVE(legacy.is_empty());
-        legacy.adjoin_inner_approximation(compact_set, 2u);
-        adjoin_inner_approximation(generic, compact_set, 2u);
+        legacy.adjoin_inner_approximation(wide_set, 2u);
+        adjoin_inner_approximation(generic, wide_set, 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
         ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(legacy[first])));
         ARIADNE_TESTING_PROVE(legacy[first].subset(static_cast<const PavingInterface&>(generic[first])));
+        ARIADNE_TESTING_PROVE(not is_empty(generic));
         ARIADNE_TESTING_PROVE(is_empty(generic) == legacy.is_empty());
 
         // mince/recombine parity on an outer approximation.
@@ -576,8 +578,8 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         // adjoin_inner_approximation on augmented values hits the state paving per location.
         HybridAugmentedPaving legacy_aug_inner = make_analysis_paving<HybridAugmentedPaving>(legacy_grid, system);
         HybridAugmentedPavingValue generic_aug_inner = make_hybrid_augmented_paving_value(legacy_aug_inner);
-        adjoin_inner_approximation(generic_aug_inner, compact_set, 2u);
-        legacy_aug_inner.state_paving().adjoin_inner_approximation(compact_set, 2u);
+        adjoin_inner_approximation(generic_aug_inner, wide_set, 2u);
+        legacy_aug_inner.state_paving().adjoin_inner_approximation(wide_set, 2u);
         ARIADNE_TESTING_PROVE(generic_aug_inner.has_value(first));
         ARIADNE_TESTING_EXPECT_EQUAL(generic_aug_inner[first].size(), legacy_aug_inner.state_paving()[first].size());
         ARIADNE_TESTING_PROVE(generic_aug_inner[first].state_paving().subset(
