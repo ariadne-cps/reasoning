@@ -28,7 +28,6 @@
 
 // Verify the continuous and hybrid enclosure-to-augmented-paving adapters.
 #include "function/taylor_function.hpp"
-#include "hybrid_legacy_policy_test_adapter.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
@@ -88,6 +87,15 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         MonolithicHybridSpace state;
         state.new_location(location, state_space);
+        const HybridSpace hybrid_space(state);
+        auto unit_scalings = [&](const HybridSpace& space) {
+            return Hybrid<Scalings>(space, [](const DiscreteLocation&, const RealSpace&) {
+                return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+            });
+        };
+        auto backend = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
+        Hybrid<Paving> state_values = make_hybrid_pavings(
+            hybrid_space, make_hybrid_grids(hybrid_space, unit_scalings(hybrid_space)), backend);
         MonolithicHybridSpace extended;
         extended.new_location(location, join(state_space, auxiliary_space));
         LabelledMapping labelled(state_space,
@@ -95,17 +103,21 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
                                  auxiliary_space);
         HybridAuxiliaryMapping mapping(HybridSpace(extended),
                                        [labelled](const DiscreteLocation&) { return labelled; });
-        HybridAugmentedPaving paving(HybridGrid(state), mapping);
+        HybridAugmentedPavingValue paving = make_hybrid_augmented_paving_value(state_values, mapping);
         Paver paver(new AffinePaver());
         adjoin_outer_approximation_to(enclosure, paving, 2u, paver);
         ARIADNE_TESTING_PROVE(paving.size() > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(paving.auxiliary_mapping(location).argument_space(), state_space);
-        ARIADNE_TESTING_EXPECT_EQUAL(paving.state_auxiliary_paving().space(location), join(state_space, auxiliary_space));
+        ARIADNE_TESTING_PROVE(paving[location].size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(mapping(location).argument_space(), state_space);
+        ARIADNE_TESTING_EXPECT_EQUAL(mapping(location).result_space(), auxiliary_space);
 
         // The same spatial precondition as the underlying HybridEnclosure API.
         MonolithicHybridSpace wrong_state;
         wrong_state.new_location(location, auxiliary_space);
-        HybridAugmentedPaving wrong(HybridGrid(wrong_state), mapping);
+        const HybridSpace wrong_hybrid_space(wrong_state);
+        Hybrid<Paving> wrong_values = make_hybrid_pavings(
+            wrong_hybrid_space, make_hybrid_grids(wrong_hybrid_space, unit_scalings(wrong_hybrid_space)), backend);
+        HybridAugmentedPavingValue wrong = make_hybrid_augmented_paving_value(wrong_values, mapping);
         ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(enclosure, wrong, 2u, paver));
     }
 
@@ -120,16 +132,27 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         const EnclosureConfiguration config(TaylorFunctionFactory(ThresholdSweeper<FloatDP>(dp, 1e-8)));
         const HybridEnclosure initial(HybridExactBox(q, state_space, domain), config);
 
+        auto unit_scalings = [](const HybridSpace& space) {
+            return Hybrid<Scalings>(space, [](const DiscreteLocation&, const RealSpace&) {
+                return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+            });
+        };
+        auto backend = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
+
         MonolithicHybridSpace valid_space;
         valid_space.new_location(q, state_space);
-        HybridPaving paving{HybridGrid(HybridSpace(valid_space))};
+        const HybridSpace valid_hybrid(valid_space);
+        Hybrid<Paving> paving = make_hybrid_pavings(
+            valid_hybrid, make_hybrid_grids(valid_hybrid, unit_scalings(valid_hybrid)), backend);
         const Paver paver(new AffinePaver());
         adjoin_outer_approximation_to(initial, paving, 0u, paver);
         ARIADNE_TESTING_PROVE(paving[q].size() > 0u);
 
         MonolithicHybridSpace incompatible;
         incompatible.new_location(q, RealSpace({y, x}));
-        HybridPaving wrong{HybridGrid(HybridSpace(incompatible))};
+        const HybridSpace incompatible_hybrid(incompatible);
+        Hybrid<Paving> wrong = make_hybrid_pavings(
+            incompatible_hybrid, make_hybrid_grids(incompatible_hybrid, unit_scalings(incompatible_hybrid)), backend);
         ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(initial, wrong, 0u, paver));
     }
 
@@ -148,8 +171,14 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         MonolithicHybridSpace state;
         state.new_location(location, state_space);
         const HybridSpace hybrid_space(state);
-        const HybridGrid grid(hybrid_space);
         Paver paver(new AffinePaver());
+        auto unit_scalings = [&](const HybridSpace& space) {
+            return Hybrid<Scalings>(space, [](const DiscreteLocation&, const RealSpace&) {
+                return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+            });
+        };
+        auto backend = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
+        Hybrid<Grid> grids = make_hybrid_grids(hybrid_space, unit_scalings(hybrid_space));
 
         LabelledMapping labelled(state_space,
                                  EffectiveVectorMultivariateFunction({EffectiveScalarMultivariateFunction::coordinate(2u, 0u)}),
@@ -159,35 +188,34 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         HybridAuxiliaryMapping mapping(HybridSpace(extended),
                                        [labelled](const DiscreteLocation&) { return labelled; });
 
-        // Legacy reference and its owning generic snapshot: the same
-        // enclosure must produce identical slices through both adapters.
-        HybridAugmentedPaving legacy(grid, mapping);
-        HybridAugmentedPavingValue generic = make_hybrid_augmented_paving_value(legacy);
-        adjoin_outer_approximation_to(enclosure, legacy, 2u, paver);
+        // Independent regression: two identically built generic families must
+        // receive identical cells from the same enclosure.
+        HybridAugmentedPavingValue generic = make_hybrid_augmented_paving_value(
+            make_hybrid_pavings(hybrid_space, grids, backend), mapping);
         adjoin_outer_approximation_to(enclosure, generic, 2u, paver);
         ARIADNE_TESTING_PROVE(generic.has_value(location));
         ARIADNE_TESTING_PROVE(generic[location].size() > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic[location].size(), legacy.state_paving()[location].size());
-        const HybridAugmentedPavingValue legacy_snapshot = make_hybrid_augmented_paving_value(legacy);
-        ARIADNE_TESTING_PROVE(subset(generic, legacy_snapshot));
-        ARIADNE_TESTING_PROVE(subset(legacy_snapshot, generic));
+        HybridAugmentedPavingValue replica = make_hybrid_augmented_paving_value(
+            make_hybrid_pavings(hybrid_space, grids, backend), mapping);
+        adjoin_outer_approximation_to(enclosure, replica, 2u, paver);
+        ARIADNE_TESTING_PROVE(subset(generic, replica));
+        ARIADNE_TESTING_PROVE(subset(replica, generic));
 
         // The Hybrid<Paving> overload materializes the location through the
-        // family's lazy factory and matches the legacy HybridPaving adapter.
-        Hybrid<Grid> grids = test_make_hybrid_grids(hybrid_space, HybridScalings(SimpleHybridScalings()));
-        Hybrid<Paving> state_values = make_hybrid_pavings(
-            hybrid_space, grids, [](const Grid& g) { return Paving(new BinaryTreePaving(g)); });
-        HybridPaving legacy_state(grid);
-        adjoin_outer_approximation_to(enclosure, legacy_state, 2u, paver);
+        // family's lazy factory and matches the augmented family's state paving.
+        Hybrid<Paving> state_values = make_hybrid_pavings(hybrid_space, grids, backend);
         adjoin_outer_approximation_to(enclosure, state_values, 2u, paver);
         ARIADNE_TESTING_PROVE(state_values.has_value(location));
-        ARIADNE_TESTING_EXPECT_EQUAL(state_values[location].size(), legacy_state[location].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(state_values[location].size(), generic[location].state_paving().size());
 
         // The same spatial precondition holds on the generic family.
         MonolithicHybridSpace wrong_state;
         wrong_state.new_location(location, auxiliary_space);
-        HybridAugmentedPavingValue wrong =
-            make_hybrid_augmented_paving_value(HybridAugmentedPaving(HybridGrid(wrong_state), mapping));
+        const HybridSpace wrong_hybrid_space(wrong_state);
+        HybridAugmentedPavingValue wrong = make_hybrid_augmented_paving_value(
+            make_hybrid_pavings(wrong_hybrid_space,
+                                make_hybrid_grids(wrong_hybrid_space, unit_scalings(wrong_hybrid_space)), backend),
+            mapping);
         ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(enclosure, wrong, 2u, paver));
     }
 };

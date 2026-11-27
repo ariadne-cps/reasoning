@@ -32,7 +32,6 @@
 #include "evolution/hybrid_enclosure.hpp"
 #include "function/constraint.hpp"
 #include "function/functional.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "labelled/figure.hpp"
 #include "logging/logging.hpp"
 #include "paving/binary_tree_paving.hpp"
@@ -57,21 +56,6 @@ AugmentedPaving outer_approximation(const Enclosure& enclosure, const Grid& grid
     AugmentedPaving result(grid, enclosure.auxiliary_mapping());
     adjoin_outer_approximation_to(enclosure, result, fineness, paver);
     return result;
-}
-
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridPaving& hgtp, Nat fineness, const Paver& paver) {
-    DiscreteLocation location = enclosure.location();
-    const Enclosure& set = enclosure.continuous_set();
-    RealSpace paving_space = hgtp.space(location);
-    RealSpace state_space = enclosure.state_space();
-    ARIADNE_PRECONDITION_MSG(state_space == paving_space,
-                             "HybridEnclosure's state variables " << state_space << " do not match variables " << paving_space << " of HybridStorage in location " << location);
-    Paving& paving = hgtp[location];
-    paver.adjoin_outer_approximation(paving, set.state_set(), fineness);
-}
-
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPaving& paving, Nat fineness, const Paver& paver) {
-    adjoin_outer_approximation_to(enclosure, paving.state_paving(), fineness, paver);
 }
 
 Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Paving>& pavings, Nat fineness, const Paver& paver) {

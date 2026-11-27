@@ -33,7 +33,6 @@
 
 #include "evolution/enclosure.hpp"
 #include "evolution/hybrid_enclosure.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/paver.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
@@ -50,16 +49,6 @@ Void adjoin_outer_approximation_to(const Enclosure& enclosure, AugmentedPaving& 
  *  and a validated outer approximation of its state set.
  */
 AugmentedPaving outer_approximation(const Enclosure& enclosure, const Grid& grid, Nat fineness, const Paver& paver);
-
-/** @brief Add a hybrid enclosure's validated outer approximation to a hybrid paving.
- *  The enclosure and paving must have identical variable spaces at its location.
- */
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridPaving& paving, Nat fineness, const Paver& paver);
-
-/** @brief Add the location-aware outer approximation of a hybrid enclosure
- *  without coupling to an automaton or reasoning-layer objects.
- */
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPaving& paving, Nat fineness, const Paver& paver);
 
 /** @brief Add a hybrid enclosure's validated outer approximation to a generic
  *  location-indexed paving family. The enclosure's location is materialized
