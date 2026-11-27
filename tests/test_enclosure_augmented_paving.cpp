@@ -28,6 +28,7 @@
 
 // Verify the continuous and hybrid enclosure-to-augmented-paving adapters.
 #include "function/taylor_function.hpp"
+#include "hybrid_legacy_policy_test_adapter.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
@@ -173,7 +174,7 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         // The Hybrid<Paving> overload materializes the location through the
         // family's lazy factory and matches the legacy HybridPaving adapter.
-        Hybrid<Grid> grids = make_hybrid_grids(hybrid_space, HybridScalings(SimpleHybridScalings()));
+        Hybrid<Grid> grids = test_make_hybrid_grids(hybrid_space, HybridScalings(SimpleHybridScalings()));
         Hybrid<Paving> state_values = make_hybrid_pavings(
             hybrid_space, grids, [](const Grid& g) { return Paving(new BinaryTreePaving(g)); });
         HybridPaving legacy_state(grid);

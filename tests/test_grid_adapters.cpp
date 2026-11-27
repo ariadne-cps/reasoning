@@ -28,6 +28,8 @@
 
 #include <memory>
 
+#include "hybrid/hybrid_grid.hpp"
+#include "hybrid_legacy_policy_test_adapter.hpp"
 #include "labelled/labelled_grid.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
@@ -72,7 +74,7 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         MonolithicHybridSpace known;
         known.new_location(first, RealSpace({x, y}));
         const HybridSpace space(known);
-        Hybrid<Grid> generic = make_hybrid_grids(space, policy);
+        Hybrid<Grid> generic = test_make_hybrid_grids(space, policy);
         ARIADNE_TESTING_PROVE(generic.has_location(first));
         ARIADNE_TESTING_PROVE(not generic.has_location(absent));
         ARIADNE_TESTING_PROVE(not generic.has_value(first));
@@ -132,7 +134,7 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         };
         const HybridScalings scaling(scales);
         const HybridGrid legacy(space, scaling);
-        Hybrid<Grid> generic = make_hybrid_grids(space, scaling);
+        Hybrid<Grid> generic = test_make_hybrid_grids(space, scaling);
         ARIADNE_TESTING_PROVE(generic.has_location(first));
         ARIADNE_TESTING_PROVE(generic.has_location(second));
         ARIADNE_TESTING_PROVE(not generic.has_value(first));

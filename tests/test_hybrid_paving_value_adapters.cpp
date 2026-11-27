@@ -44,6 +44,7 @@
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
+#include "hybrid_legacy_policy_test_adapter.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
@@ -87,7 +88,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             HybridPaving legacy(legacy_grid, create_backend);
 
             Hybrid<Grid> generic_grids = make_hybrid_grids(
-                space, make_hybrid_scalings(space, policy));
+                space, test_make_hybrid_scalings(space, policy));
             Hybrid<Paving> generic = make_hybrid_pavings(
                 space, std::move(generic_grids), create_backend);
 
@@ -434,7 +435,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const HybridScalings policy(scale_values);
         const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
-        auto generic_grids = [&] { return make_hybrid_grids(space, make_hybrid_scalings(space, policy)); };
+        auto generic_grids = [&] { return make_hybrid_grids(space, test_make_hybrid_scalings(space, policy)); };
 
         // Outer approximation of a hybrid compact set: identical slices.
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
@@ -511,7 +512,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const HybridScalings policy(scale_values);
         const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
-        auto generic_grids = [&] { return make_hybrid_grids(space, make_hybrid_scalings(space, policy)); };
+        auto generic_grids = [&] { return make_hybrid_grids(space, test_make_hybrid_scalings(space, policy)); };
 
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
         const HybridBoundedConstraintSet wide_set(first, {-1.0_dec <= x <= 3.0_dec});

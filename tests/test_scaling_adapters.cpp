@@ -27,6 +27,7 @@
  */
 
 #include "hybrid/hybrid_grid.hpp"
+#include "hybrid_legacy_policy_test_adapter.hpp"
 #include "logging/test_runner.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
@@ -71,7 +72,7 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         const HybridGrid legacy(space, policy);
 
         Hybrid<Grid> generic_grids =
-            make_hybrid_grids(space, make_hybrid_scalings(space, policy));
+            make_hybrid_grids(space, test_make_hybrid_scalings(space, policy));
         ARIADNE_TESTING_PROVE(not generic_grids.has_value(first));
         ARIADNE_TESTING_PROVE(not generic_grids.has_value(second));
         const Grid& first_grid = generic_grids[first];
@@ -81,7 +82,7 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(second_grid == legacy[second]);
         ARIADNE_TESTING_EXPECT_EQUAL(generic_grids.size(), 2u);
 
-        Hybrid<Scalings> generic = make_hybrid_scalings(space, policy);
+        Hybrid<Scalings> generic = test_make_hybrid_scalings(space, policy);
         ARIADNE_TESTING_PROVE(generic.has_location(first));
         ARIADNE_TESTING_PROVE(generic.has_location(second));
         ARIADNE_TESTING_PROVE(not generic.has_location(absent));
@@ -120,7 +121,7 @@ class TestScalingAdapters : public Ariadne::Testing::ContextFixture {
         const HybridSpace space(locations);
         const HybridScalings policy(LocationDependentPolicy{});
         const HybridGrid provider(space, policy);
-        Hybrid<Grid> generic = make_hybrid_grids(space, make_hybrid_scalings(space, policy));
+        Hybrid<Grid> generic = make_hybrid_grids(space, test_make_hybrid_scalings(space, policy));
         ARIADNE_TESTING_PROVE(not generic.has_value(first));
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
         ARIADNE_TESTING_PROVE(provider.grid(first) == Grid(Vector<ExactDouble>{2.0_x}));

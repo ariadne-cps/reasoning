@@ -29,10 +29,7 @@
 #ifndef ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP
 #define ARIADNE_REASONING_HYBRID_GRID_COMPAT_HPP
 
-#include "evolution/scalings.hpp"
-#include "hybrid/hybrid_grid.hpp"
 #include "hybrid/hybrid_scalings.hpp"
-#include "hybrid/value.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
@@ -45,23 +42,6 @@ namespace Ariadne {
  */
 Grid grid_from_scalings(const HybridScalings& policy,
                         const DiscreteLocation& location, const RealSpace& space);
-
-// Legacy HybridGrid still exposes the concrete paving Grid API.
-// This factory preserves the independent scaling policy in Hybrid<Grid>,
-// lazily, without materialising all valid locations.
-Hybrid<Grid> make_hybrid_grids(HybridSpace space, HybridScalings scalings);
-
-// Materialize only the variables belonging to the requested location.
-// A shared HybridScalings policy may depend on both the location and the
-// variable; resolving it lazily preserves that behavior for Hybrid<Scalings>.
-Hybrid<Scalings> make_hybrid_scalings(HybridSpace space, HybridScalings policy);
-
-/** @brief Adapt a generic location-indexed scaling family back to a legacy policy.
- *  @details The policy resolves scaling(location, variable) through the
- *  generic values, materializing lazily via the family's own factory when
- *  present. The family must carry its HybridSpace.
- */
-HybridScalings make_hybrid_scalings_policy(Hybrid<Scalings> scalings);
 
 } // namespace Ariadne
 
