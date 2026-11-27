@@ -198,14 +198,14 @@ Void TestHybridReachability::test_analyser_configuration() {
     Hybrid<Grid> grid_value = config.grid_value();
     ARIADNE_TESTING_PROVE(grid_value.has_location(q));
     ARIADNE_TESTING_PROVE(grid_value.space() == system.state_space());
-    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], config.grid()[q]);
+    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], config.hybrid_grid().grid(q));
     ARIADNE_TESTING_PROVE(config.grid().space() == system.state_space());
-    ARIADNE_TESTING_EXPECT_EQUAL(config.hybrid_grid().grid(q), config.grid()[q]);
+    ARIADNE_TESTING_PROVE(not config.grid().has_value(q));
 
     scalings_value[q].set_scaling(x, ApproximateDouble(0.25));
     config.set_grid(scalings_value);
     ARIADNE_TESTING_EXPECT_EQUAL(config.scalings_value()[q].scaling(x), 0.25_x);
-    ARIADNE_TESTING_EXPECT_EQUAL(config.grid()[q],
+    ARIADNE_TESTING_EXPECT_EQUAL(config.hybrid_grid().grid(q),
                                  grid_from_scalings(config.scalings_value()[q],
                                                     system.continuous_state_space(q)));
 

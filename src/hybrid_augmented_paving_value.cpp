@@ -78,7 +78,7 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>
     HybridAuxiliaryMapping mapping = make_hybrid_auxiliary_mapping(system);
     return HybridAugmentedPavingValue(
         space,
-        [grids, mapping = std::move(mapping), backend = std::move(backend)](
+        [grids = grids, mapping = std::move(mapping), backend = std::move(backend)](
             const DiscreteLocation& location, const RealSpace& real_space) mutable {
             ARIADNE_PRECONDITION(grids.space()[location] == real_space);
             return AugmentedPaving(backend(grids[location]), mapping(location).mapping());
@@ -90,7 +90,7 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Pavin
     const HybridSpace space = state.space();
     HybridAugmentedPavingValue result(
         space,
-        [state, mapping](const DiscreteLocation& location, const RealSpace& real_space) mutable {
+        [state = state, mapping = mapping](const DiscreteLocation& location, const RealSpace& real_space) mutable {
             ARIADNE_PRECONDITION(state.space()[location] == real_space);
             return AugmentedPaving(state[location], mapping(location).mapping());
         });
