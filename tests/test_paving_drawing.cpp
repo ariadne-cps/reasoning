@@ -32,7 +32,6 @@
 #include "evolution/located_projection.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/hybrid_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 

@@ -47,16 +47,6 @@ struct AnalysisPavingFactory {
     }
 };
 
-/** @brief Construct hybrid pavings with location-dependent auxiliary mappings. */
-template<>
-struct AnalysisPavingFactory<HybridAugmentedPaving> {
-    /** @brief Construct a hybrid paving using the automaton's auxiliary mapping. */
-    template<class GRID>
-    static HybridAugmentedPaving make(GRID const& grid, const HybridAutomatonInterface& system) {
-        return HybridAugmentedPaving(grid, make_hybrid_auxiliary_mapping(system));
-    }
-};
-
 /** @brief Construct generic hybrid augmented paving values with location-dependent auxiliary mappings. */
 template<>
 struct AnalysisPavingFactory<HybridAugmentedPavingValue> {

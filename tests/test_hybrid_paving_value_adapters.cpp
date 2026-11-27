@@ -50,7 +50,6 @@
 #include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_grid_compat.hpp"
-#include "reasoning/hybrid_paving.hpp"
 #include "system/hybrid_automaton.hpp"
 
 #include "ariadne-testing.hpp"
@@ -495,7 +494,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPaving legacy_aug = make_analysis_paving<HybridAugmentedPaving>(legacy_grid, system);
+        HybridAugmentedPaving legacy_aug = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
         HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(legacy_aug);
         legacy_aug.adjoin_outer_approximation(compact_set, 2u);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
@@ -571,7 +570,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPaving legacy_aug = make_analysis_paving<HybridAugmentedPaving>(legacy_grid, system);
+        HybridAugmentedPaving legacy_aug = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
         HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(legacy_aug);
         legacy_aug.adjoin_outer_approximation(compact_set, 2u);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
@@ -585,7 +584,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(is_empty(generic_aug) == legacy_aug.is_empty());
 
         // adjoin_inner_approximation on augmented values hits the state paving per location.
-        HybridAugmentedPaving legacy_aug_inner = make_analysis_paving<HybridAugmentedPaving>(legacy_grid, system);
+        HybridAugmentedPaving legacy_aug_inner = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
         HybridAugmentedPavingValue generic_aug_inner = make_hybrid_augmented_paving_value(legacy_aug_inner);
         adjoin_inner_approximation(generic_aug_inner, wide_set, 2u);
         legacy_aug_inner.state_paving().adjoin_inner_approximation(wide_set, 2u);
