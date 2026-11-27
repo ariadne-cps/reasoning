@@ -44,12 +44,12 @@
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "hybrid_legacy_policy_test_adapter.hpp"
+#include "hybrid_scalings_test_util.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "system/hybrid_automaton.hpp"
 
 #include "ariadne-testing.hpp"
@@ -87,7 +87,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             HybridPaving legacy(legacy_grid, create_backend);
 
             Hybrid<Grid> generic_grids = make_hybrid_grids(
-                space, test_make_hybrid_scalings(space, policy));
+                space, test_scalings_from_map(space, 1.0_x, scale_values));
             Hybrid<Paving> generic = make_hybrid_pavings(
                 space, std::move(generic_grids), create_backend);
 
@@ -442,7 +442,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const HybridScalings policy(scale_values);
         const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
-        auto generic_grids = [&] { return make_hybrid_grids(space, test_make_hybrid_scalings(space, policy)); };
+        auto generic_grids = [&] { return make_hybrid_grids(space, test_scalings_from_map(space, 1.0_x, scale_values)); };
 
         // Outer approximation of a hybrid compact set: identical slices.
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
@@ -519,7 +519,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         const HybridScalings policy(scale_values);
         const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
-        auto generic_grids = [&] { return make_hybrid_grids(space, test_make_hybrid_scalings(space, policy)); };
+        auto generic_grids = [&] { return make_hybrid_grids(space, test_scalings_from_map(space, 1.0_x, scale_values)); };
 
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
         const HybridBoundedConstraintSet wide_set(first, {-1.0_dec <= x <= 3.0_dec});

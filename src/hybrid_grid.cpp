@@ -23,13 +23,12 @@
  */
 
 /** @file src/hybrid_grid.cpp
- *  @brief Materialize generic and legacy hybrid grids from scaling policies.
+ *  @brief Materialize generic hybrid grids from lazy scaling values.
  */
 
 #include <utility>
 
 #include "algebra/vector.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
@@ -38,15 +37,6 @@ Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
     Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
     for (SizeType axis = 0; axis < space.dimension(); ++axis) {
         lengths[axis] = scalings.scaling(space[axis]);
-    }
-    return Grid(lengths);
-}
-
-Grid grid_from_scalings(const HybridScalings& policy,
-                        const DiscreteLocation& location, const RealSpace& space) {
-    Vector<ExactDouble> lengths(space.dimension());
-    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
-        lengths[axis] = policy.scaling(location, space[axis]);
     }
     return Grid(lengths);
 }

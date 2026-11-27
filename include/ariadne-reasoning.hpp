@@ -39,7 +39,6 @@
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_augmented_paving_value_drawing.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"

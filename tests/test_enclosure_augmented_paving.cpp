@@ -33,7 +33,7 @@
 #include "paving/paver.hpp"
 #include "reasoning/enclosure_augmented_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_paving_value.hpp"
 
 #include "ariadne-testing.hpp"

@@ -35,7 +35,7 @@
 #include "hybrid/hybrid_set.hpp"
 #include "labelled/set.hpp"
 #include "paving/binary_tree_paving.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_paving_value.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 

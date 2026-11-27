@@ -42,7 +42,7 @@
 #include "logging/logging.hpp"
 #include "paving/paver.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton_interface.hpp"

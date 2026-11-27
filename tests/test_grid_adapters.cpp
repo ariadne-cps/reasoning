@@ -23,17 +23,16 @@
  */
 
 /** @file tests/test_grid_adapters.cpp
- *  @brief Verify generic grid wrappers against legacy labelled and hybrid grids.
+ *  @brief Verify generic grid wrappers against legacy labelled grids and generic hybrid values.
  */
 
 #include <memory>
 
-#include "hybrid/hybrid_grid.hpp"
-#include "hybrid_legacy_policy_test_adapter.hpp"
+#include "hybrid_scalings_test_util.hpp"
 #include "labelled/labelled_grid.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 
 #include "ariadne-testing.hpp"
@@ -56,25 +55,28 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_grid(Grid(1u), space));
     }
 
-    Void test_legacy_location_scalings_preserve_coordinate_order() {
+    Void test_location_scalings_preserve_coordinate_order() {
         const DiscreteLocation first(1), absent(9);
         const RealVariable x("x"), y("y"), z("z");
         const Map<Identifier, ExactDouble> named{
             {x.name(), 2.0_x},
             {y.name(), 3.0_x}
         };
-        const HybridScalings policy{SimpleHybridScalings(4.0_x, named)};
+        const Scalings scalings(4.0_x, Map<RealVariable, ExactDouble>{
+                                           {x, 2.0_x},
+                                           {y, 3.0_x}
+        });
 
-        const Grid permuted = grid_from_scalings(policy, first, RealSpace({y, z, x}));
+        const Grid permuted = grid_from_scalings(scalings, RealSpace({y, z, x}));
         ARIADNE_TESTING_EXPECT_EQUAL(permuted.dimension(), 3u);
         ARIADNE_TESTING_PROVE(permuted == Grid(Vector<ExactDouble>{3.0_x, 4.0_x, 2.0_x}));
-        const Grid reversed = grid_from_scalings(policy, first, RealSpace({x, y}));
+        const Grid reversed = grid_from_scalings(scalings, RealSpace({x, y}));
         ARIADNE_TESTING_PROVE(reversed == Grid(Vector<ExactDouble>{2.0_x, 3.0_x}));
 
         MonolithicHybridSpace known;
         known.new_location(first, RealSpace({x, y}));
         const HybridSpace space(known);
-        Hybrid<Grid> generic = test_make_hybrid_grids(space, policy);
+        Hybrid<Grid> generic = make_hybrid_grids(space, test_scalings_from_map(space, 4.0_x, named));
         ARIADNE_TESTING_PROVE(generic.has_location(first));
         ARIADNE_TESTING_PROVE(not generic.has_location(absent));
         ARIADNE_TESTING_PROVE(not generic.has_value(first));
@@ -121,7 +123,7 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
             make_labelled_paving(tree_paving, RealSpace({x})));
     }
 
-    Void test_hybrid_grids_match_legacy_and_are_lazy() {
+    Void test_hybrid_grids_from_scalings_are_lazy() {
         const DiscreteLocation first(1), second(2);
         const RealVariable x("x"), y("y");
         MonolithicHybridSpace spaces;
@@ -132,22 +134,20 @@ class TestGridAdapters : public Ariadne::Testing::ContextFixture {
             {x.name(), 2.0_x},
             {y.name(), 3.0_x}
         };
-        const HybridScalings scaling(scales);
-        const HybridGrid legacy(space, scaling);
-        Hybrid<Grid> generic = test_make_hybrid_grids(space, scaling);
+        Hybrid<Grid> generic = make_hybrid_grids(space, test_scalings_from_map(space, 1.0_x, scales));
         ARIADNE_TESTING_PROVE(generic.has_location(first));
         ARIADNE_TESTING_PROVE(generic.has_location(second));
         ARIADNE_TESTING_PROVE(not generic.has_value(first));
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
         const Grid& one = generic[first];
-        ARIADNE_TESTING_PROVE(one == legacy[first]);
+        ARIADNE_TESTING_PROVE(one == Grid(Vector<ExactDouble>{2.0_x}));
         ARIADNE_TESTING_EXPECT_EQUAL(one.dimension(), 1u);
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 1u);
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
         const Grid& second_grid = generic[second];
-        ARIADNE_TESTING_PROVE(second_grid == legacy[second]);
+        ARIADNE_TESTING_PROVE(second_grid == Grid(Vector<ExactDouble>{3.0_x, 2.0_x}));
         ARIADNE_TESTING_EXPECT_EQUAL(second_grid.dimension(), 2u);
         ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 2u);
 
@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_grid_adapters");
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_grid_matches_legacy);
     ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_labelled_pavings_preserve_tree_and_robdd);
-    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_hybrid_grids_match_legacy_and_are_lazy);
-    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_legacy_location_scalings_preserve_coordinate_order);
+    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_hybrid_grids_from_scalings_are_lazy);
+    ARIADNE_TESTING_ADD_TEST(TestGridAdapters, test_location_scalings_preserve_coordinate_order);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

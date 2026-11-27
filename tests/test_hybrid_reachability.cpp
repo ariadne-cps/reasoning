@@ -50,7 +50,7 @@
 #include "logging/test_runner.hpp"
 #include "numeric/rational.hpp"
 #include "paving/robdd_paving.hpp"
-#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"
