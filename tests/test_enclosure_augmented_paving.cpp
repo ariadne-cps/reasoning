@@ -29,8 +29,12 @@
 // Verify the continuous and hybrid enclosure-to-augmented-paving adapters.
 #include "function/taylor_function.hpp"
 #include "logging/test_runner.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
 #include "reasoning/enclosure_augmented_paving.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_grid_compat.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 
 #include "ariadne-testing.hpp"
 
@@ -127,6 +131,64 @@ class TestEnclosureAugmentedPaving : public Ariadne::Testing::ContextFixture {
         HybridPaving wrong{HybridGrid(HybridSpace(incompatible))};
         ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(initial, wrong, 0u, paver));
     }
+
+    Void test_hybrid_generic_value() {
+        DiscreteLocation location(1);
+        RealVariable x("x"), y("y"), a("a");
+        RealSpace state_space({x, y});
+        RealSpace auxiliary_space({a});
+        ExactBoxType domain({
+            {-1, 1},
+            {-1, 1}
+        });
+        EnclosureConfiguration config(TaylorFunctionFactory(ThresholdSweeper<FloatDP>(dp, 1e-8)));
+        HybridEnclosure enclosure(HybridExactBox(location, state_space, domain), config);
+
+        MonolithicHybridSpace state;
+        state.new_location(location, state_space);
+        const HybridSpace hybrid_space(state);
+        const HybridGrid grid(hybrid_space);
+        Paver paver(new AffinePaver());
+
+        LabelledMapping labelled(state_space,
+                                 EffectiveVectorMultivariateFunction({EffectiveScalarMultivariateFunction::coordinate(2u, 0u)}),
+                                 auxiliary_space);
+        MonolithicHybridSpace extended;
+        extended.new_location(location, join(state_space, auxiliary_space));
+        HybridAuxiliaryMapping mapping(HybridSpace(extended),
+                                       [labelled](const DiscreteLocation&) { return labelled; });
+
+        // Legacy reference and its owning generic snapshot: the same
+        // enclosure must produce identical slices through both adapters.
+        HybridAugmentedPaving legacy(grid, mapping);
+        HybridAugmentedPavingValue generic = make_hybrid_augmented_paving_value(legacy);
+        adjoin_outer_approximation_to(enclosure, legacy, 2u, paver);
+        adjoin_outer_approximation_to(enclosure, generic, 2u, paver);
+        ARIADNE_TESTING_PROVE(generic.has_value(location));
+        ARIADNE_TESTING_PROVE(generic[location].size() > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[location].size(), legacy.state_paving()[location].size());
+        const HybridAugmentedPavingValue legacy_snapshot = make_hybrid_augmented_paving_value(legacy);
+        ARIADNE_TESTING_PROVE(subset(generic, legacy_snapshot));
+        ARIADNE_TESTING_PROVE(subset(legacy_snapshot, generic));
+
+        // The Hybrid<Paving> overload materializes the location through the
+        // family's lazy factory and matches the legacy HybridPaving adapter.
+        Hybrid<Grid> grids = make_hybrid_grids(hybrid_space, HybridScalings(SimpleHybridScalings()));
+        Hybrid<Paving> state_values = make_hybrid_pavings(
+            hybrid_space, grids, [](const Grid& g) { return Paving(new BinaryTreePaving(g)); });
+        HybridPaving legacy_state(grid);
+        adjoin_outer_approximation_to(enclosure, legacy_state, 2u, paver);
+        adjoin_outer_approximation_to(enclosure, state_values, 2u, paver);
+        ARIADNE_TESTING_PROVE(state_values.has_value(location));
+        ARIADNE_TESTING_EXPECT_EQUAL(state_values[location].size(), legacy_state[location].size());
+
+        // The same spatial precondition holds on the generic family.
+        MonolithicHybridSpace wrong_state;
+        wrong_state.new_location(location, auxiliary_space);
+        HybridAugmentedPavingValue wrong =
+            make_hybrid_augmented_paving_value(HybridAugmentedPaving(HybridGrid(wrong_state), mapping));
+        ARIADNE_TESTING_EXPECT_EXCEPTION(adjoin_outer_approximation_to(enclosure, wrong, 2u, paver));
+    }
 };
 
 int main(int argc, char** argv) {
@@ -134,5 +196,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_continuous);
     ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_hybrid);
     ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_hybrid_enclosure_paving_space_contract);
+    ARIADNE_TESTING_ADD_TEST(TestEnclosureAugmentedPaving, test_hybrid_generic_value);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

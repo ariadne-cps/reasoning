@@ -36,6 +36,8 @@
 #include "hybrid/hybrid_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/paver.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 
 namespace Ariadne {
 
@@ -58,6 +60,18 @@ Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridPavin
  *  without coupling to an automaton or reasoning-layer objects.
  */
 Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPaving& paving, Nat fineness, const Paver& paver);
+
+/** @brief Add a hybrid enclosure's validated outer approximation to a generic
+ *  location-indexed paving family. The enclosure's location is materialized
+ *  lazily through the family's own factory, preserving its backend.
+ */
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Paving>& pavings, Nat fineness, const Paver& paver);
+
+/** @brief Add a hybrid enclosure's validated outer approximation to a generic
+ *  location-indexed augmented paving family, adjoining only the state paving
+ *  as in the legacy augmented adapter.
+ */
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPavingValue& pavings, Nat fineness, const Paver& paver);
 
 } // namespace Ariadne
 

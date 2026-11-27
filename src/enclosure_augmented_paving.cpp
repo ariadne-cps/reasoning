@@ -74,4 +74,20 @@ Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugme
     adjoin_outer_approximation_to(enclosure, paving.state_paving(), fineness, paver);
 }
 
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Paving>& pavings, Nat fineness, const Paver& paver) {
+    const DiscreteLocation location = enclosure.location();
+    const Enclosure& set = enclosure.continuous_set();
+    ARIADNE_PRECONDITION_MSG(enclosure.state_space() == pavings.space()[location],
+                             "HybridEnclosure's state variables " << enclosure.state_space() << " do not match variables " << pavings.space()[location] << " of the hybrid paving family in location " << location);
+    paver.adjoin_outer_approximation(pavings[location], set.state_set(), fineness);
+}
+
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPavingValue& pavings, Nat fineness, const Paver& paver) {
+    const DiscreteLocation location = enclosure.location();
+    const Enclosure& set = enclosure.continuous_set();
+    ARIADNE_PRECONDITION_MSG(enclosure.state_space() == pavings.space()[location],
+                             "HybridEnclosure's state variables " << enclosure.state_space() << " do not match variables " << pavings.space()[location] << " of the hybrid augmented paving family in location " << location);
+    paver.adjoin_outer_approximation(pavings[location].state_paving(), set.state_set(), fineness);
+}
+
 } // namespace Ariadne
