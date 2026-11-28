@@ -20,19 +20,20 @@ endif()
 
 
 require_same_dependency_commit(Build CHAINS
-    "build" "evolution|build" "smt|build" "sat|build")
+    "build" "evolution|build" "smt|build" "sat|build" "paving|build")
 require_same_dependency_commit(EquationSolving CHAINS
     "evolution|equation-solving" "smt|equation-solving")
 require_same_dependency_commit(Cdcl CHAINS
     "smt|cdcl" "sat|cdcl")
 require_same_dependency_commit(Symbolic CHAINS
-    "evolution|system|hybrid|labelled|expression-set|symbolic"
+    "evolution|system|hybrid|labelled|symbolic"
+    "evolution|system|hybrid|expression-set|symbolic"
     "smt|symbolic")
 require_same_dependency_commit(Bdd CHAINS
-    "evolution|system|hybrid|labelled|paving|bdd"
+    "paving|bdd"
     "sat|bdd")
 require_same_dependency_commit(ConstraintSolving CHAINS
-    "evolution|system|hybrid|labelled|expression-set|set|constraint-solving"
+    "evolution|system|hybrid|expression-set|set|constraint-solving"
     "smt|constraint-solving")
 require_same_dependency_commit(Logging CHAINS
     "evolution|integration|logging" "benchmarking|logging")

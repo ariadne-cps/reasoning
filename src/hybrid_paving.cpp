@@ -30,10 +30,10 @@
 
 #include <utility>
 
+#include "drawing/labelled_set.hpp"
 #include "function/functional.hpp"
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "labelled/set.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_paving_value.hpp"

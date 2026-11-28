@@ -29,10 +29,10 @@
 // Adapt evolved enclosures into drawing-independent augmented pavings.
 #include "reasoning/enclosure_augmented_paving.hpp"
 
+#include "drawing/labelled_figure.hpp"
 #include "evolution/hybrid_enclosure.hpp"
 #include "function/constraint.hpp"
 #include "function/functional.hpp"
-#include "labelled/figure.hpp"
 #include "logging/logging.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "set/function_set.hpp"

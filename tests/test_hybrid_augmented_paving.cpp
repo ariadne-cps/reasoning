@@ -32,12 +32,12 @@
 
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "function/function.hpp"
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"

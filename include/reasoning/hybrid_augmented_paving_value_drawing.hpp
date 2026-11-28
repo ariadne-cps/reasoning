@@ -29,7 +29,7 @@
 #ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_DRAWING_HPP
 #define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_VALUE_DRAWING_HPP
 
-#include "labelled/figure.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/paving_drawing.hpp"

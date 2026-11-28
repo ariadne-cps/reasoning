@@ -28,7 +28,7 @@
 #ifndef ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_VALUE_DRAWING_HPP
 #define ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_VALUE_DRAWING_HPP
 
-#include "labelled/figure.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/paving_drawing.hpp"
 

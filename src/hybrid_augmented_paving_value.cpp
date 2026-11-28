@@ -31,10 +31,10 @@
 #include <stdexcept>
 #include <utility>
 
+#include "drawing/labelled_set.hpp"
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "labelled/set.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 

@@ -17,3 +17,6 @@
 [submodule "benchmarking"]
 	path = ss/bmk
 	url = https://github.com/ariadne-cps/benchmarking
+[submodule "pav"]
+	path = ss/pav
+	url = https://github.com/ariadne-cps/paving

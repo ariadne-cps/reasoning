@@ -31,13 +31,13 @@
 #include <string>
 
 #include "algebra/algebra.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "function/formula.hpp"
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
-#include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/paving_drawing.hpp"
