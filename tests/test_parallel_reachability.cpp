@@ -157,7 +157,7 @@ class TestParallelReachability : public Testing::ContextFixture {
         for (bool use_robdd: {false, true}) {
             // Same-manager tests are valid; these are not benchmark samples.
             auto manager = std::make_shared<RobddManager>();
-            auto fresh = [&]() -> LabelledAugmentedPavingValue {
+            auto fresh = [&]() -> LabelledAugmentedPaving {
                 if (use_robdd)
                     return make_labelled_augmented_paving(
                         Paving(new RobddPaving(manager, grid)), system);

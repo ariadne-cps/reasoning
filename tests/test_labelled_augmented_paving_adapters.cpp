@@ -85,7 +85,7 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const RobddPaving*>(
                 &static_cast<const PavingInterface&>(generic_robdd.value().state_paving())) != nullptr);
-        const LabelledAugmentedPavingValue copy(generic_robdd);
+        const LabelledAugmentedPaving copy(generic_robdd);
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const RobddPaving*>(
                 &static_cast<const PavingInterface&>(copy.value().state_paving())) != nullptr);

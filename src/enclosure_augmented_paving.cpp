@@ -52,7 +52,7 @@ Void adjoin_outer_approximation_to(const Enclosure& enclosure, AugmentedPaving& 
     paver.adjoin_outer_approximation(paving.state_paving(), enclosure.state_set(), fineness);
 }
 
-Void adjoin_outer_approximation_to(const Enclosure& enclosure, LabelledAugmentedPavingValue& pavings, Nat fineness, const Paver& paver) {
+Void adjoin_outer_approximation_to(const Enclosure& enclosure, LabelledAugmentedPaving& pavings, Nat fineness, const Paver& paver) {
     adjoin_outer_approximation_to(enclosure, pavings.value(), fineness, paver);
 }
 
@@ -70,7 +70,7 @@ Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Pavi
     paver.adjoin_outer_approximation(pavings[location], set.state_set(), fineness);
 }
 
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPavingValue& pavings, Nat fineness, const Paver& paver) {
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPaving& pavings, Nat fineness, const Paver& paver) {
     const DiscreteLocation location = enclosure.location();
     const Enclosure& set = enclosure.continuous_set();
     ARIADNE_PRECONDITION_MSG(enclosure.state_space() == pavings.space()[location],

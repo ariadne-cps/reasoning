@@ -31,21 +31,21 @@
 namespace Ariadne::PavingDrawing {
 
 Void draw(CanvasInterface& canvas, const Variables2d& axes,
-          const LabelledAugmentedPavingValue& paving) {
+          const LabelledAugmentedPaving& paving) {
     const Projection2d proj = Ariadne::projection(state_auxiliary_space(paving), axes);
     PavingDrawing::draw(canvas, proj, paving.value());
 }
 
-Void draw(Figure& figure, const LabelledAugmentedPavingValue& paving) {
+Void draw(Figure& figure, const LabelledAugmentedPaving& paving) {
     PavingDrawing::draw(figure, paving.value());
 }
 
-Void draw(LabelledFigure& figure, const LabelledAugmentedPavingValue& paving) {
+Void draw(LabelledFigure& figure, const LabelledAugmentedPaving& paving) {
     figure.draw(LabelledAugmentedPavingValueDrawable(paving));
 }
 
 LabelledAugmentedPavingValueDrawable::LabelledAugmentedPavingValueDrawable(
-    const LabelledAugmentedPavingValue& paving)
+    const LabelledAugmentedPaving& paving)
     : _paving(paving) {}
 
 LabelledAugmentedPavingValueDrawable*

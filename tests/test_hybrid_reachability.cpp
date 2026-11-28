@@ -327,8 +327,8 @@ Void TestHybridReachability::test_verify_safety() {
 
     // The certificate stores the generic value directly; the value accessors
     // are near-identity snapshots preserving the per-location backend.
-    const HybridAugmentedPavingValue chain_value = certificate.chain_reach_value();
-    const HybridAugmentedPavingValue safe_value = certificate.safe_value();
+    const HybridAugmentedPaving chain_value = certificate.chain_reach_value();
+    const HybridAugmentedPaving safe_value = certificate.safe_value();
     ARIADNE_TESTING_PROVE(chain_value.size() == certificate.chain_reach_set.size());
     ARIADNE_TESTING_PROVE(safe_value.size() == certificate.safe_set.size());
     ARIADNE_TESTING_PROVE(chain_value.has_value(q));
@@ -370,8 +370,8 @@ Void TestHybridReachability::test_selected_robdd_backend() {
     // Compare complete analysis results geometrically. Algebra between
     // different backends is intentionally unsupported; GridCell coverage
     // is independent of both the representation and its ROBDD manager.
-    auto geometrically_contained = [](const HybridAugmentedPavingValue& candidate,
-                                      const HybridAugmentedPavingValue& container) {
+    auto geometrically_contained = [](const HybridAugmentedPaving& candidate,
+                                      const HybridAugmentedPaving& container) {
         for (auto it = candidate.begin(); it != candidate.end(); ++it) {
             const DiscreteLocation& loc = it->first;
             if (!container.has_value(loc))
@@ -412,10 +412,10 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     ExposedHybridAnalyser exposed_analyser(evolver);
     const Hybrid<Grid>& grids = exposed_analyser.configuration().grid();
     auto fresh = [&] {
-        return make_hybrid_augmented_paving_value(grids, system);
+        return make_hybrid_augmented_paving(grids, system);
     };
 
-    HybridAugmentedPavingValue input = fresh();
+    HybridAugmentedPaving input = fresh();
     Hybrid<Grid> materialized_grids = grids;
     GridCell root(materialized_grids[q], 0u, BinaryWord{});
     const GridCell first = root.split(false).split(false);
@@ -434,8 +434,8 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
 
     auto compute = [&](std::size_t concurrency) {
         threads.set_concurrency(concurrency);
-        HybridAugmentedPavingValue reach = fresh();
-        HybridAugmentedPavingValue evolved = fresh();
+        HybridAugmentedPaving reach = fresh();
+        HybridAugmentedPaving evolved = fresh();
         // The reach destination already contains a cell; the evolve
         // destination is empty and must create its location during adjoin.
         reach[q].state_paving().adjoin(first);

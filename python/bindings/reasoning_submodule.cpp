@@ -47,7 +47,7 @@ using namespace Ariadne;
 // Export the representation-independent alternatives without removing the
 // existing Python names for legacy labelled paving subclasses.
 Void export_labelled_paving_values(pybind11::module& module) {
-    pybind11::class_<LabelledValue<Grid>> grid_value_class(module, "LabelledGridValue");
+    pybind11::class_<LabelledValue<Grid>> grid_value_class(module, "LabelledGrid");
     grid_value_class.def(pybind11::init([](const Grid& grid, const RealSpace& space) {
                              return make_labelled_grid(grid, space);
                          }),
@@ -57,7 +57,7 @@ Void export_labelled_paving_values(pybind11::module& module) {
     });
     grid_value_class.def("value", [](LabelledValue<Grid>& value) -> Grid& { return value.value(); }, pybind11::return_value_policy::reference_internal);
 
-    pybind11::class_<LabelledValue<Paving>> paving_value_class(module, "LabelledPavingValue");
+    pybind11::class_<LabelledValue<Paving>> paving_value_class(module, "LabelledPaving");
     paving_value_class.def(pybind11::init([](const Paving& paving, const RealSpace& space) {
                                return make_labelled_paving(paving, space);
                            }),
@@ -68,27 +68,27 @@ Void export_labelled_paving_values(pybind11::module& module) {
     paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& { return value.value(); }, pybind11::return_value_policy::reference_internal);
 
     // Generic, owning snapshots returned by continuous safety certificates.
-    pybind11::class_<LabelledAugmentedPavingValue> augmented_value_class(
-        module, "LabelledAugmentedPavingValue");
-    augmented_value_class.def("state_space", [](const LabelledAugmentedPavingValue& paving) {
+    pybind11::class_<LabelledAugmentedPaving> augmented_value_class(
+        module, "LabelledAugmentedPaving");
+    augmented_value_class.def("state_space", [](const LabelledAugmentedPaving& paving) {
         return state_space(paving);
     });
-    augmented_value_class.def("auxiliary_space", [](const LabelledAugmentedPavingValue& paving) {
+    augmented_value_class.def("auxiliary_space", [](const LabelledAugmentedPaving& paving) {
         return auxiliary_space(paving);
     });
-    augmented_value_class.def("state_auxiliary_space", [](const LabelledAugmentedPavingValue& paving) {
+    augmented_value_class.def("state_auxiliary_space", [](const LabelledAugmentedPaving& paving) {
         return state_auxiliary_space(paving);
     });
-    augmented_value_class.def("size", [](const LabelledAugmentedPavingValue& paving) {
+    augmented_value_class.def("size", [](const LabelledAugmentedPaving& paving) {
         return paving.value().size();
     });
-    augmented_value_class.def("is_empty", [](const LabelledAugmentedPavingValue& paving) {
+    augmented_value_class.def("is_empty", [](const LabelledAugmentedPaving& paving) {
         return paving.value().is_empty();
     });
-    augmented_value_class.def("clear", [](LabelledAugmentedPavingValue& paving) {
+    augmented_value_class.def("clear", [](LabelledAugmentedPaving& paving) {
         paving.value().clear();
     });
-    augmented_value_class.def("state_paving", [](LabelledAugmentedPavingValue& paving) -> Paving& { return paving.value().state_paving(); }, pybind11::return_value_policy::reference_internal);
+    augmented_value_class.def("state_paving", [](LabelledAugmentedPaving& paving) -> Paving& { return paving.value().state_paving(); }, pybind11::return_value_policy::reference_internal);
 
     module.def("make_labelled_grid", &make_labelled_grid,
                pybind11::arg("grid"), pybind11::arg("space"));
@@ -98,11 +98,11 @@ Void export_labelled_paving_values(pybind11::module& module) {
 
 // Generic, owning location-indexed snapshots returned by hybrid analyses.
 Void export_hybrid_augmented_paving_value(pybind11::module& module) {
-    pybind11::class_<HybridAugmentedPavingValue> value_class(module, "HybridAugmentedPavingValue");
-    value_class.def("size", &HybridAugmentedPavingValue::size);
-    value_class.def("__len__", &HybridAugmentedPavingValue::size);
-    value_class.def("has_value", &HybridAugmentedPavingValue::has_value);
-    value_class.def("__getitem__", [](const HybridAugmentedPavingValue& value, const DiscreteLocation& location) -> const AugmentedPaving& { return value[location]; }, pybind11::return_value_policy::reference_internal);
+    pybind11::class_<HybridAugmentedPaving> value_class(module, "HybridAugmentedPaving");
+    value_class.def("size", &HybridAugmentedPaving::size);
+    value_class.def("__len__", &HybridAugmentedPaving::size);
+    value_class.def("has_value", &HybridAugmentedPaving::has_value);
+    value_class.def("__getitem__", [](const HybridAugmentedPaving& value, const DiscreteLocation& location) -> const AugmentedPaving& { return value[location]; }, pybind11::return_value_policy::reference_internal);
 }
 
 Void export_augmented_paving(pybind11::module& module) {

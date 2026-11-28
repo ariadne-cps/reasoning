@@ -431,10 +431,10 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
+        HybridAugmentedPaving generic_aug = make_hybrid_augmented_paving(generic_grids(), system, create_tree);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
         ARIADNE_TESTING_PROVE(generic_aug[first].size() > 0u);
-        HybridAugmentedPavingValue replica_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
+        HybridAugmentedPaving replica_aug = make_hybrid_augmented_paving(generic_grids(), system, create_tree);
         adjoin_outer_approximation(replica_aug, compact_set, 2u);
         ARIADNE_TESTING_PROVE(subset(generic_aug, replica_aug));
         ARIADNE_TESTING_PROVE(subset(replica_aug, generic_aug));
@@ -497,7 +497,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
+        HybridAugmentedPaving generic_aug = make_hybrid_augmented_paving(generic_grids(), system, create_tree);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
         ARIADNE_TESTING_PROVE(not is_empty(generic_aug));
         mince(generic_aug, 4u);
@@ -506,7 +506,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(not is_empty(generic_aug));
 
         // adjoin_inner_approximation on augmented values hits the state paving per location.
-        HybridAugmentedPavingValue generic_aug_inner = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
+        HybridAugmentedPaving generic_aug_inner = make_hybrid_augmented_paving(generic_grids(), system, create_tree);
         adjoin_inner_approximation(generic_aug_inner, wide_set, 2u);
         ARIADNE_TESTING_PROVE(generic_aug_inner.has_value(first));
         ARIADNE_TESTING_PROVE(generic_aug_inner[first].state_paving().size() > 0u);

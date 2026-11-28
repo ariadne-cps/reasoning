@@ -142,11 +142,11 @@ Void HybridReachabilityAnalyserConfiguration::set_grid(const Hybrid<Scalings>& s
     _grids = make_hybrid_grids(_space, _scalings);
 }
 
-HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::chain_reach_value() const {
+HybridAugmentedPaving SafetyCertificate<HybridSpace>::chain_reach_value() const {
     return chain_reach_set;
 }
 
-HybridAugmentedPavingValue SafetyCertificate<HybridSpace>::safe_value() const {
+HybridAugmentedPaving SafetyCertificate<HybridSpace>::safe_value() const {
     return safe_set;
 }
 

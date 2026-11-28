@@ -23,7 +23,7 @@
  */
 
 /** @file tests/test_hybrid_augmented_paving.cpp
- *  @brief Generic HybridAugmentedPavingValue snapshots, orbits and flattened drawing.
+ *  @brief Generic HybridAugmentedPaving snapshots, orbits and flattened drawing.
  */
 
 #include <iostream>
@@ -76,9 +76,9 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         });
     }
 
-    HybridAugmentedPavingValue make_value(const std::function<Paving(const Grid&)>& backend) const {
+    HybridAugmentedPaving make_value(const std::function<Paving(const Grid&)>& backend) const {
         Hybrid<Grid> grids = make_hybrid_grids(system.state_space(), unit_scalings(system.state_space()));
-        return make_hybrid_augmented_paving_value(grids, system, backend);
+        return make_hybrid_augmented_paving(grids, system, backend);
     }
 
   public:
@@ -98,7 +98,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         std::function<Paving(const Grid&)> tree_backend =
             [](const Grid& selected) { return Paving(new BinaryTreePaving(selected)); };
 
-        HybridAugmentedPavingValue storage = make_value(robdd_backend);
+        HybridAugmentedPaving storage = make_value(robdd_backend);
         ARIADNE_TESTING_PROVE(Ariadne::is_empty(storage));
         ARIADNE_TESTING_EXPECT_EQUAL(storage.size(), 0u);
         ARIADNE_TESTING_PROVE(storage.begin() == storage.end());
@@ -123,10 +123,10 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
                 storage[q].state_paving())) != nullptr);
 
         // Read-only slice as an owning generic labelled value snapshot.
-        const LabelledAugmentedPavingValue slice =
+        const LabelledAugmentedPaving slice =
             make_labelled_augmented_paving(storage[q], system.continuous_state_space(q),
                                            system.continuous_auxiliary_space(q));
-        const LabelledAugmentedPavingValue copied_slice(slice);
+        const LabelledAugmentedPaving copied_slice(slice);
         ARIADNE_TESTING_EXPECT_EQUAL(state_space(slice), system.continuous_state_space(q));
         ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(slice), system.continuous_auxiliary_space(q));
         ARIADNE_TESTING_PROVE(copied_slice.value().size() > 0u);
@@ -135,7 +135,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
                 &static_cast<const PavingInterface&>(
                     copied_slice.value().state_paving())) != nullptr);
 
-        HybridAugmentedPavingValue other = make_value(robdd_backend);
+        HybridAugmentedPaving other = make_value(robdd_backend);
         ARIADNE_TESTING_PROVE(Ariadne::subset(other, storage));
         Ariadne::adjoin(other, storage);
         ARIADNE_TESTING_PROVE(other.size() == storage.size());
@@ -151,7 +151,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         // Snapshot the occupied location; it must retain its cells after the
         // original is cleared.
-        const LabelledAugmentedPavingValue snapshot =
+        const LabelledAugmentedPaving snapshot =
             make_labelled_augmented_paving(storage[q], system.continuous_state_space(q),
                                            system.continuous_auxiliary_space(q));
         const SizeType snapshot_size = snapshot.value().size();
@@ -162,7 +162,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
 
         // The whole-family copy keeps every materialized location, its backend
         // and its auxiliary mapping; generic set operations do not mutate the original.
-        const HybridAugmentedPavingValue family(storage);
+        const HybridAugmentedPaving family(storage);
         ARIADNE_TESTING_PROVE(family.size() == storage.size());
         ARIADNE_TESTING_PROVE(family.has_value(q));
         ARIADNE_TESTING_EXPECT_EQUAL(family[q].size(), storage[q].size());
@@ -171,7 +171,7 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
                 &static_cast<const PavingInterface&>(family[q].state_paving())) != nullptr);
         ARIADNE_TESTING_PROVE(Ariadne::subset(family, family));
         ARIADNE_TESTING_PROVE(Ariadne::intersect(family, family));
-        HybridAugmentedPavingValue family_copy = family;
+        HybridAugmentedPaving family_copy = family;
         Ariadne::remove(family_copy, family);
         ARIADNE_TESTING_PROVE(family_copy.has_value(q));
         ARIADNE_TESTING_PROVE(family_copy[q].is_empty());
@@ -219,22 +219,22 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
     Void test_hybrid_augmented_paving_value_orbit() {
         std::function<Paving(const Grid&)> tree_backend =
             [](const Grid& selected) { return Paving(new BinaryTreePaving(selected)); };
-        HybridAugmentedPavingValue initial = make_value(tree_backend);
+        HybridAugmentedPaving initial = make_value(tree_backend);
         HybridBoundedConstraintSet initial_set(q, {0.9_dec <= x <= 1.1_dec, 0.9_dec <= y <= 1.1_dec});
         Ariadne::adjoin_outer_approximation(initial, initial_set, 2u);
 
-        Orbit<HybridAugmentedPavingValue> orbit(initial);
+        Orbit<HybridAugmentedPaving> orbit(initial);
         ARIADNE_TESTING_PROVE(orbit.initial().size() == initial.size());
         ARIADNE_TESTING_PROVE(orbit.reach().size() == 0u);
         ARIADNE_TESTING_PROVE(orbit.intermediate().size() == 0u);
         ARIADNE_TESTING_PROVE(orbit.final().size() == 0u);
 
-        HybridAugmentedPavingValue reach = make_value(tree_backend);
+        HybridAugmentedPaving reach = make_value(tree_backend);
         Ariadne::adjoin_outer_approximation(reach, initial_set, 2u);
-        HybridAugmentedPavingValue intermediate = reach;
-        HybridAugmentedPavingValue final_set = reach;
+        HybridAugmentedPaving intermediate = reach;
+        HybridAugmentedPaving final_set = reach;
 
-        Orbit<HybridAugmentedPavingValue> full_orbit(initial, reach, intermediate, final_set);
+        Orbit<HybridAugmentedPaving> full_orbit(initial, reach, intermediate, final_set);
         ARIADNE_TESTING_PROVE(full_orbit.initial().size() == initial.size());
         ARIADNE_TESTING_EXPECT_EQUAL(full_orbit.reach()[q].size(), reach[q].size());
         ARIADNE_TESTING_EXPECT_EQUAL(full_orbit.intermediate()[q].size(), intermediate[q].size());

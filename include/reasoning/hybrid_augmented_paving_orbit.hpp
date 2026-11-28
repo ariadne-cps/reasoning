@@ -36,26 +36,26 @@ namespace Ariadne {
 
 /** @brief Store initial, reachable, intermediate and final generic hybrid paving values. */
 template<>
-class Orbit<HybridAugmentedPavingValue> {
+class Orbit<HybridAugmentedPaving> {
     struct Data;
 
   public:
-    typedef HybridAugmentedPavingValue EnclosureListType;
+    typedef HybridAugmentedPaving EnclosureListType;
 
     /** @brief Initialize a hybrid orbit from its initial generic value. */
-    Orbit(const HybridAugmentedPavingValue& initial_set);
+    Orbit(const HybridAugmentedPaving& initial_set);
     /** @brief Initialize all four phases of a hybrid orbit. */
-    Orbit(const HybridAugmentedPavingValue& initial_set, const HybridAugmentedPavingValue& reach_set,
-          const HybridAugmentedPavingValue& intermediate_set, const HybridAugmentedPavingValue& final_set);
+    Orbit(const HybridAugmentedPaving& initial_set, const HybridAugmentedPaving& reach_set,
+          const HybridAugmentedPaving& intermediate_set, const HybridAugmentedPaving& final_set);
 
     /** @brief Return the initial hybrid paving value. */
-    const HybridAugmentedPavingValue& initial() const;
+    const HybridAugmentedPaving& initial() const;
     /** @brief Return the reach hybrid paving value. */
-    const HybridAugmentedPavingValue& reach() const;
+    const HybridAugmentedPaving& reach() const;
     /** @brief Return the intermediate hybrid paving value. */
-    const HybridAugmentedPavingValue& intermediate() const;
+    const HybridAugmentedPaving& intermediate() const;
     /** @brief Return the final hybrid paving value. */
-    const HybridAugmentedPavingValue& final() const;
+    const HybridAugmentedPaving& final() const;
 
   private:
     SharedPointer<Data> _data;

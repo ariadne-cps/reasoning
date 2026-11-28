@@ -81,8 +81,8 @@ using ContinuousReachabilityAnalyser = ReachabilityAnalyser<VectorField>;
 template<>
 struct SafetyCertificate<EuclideanSpace> {
     const ValidatedSierpinskian is_safe;
-    const LabelledAugmentedPavingValue chain_reach_set;
-    const LabelledAugmentedPavingValue safe_set;
+    const LabelledAugmentedPaving chain_reach_set;
+    const LabelledAugmentedPaving safe_set;
 };
 
 //! \ingroup DynamicsModule
@@ -150,17 +150,17 @@ class ReachabilityAnalyser
     Void set_paving_factory(std::function<Paving(const Grid&)> factory) {
         if (not factory)
             throw std::invalid_argument("Empty paving factory");
-        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPavingValue>) {
+        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPaving>) {
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
                 return make_labelled_augmented_paving(factory(grid.value()), system);
             };
-        } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPavingValue>) {
+        } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             // The same factory creates the continuous paving on demand in
             // every hybrid location. Captured managers survive all copies.
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
-                return make_hybrid_augmented_paving_value(grid, system, factory);
+                return make_hybrid_augmented_paving(grid, system, factory);
             };
         } else {
             throw std::logic_error("Unsupported storage for paving factory");

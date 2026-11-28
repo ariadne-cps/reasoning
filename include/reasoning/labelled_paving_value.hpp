@@ -51,7 +51,7 @@ LabelledValue<Paving> make_labelled_paving(Paving paving, const RealSpace& space
 
 // The first space names state coordinates; the second names the auxiliary
 // mapping's outputs. No paving-specific metadata is added to LabelledValue.
-using LabelledAugmentedPavingValue =
+using LabelledAugmentedPaving =
     LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
 
 /** @brief Attach ordered state and auxiliary coordinates to an augmented paving.
@@ -59,19 +59,19 @@ using LabelledAugmentedPavingValue =
  *  Validate both dimensions rather than silently accepting a mislabelled
  *  auxiliary mapping. This factory belongs to Reasoning, not Labelled.
  */
-LabelledAugmentedPavingValue make_labelled_augmented_paving(
+LabelledAugmentedPaving make_labelled_augmented_paving(
     AugmentedPaving paving, RealSpace state_space, RealSpace auxiliary_space);
 
 /** @brief Construct an empty labelled augmented paving value on a labelled grid. */
 template<class SYS>
-LabelledAugmentedPavingValue make_labelled_augmented_paving(const LabelledValue<Grid>& grid, const SYS& system) {
+LabelledAugmentedPaving make_labelled_augmented_paving(const LabelledValue<Grid>& grid, const SYS& system) {
     ARIADNE_PRECONDITION(grid.space() == system.state_space());
     return make_labelled_augmented_paving(Paving(new BinaryTreePaving(grid.value())), system);
 }
 
 /** @brief Attach a system's state/auxiliary coordinates and auxiliary mapping to a state paving. */
 template<class SYS>
-LabelledAugmentedPavingValue make_labelled_augmented_paving(Paving paving, const SYS& system) {
+LabelledAugmentedPaving make_labelled_augmented_paving(Paving paving, const SYS& system) {
     return make_labelled_augmented_paving(
         AugmentedPaving(std::move(paving), system.auxiliary_mapping()),
         system.state_space(), system.auxiliary_space());
@@ -79,51 +79,51 @@ LabelledAugmentedPavingValue make_labelled_augmented_paving(Paving paving, const
 
 /** @brief Attach a system's state/auxiliary coordinates to an augmented paving. */
 template<class SYS>
-LabelledAugmentedPavingValue make_labelled_augmented_paving(AugmentedPaving paving, const SYS& system) {
+LabelledAugmentedPaving make_labelled_augmented_paving(AugmentedPaving paving, const SYS& system) {
     return make_labelled_augmented_paving(std::move(paving), system.state_space(), system.auxiliary_space());
 }
 
 /** @brief Access the labelled augmented paving's state coordinates. */
-const RealSpace& state_space(const LabelledAugmentedPavingValue& paving);
+const RealSpace& state_space(const LabelledAugmentedPaving& paving);
 
 /** @brief Access the labelled augmented paving's auxiliary coordinates. */
-const RealSpace& auxiliary_space(const LabelledAugmentedPavingValue& paving);
+const RealSpace& auxiliary_space(const LabelledAugmentedPaving& paving);
 
 /** @brief Return the coordinates in state-then-auxiliary order. */
-RealSpace state_auxiliary_space(const LabelledAugmentedPavingValue& paving);
+RealSpace state_auxiliary_space(const LabelledAugmentedPaving& paving);
 
 // Match the legacy labelled operations: compatibility is checked against the
 // ordered state space; the underlying paving implements geometric operations.
 // Requiring equal auxiliary spaces here would alter the old set semantics.
-Void adjoin(LabelledAugmentedPavingValue& left,
-            const LabelledAugmentedPavingValue& right);
+Void adjoin(LabelledAugmentedPaving& left,
+            const LabelledAugmentedPaving& right);
 
-Void restrict(LabelledAugmentedPavingValue& left,
-              const LabelledAugmentedPavingValue& right);
+Void restrict(LabelledAugmentedPaving& left,
+              const LabelledAugmentedPaving& right);
 
-Void remove(LabelledAugmentedPavingValue& left,
-            const LabelledAugmentedPavingValue& right);
+Void remove(LabelledAugmentedPaving& left,
+            const LabelledAugmentedPaving& right);
 
-Bool subset(const LabelledAugmentedPavingValue& left,
-            const LabelledAugmentedPavingValue& right);
+Bool subset(const LabelledAugmentedPaving& left,
+            const LabelledAugmentedPaving& right);
 
-Bool intersect(const LabelledAugmentedPavingValue& left,
-               const LabelledAugmentedPavingValue& right);
+Bool intersect(const LabelledAugmentedPaving& left,
+               const LabelledAugmentedPaving& right);
 
-Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+Void adjoin_outer_approximation(LabelledAugmentedPaving& pavings,
                                 const EffectiveEuclideanCompactSetInterface& set, Nat fineness);
-Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+Void adjoin_outer_approximation(LabelledAugmentedPaving& pavings,
                                 const ValidatedEuclideanCompactSetInterface& set, Nat fineness);
-Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+Void adjoin_outer_approximation(LabelledAugmentedPaving& pavings,
                                 const ExactBoxType& box, Nat fineness);
-Void adjoin_lower_approximation(LabelledAugmentedPavingValue& pavings,
+Void adjoin_lower_approximation(LabelledAugmentedPaving& pavings,
                                 const EffectiveEuclideanOvertSetInterface& set, Nat extent, Nat fineness);
-Void adjoin_inner_approximation(LabelledAugmentedPavingValue& pavings,
+Void adjoin_inner_approximation(LabelledAugmentedPaving& pavings,
                                 const EffectiveEuclideanSetInterface& set, Nat fineness);
-Void restrict_to_extent(LabelledAugmentedPavingValue& pavings, Nat extent);
-Void mince(LabelledAugmentedPavingValue& pavings, Nat fineness);
-Void recombine(LabelledAugmentedPavingValue& pavings);
-Bool is_empty(const LabelledAugmentedPavingValue& pavings);
+Void restrict_to_extent(LabelledAugmentedPaving& pavings, Nat extent);
+Void mince(LabelledAugmentedPaving& pavings, Nat fineness);
+Void recombine(LabelledAugmentedPaving& pavings);
+Bool is_empty(const LabelledAugmentedPaving& pavings);
 
 Paving inner_approximation(const EffectiveEuclideanSetInterface& set,
                            const LabelledValue<Grid>& grid, Nat fineness);

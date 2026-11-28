@@ -43,7 +43,7 @@ namespace Ariadne::PavingDrawing {
 // as the legacy joined space. An empty location filter selects all
 // materialised locations, as with the legacy draw.
 inline Void draw(CanvasInterface& canvas, const Set<DiscreteLocation>& locations,
-                 const Variables2d& axes, const HybridAugmentedPavingValue& pavings) {
+                 const Variables2d& axes, const HybridAugmentedPaving& pavings) {
     for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
         if (not locations.empty() and not locations.contains(iter->first))
             continue;

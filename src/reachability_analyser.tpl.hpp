@@ -78,8 +78,8 @@ namespace ReasoningDetail {
 // functions on the generic value storages; dispatch on the storage type.
 template<class STORAGE>
 inline constexpr bool is_value_storage_v =
-    std::is_same_v<STORAGE, HybridAugmentedPavingValue> ||
-    std::is_same_v<STORAGE, LabelledAugmentedPavingValue>;
+    std::is_same_v<STORAGE, HybridAugmentedPaving> ||
+    std::is_same_v<STORAGE, LabelledAugmentedPaving>;
 
 template<class STORAGE, class SET>
 Void storage_adjoin_lower_approximation(STORAGE& storage, const SET& set, Nat extent, Nat fineness) {
@@ -155,7 +155,7 @@ Bool storage_is_empty(const STORAGE& storage) {
 
 template<class STORAGE>
 const auto& storage_for_log(const STORAGE& storage) {
-    if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>)
+    if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPaving>)
         return storage.value();
     else
         return storage;
@@ -171,7 +171,7 @@ const auto& storage_grid_for_log(const GRID& grid) {
 
 template<class STORAGE>
 SizeType storage_size(const STORAGE& storage) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPaving>)
         return storage.size();
     else
         return storage.value().size();
@@ -181,11 +181,11 @@ SizeType storage_size(const STORAGE& storage) {
 // Hybrid values iterate the cells of their per-location state pavings.
 template<class STORAGE>
 auto first_storage_cell_box(const STORAGE& cells) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>) {
+    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPaving>) {
         auto loc = cells.begin();
         auto cell = loc->second.state_paving().begin();
         return HybridExactBox(loc->first, cells.space()[loc->first], cell->box());
-    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>) {
+    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPaving>) {
         return cells.value().begin()->box();
     } else {
         return cells.begin()->box();
@@ -197,14 +197,14 @@ using StorageCellBox = std::decay_t<decltype(first_storage_cell_box(std::declval
 
 template<class STORAGE, class FN>
 Void for_each_storage_cell(const STORAGE& cells, FN&& fn) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>) {
+    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPaving>) {
         for (auto iter = cells.begin(); iter != cells.end(); ++iter) {
             const DiscreteLocation location = iter->first;
             const RealSpace space = cells.space()[location];
             for (const auto& cell: iter->second.state_paving())
                 fn(HybridExactBox(location, space, cell.box()));
         }
-    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>) {
+    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPaving>) {
         for (const auto& cell: cells.value())
             fn(cell.box());
     } else {
@@ -337,7 +337,7 @@ Void ReachabilityAnalyser<SYS>::
     // Orbit evolution remains concurrent in both cases.
     std::mutex hybrid_adjoin_mutex;
     auto adjoin_incrementally = [&](const auto& enclosure, StorageType& target) {
-        if constexpr (std::is_same_v<StorageType, HybridAugmentedPavingValue>) {
+        if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             std::lock_guard<std::mutex> lock(hybrid_adjoin_mutex);
             adjoin_outer_approximation_to(enclosure, target, accuracy, this->_configuration->paver());
         } else {
@@ -657,7 +657,7 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin(accumulated_evolve_cells, found_cells);
         LOGGING_PRINTLN_AT(1, "computing " << i + 1u << "-th reachability step...");
         this->_adjoin_upper_reach_evolve(found_cells, evolve_cells, evolve_cells, lock_to_grid_time, grid_fineness, *_evolver);
-        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPavingValue>)
+        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPaving>)
             LOGGING_PRINTLN_AT(1, "evolve bounding box = " << evolve_cells.value().state_paving().bounding_box());
         LOGGING_PRINTLN_AT(1, "found.size()=" << ReasoningDetail::storage_size(found_cells));
         LOGGING_PRINTLN_AT(1, "evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
@@ -805,7 +805,7 @@ auto ReachabilityAnalyser<SYS>::
     const RegularLocatedSetInterfaceType* bounded_safe_set_ptr = dynamic_cast<const RegularLocatedSetInterfaceType*>(&safe_set);
     const GridType& grid = this->_configuration->grid();
     auto make_safe_cells = [&]() -> StorageType {
-        if constexpr (std::is_same_v<StorageType, HybridAugmentedPavingValue>) {
+        if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             const Hybrid<Paving> safe_state = inner_approximation(
                 *bounded_safe_set_ptr, grid,
                 [](const Grid& g) { return Paving(new BinaryTreePaving(g)); },

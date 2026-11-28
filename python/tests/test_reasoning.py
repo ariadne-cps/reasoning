@@ -2,8 +2,8 @@
 import pyariadne_reasoning as a
 
 def test_reasoning_bindings():
-    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPavingValue",
-                 "LabelledAugmentedPavingValue",
+    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPaving",
+                 "LabelledAugmentedPaving",
                  "ContinuousReachabilityAnalyser", "SafetyCertificate", "GeneralHybridEvolver",
                  "HybridBoundedConstraintSet", "HybridSafetyCertificate",
                  "HybridReachabilityAnalyser", "HybridReachabilityAnalyserConfiguration",
@@ -30,15 +30,15 @@ def test_generic_labelled_paving_values():
     grid = a.Grid(2)
 
     labelled_grid = a.make_labelled_grid(grid, space)
-    assert isinstance(labelled_grid, a.LabelledGridValue)
+    assert isinstance(labelled_grid, a.LabelledGrid)
     assert labelled_grid.space().dimension() == 2
     assert labelled_grid.value().dimension() == 2
-    assert a.LabelledGridValue(grid, space).value().dimension() == 2
+    assert a.LabelledGrid(grid, space).value().dimension() == 2
 
     cell = a.GridCell(grid, 0, a.BinaryWord(""))
     original_tree = a.Paving.tree(grid)
     labelled_tree = a.make_labelled_paving(original_tree, space)
-    assert isinstance(labelled_tree, a.LabelledPavingValue)
+    assert isinstance(labelled_tree, a.LabelledPaving)
     assert labelled_tree.value().is_empty()
     labelled_tree.value().adjoin(cell)
     assert labelled_tree.value().superset(cell)
@@ -47,7 +47,7 @@ def test_generic_labelled_paving_values():
 
     manager = a.RobddManager()
     original_robdd = a.Paving.robdd(grid, manager)
-    labelled_robdd = a.LabelledPavingValue(original_robdd, space)
+    labelled_robdd = a.LabelledPaving(original_robdd, space)
     assert labelled_robdd.value().is_empty()
     labelled_robdd.value().adjoin(cell)
     assert labelled_robdd.value().superset(cell)

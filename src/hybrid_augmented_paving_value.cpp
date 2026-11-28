@@ -40,21 +40,21 @@
 
 namespace Ariadne {
 
-HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
-                                                              const HybridAutomatonInterface& system) {
-    return make_hybrid_augmented_paving_value(
+HybridAugmentedPaving make_hybrid_augmented_paving(const Hybrid<Grid>& grids,
+                                                   const HybridAutomatonInterface& system) {
+    return make_hybrid_augmented_paving(
         grids, system, [](const Grid& grid) { return Paving(new BinaryTreePaving(grid)); });
 }
 
-HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
-                                                              const HybridAutomatonInterface& system,
-                                                              std::function<Paving(const Grid&)> backend) {
+HybridAugmentedPaving make_hybrid_augmented_paving(const Hybrid<Grid>& grids,
+                                                   const HybridAutomatonInterface& system,
+                                                   std::function<Paving(const Grid&)> backend) {
     if (not backend)
         throw std::invalid_argument("Empty paving backend factory");
     const HybridSpace space = system.state_space();
     ARIADNE_PRECONDITION(possibly(grids.space() == space));
     HybridAuxiliaryMapping mapping = make_hybrid_auxiliary_mapping(system);
-    return HybridAugmentedPavingValue(
+    return HybridAugmentedPaving(
         space,
         [grids = grids, mapping = std::move(mapping), backend = std::move(backend)](
             const DiscreteLocation& location, const RealSpace& real_space) mutable {
@@ -63,10 +63,10 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>
         });
 }
 
-HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Paving>& state,
-                                                              const HybridAuxiliaryMapping& mapping) {
+HybridAugmentedPaving make_hybrid_augmented_paving(const Hybrid<Paving>& state,
+                                                   const HybridAuxiliaryMapping& mapping) {
     const HybridSpace space = state.space();
-    HybridAugmentedPavingValue result(
+    HybridAugmentedPaving result(
         space,
         [state = state, mapping = mapping](const DiscreteLocation& location, const RealSpace& real_space) mutable {
             ARIADNE_PRECONDITION(state.space()[location] == real_space);
@@ -78,19 +78,19 @@ HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Pavin
     return result;
 }
 
-Void adjoin(HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right) {
+Void adjoin(HybridAugmentedPaving& left, const HybridAugmentedPaving& right) {
     for (auto iter = right.begin(); iter != right.end(); ++iter) {
         left[iter->first].adjoin(iter->second);
     }
 }
 
-Void remove(HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right) {
+Void remove(HybridAugmentedPaving& left, const HybridAugmentedPaving& right) {
     for (auto iter = right.begin(); iter != right.end(); ++iter) {
         left[iter->first].remove(iter->second);
     }
 }
 
-Void restrict(HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right) {
+Void restrict(HybridAugmentedPaving& left, const HybridAugmentedPaving& right) {
     for (auto iter = left.begin(); iter != left.end(); ++iter) {
         if (not right.has_value(iter->first)) {
             iter->second.clear();
@@ -100,7 +100,7 @@ Void restrict(HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue
     }
 }
 
-Bool subset(const HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right) {
+Bool subset(const HybridAugmentedPaving& left, const HybridAugmentedPaving& right) {
     for (auto iter = left.begin(); iter != left.end(); ++iter) {
         if (iter->second.is_empty())
             continue;
@@ -112,7 +112,7 @@ Bool subset(const HybridAugmentedPavingValue& left, const HybridAugmentedPavingV
     return true;
 }
 
-Bool intersect(const HybridAugmentedPavingValue& left, const HybridAugmentedPavingValue& right) {
+Bool intersect(const HybridAugmentedPaving& left, const HybridAugmentedPaving& right) {
     for (auto iter = left.begin(); iter != left.end(); ++iter) {
         if (iter->second.is_empty() || not right.has_value(iter->first))
             continue;
@@ -122,7 +122,7 @@ Bool intersect(const HybridAugmentedPavingValue& left, const HybridAugmentedPavi
     return false;
 }
 
-Void adjoin_lower_approximation(HybridAugmentedPavingValue& pavings,
+Void adjoin_lower_approximation(HybridAugmentedPaving& pavings,
                                 const EffectiveHybridOvertSetInterface& set, Nat extent, Nat fineness) {
     const Set<DiscreteLocation> locations =
         dynamic_cast<const EffectiveHybridBoundedSetInterface&>(set).locations();
@@ -133,7 +133,7 @@ Void adjoin_lower_approximation(HybridAugmentedPavingValue& pavings,
     }
 }
 
-Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+Void adjoin_outer_approximation(HybridAugmentedPaving& pavings,
                                 const EffectiveHybridCompactSetInterface& set, Nat fineness) {
     for (const DiscreteLocation& location: set.locations()) {
         ARIADNE_PRECONDITION(pavings.has_location(location));
@@ -142,7 +142,7 @@ Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
     }
 }
 
-Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
+Void adjoin_outer_approximation(HybridAugmentedPaving& pavings,
                                 const HybridExactBoxes& boxes, Nat fineness) {
     for (auto iter = boxes.begin(); iter != boxes.end(); ++iter) {
         const DiscreteLocation& location = iter->first;
@@ -153,25 +153,25 @@ Void adjoin_outer_approximation(HybridAugmentedPavingValue& pavings,
     }
 }
 
-Void restrict_to_extent(HybridAugmentedPavingValue& pavings, Nat extent) {
+Void restrict_to_extent(HybridAugmentedPaving& pavings, Nat extent) {
     for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
         iter->second.state_paving().restrict_to_extent(extent);
     }
 }
 
-Void mince(HybridAugmentedPavingValue& pavings, Nat fineness) {
+Void mince(HybridAugmentedPaving& pavings, Nat fineness) {
     for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
         iter->second.mince(fineness);
     }
 }
 
-Void recombine(HybridAugmentedPavingValue& pavings) {
+Void recombine(HybridAugmentedPaving& pavings) {
     for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
         iter->second.recombine();
     }
 }
 
-Bool is_empty(const HybridAugmentedPavingValue& pavings) {
+Bool is_empty(const HybridAugmentedPaving& pavings) {
     for (auto iter = pavings.begin(); iter != pavings.end(); ++iter) {
         if (not iter->second.is_empty())
             return false;
@@ -179,7 +179,7 @@ Bool is_empty(const HybridAugmentedPavingValue& pavings) {
     return true;
 }
 
-Void adjoin_inner_approximation(HybridAugmentedPavingValue& pavings,
+Void adjoin_inner_approximation(HybridAugmentedPaving& pavings,
                                 const EffectiveHybridSetInterface& set, Nat fineness) {
     for (const DiscreteLocation& location: set.locations()) {
         ARIADNE_PRECONDITION(pavings.has_location(location));

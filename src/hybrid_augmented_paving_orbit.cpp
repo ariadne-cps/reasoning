@@ -30,24 +30,24 @@
 
 namespace Ariadne {
 
-struct Orbit<HybridAugmentedPavingValue>::Data {
-    HybridAugmentedPavingValue initial;
-    HybridAugmentedPavingValue reach;
-    HybridAugmentedPavingValue intermediate;
-    HybridAugmentedPavingValue final;
+struct Orbit<HybridAugmentedPaving>::Data {
+    HybridAugmentedPaving initial;
+    HybridAugmentedPaving reach;
+    HybridAugmentedPaving intermediate;
+    HybridAugmentedPaving final;
 };
 
-Orbit<HybridAugmentedPavingValue>::
-    Orbit(const HybridAugmentedPavingValue& initial_set)
+Orbit<HybridAugmentedPaving>::
+    Orbit(const HybridAugmentedPaving& initial_set)
     : _data(new Data()) {
     this->_data->initial = initial_set;
 }
 
-Orbit<HybridAugmentedPavingValue>::
-    Orbit(const HybridAugmentedPavingValue& initial_set,
-          const HybridAugmentedPavingValue& reach_set,
-          const HybridAugmentedPavingValue& intermediate_set,
-          const HybridAugmentedPavingValue& final_set)
+Orbit<HybridAugmentedPaving>::
+    Orbit(const HybridAugmentedPaving& initial_set,
+          const HybridAugmentedPaving& reach_set,
+          const HybridAugmentedPaving& intermediate_set,
+          const HybridAugmentedPaving& final_set)
     : _data(new Data()) {
     this->_data->initial = initial_set;
     this->_data->reach = reach_set;
@@ -55,26 +55,26 @@ Orbit<HybridAugmentedPavingValue>::
     this->_data->final = final_set;
 }
 
-const HybridAugmentedPavingValue&
-    Orbit<HybridAugmentedPavingValue>::
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
         initial() const {
     return this->_data->initial;
 }
 
-const HybridAugmentedPavingValue&
-    Orbit<HybridAugmentedPavingValue>::
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
         reach() const {
     return this->_data->reach;
 }
 
-const HybridAugmentedPavingValue&
-    Orbit<HybridAugmentedPavingValue>::
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
         intermediate() const {
     return this->_data->intermediate;
 }
 
-const HybridAugmentedPavingValue&
-    Orbit<HybridAugmentedPavingValue>::
+const HybridAugmentedPaving&
+    Orbit<HybridAugmentedPaving>::
         final() const {
     return this->_data->final;
 }

@@ -199,7 +199,7 @@ class TestAugmentedPaving : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(ls1.value().is_empty());
 
         ls1.value().adjoin_outer_approximation(box, 2u);
-        const LabelledAugmentedPavingValue copy(ls1);
+        const LabelledAugmentedPaving copy(ls1);
         ARIADNE_TESTING_PROVE(copy.value().size() == ls1.value().size());
         PavingDrawing::LabelledAugmentedPavingValueDrawable drawable(ls1);
         std::unique_ptr<LabelledDrawable2dInterface> lcopy(drawable.labelled_clone());

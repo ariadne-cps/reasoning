@@ -64,13 +64,13 @@ class HybridAutomaton;
 template<>
 struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
-    HybridAugmentedPavingValue chain_reach_set;
-    HybridAugmentedPavingValue safe_set;
+    HybridAugmentedPaving chain_reach_set;
+    HybridAugmentedPaving safe_set;
 
     /** @brief Return an owning generic snapshot of the chain-reachable set. */
-    HybridAugmentedPavingValue chain_reach_value() const;
+    HybridAugmentedPaving chain_reach_value() const;
     /** @brief Return an owning generic snapshot of the safe set. */
-    HybridAugmentedPavingValue safe_value() const;
+    HybridAugmentedPaving safe_value() const;
 };
 
 using HybridSafetyCertificate = SafetyCertificate<HybridSpace>;
@@ -107,48 +107,48 @@ class HybridReachabilityAnalyser
     //! accessors return the analyser results directly.
 
     //! \brief Generic snapshot of a lower-approximation to the evolved set.
-    HybridAugmentedPavingValue lower_evolve_value(const OvertSetInterfaceType& initial_set,
-                                                  const TimeType& time) const {
+    HybridAugmentedPaving lower_evolve_value(const OvertSetInterfaceType& initial_set,
+                                             const TimeType& time) const {
         return lower_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshots of lower reachable and evolved sets.
-    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+    Pair<HybridAugmentedPaving, HybridAugmentedPaving>
         lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const {
         return lower_reach_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshot of a lower-approximation to the reachable set up to \a time.
-    HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set,
-                                                 const TimeType& time) const {
+    HybridAugmentedPaving lower_reach_value(const OvertSetInterfaceType& initial_set,
+                                            const TimeType& time) const {
         return lower_reach(initial_set, time);
     }
 
     //! \brief Generic snapshot of an infinite-time lower reachable set.
-    HybridAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const {
+    HybridAugmentedPaving lower_reach_value(const OvertSetInterfaceType& initial_set) const {
         return lower_reach(initial_set);
     }
 
     //! \brief Generic snapshot of an upper-approximation to the evolved set.
-    HybridAugmentedPavingValue upper_evolve_value(const CompactSetInterfaceType& initial_set,
-                                                  const TimeType& time) const {
+    HybridAugmentedPaving upper_evolve_value(const CompactSetInterfaceType& initial_set,
+                                             const TimeType& time) const {
         return upper_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshots of upper reachable and evolved sets.
-    Pair<HybridAugmentedPavingValue, HybridAugmentedPavingValue>
+    Pair<HybridAugmentedPaving, HybridAugmentedPaving>
         upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const {
         return upper_reach_evolve(initial_set, time);
     }
 
     //! \brief Generic snapshot of an upper-approximation to the reachable set up to \a time.
-    HybridAugmentedPavingValue upper_reach_value(const CompactSetInterfaceType& initial_set,
-                                                 const TimeType& time) const {
+    HybridAugmentedPaving upper_reach_value(const CompactSetInterfaceType& initial_set,
+                                            const TimeType& time) const {
         return upper_reach(initial_set, time);
     }
 
     //! \brief Generic snapshot of the outer chain-reachable set.
-    HybridAugmentedPavingValue outer_chain_reach_value(const CompactSetInterfaceType& initial_set) const {
+    HybridAugmentedPaving outer_chain_reach_value(const CompactSetInterfaceType& initial_set) const {
         return outer_chain_reach(initial_set);
     }
     //!@}

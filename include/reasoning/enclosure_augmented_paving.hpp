@@ -57,7 +57,7 @@ AugmentedPaving outer_approximation(const Enclosure& enclosure, const Grid& grid
  */
 /** @brief Add a validated outer approximation of a continuous enclosure to a
  *  labelled augmented paving value, adjoining only its state paving. */
-Void adjoin_outer_approximation_to(const Enclosure& enclosure, LabelledAugmentedPavingValue& pavings, Nat fineness, const Paver& paver);
+Void adjoin_outer_approximation_to(const Enclosure& enclosure, LabelledAugmentedPaving& pavings, Nat fineness, const Paver& paver);
 
 Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Paving>& pavings, Nat fineness, const Paver& paver);
 
@@ -65,7 +65,7 @@ Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, Hybrid<Pavi
  *  location-indexed augmented paving family, adjoining only the state paving
  *  as in the legacy augmented adapter.
  */
-Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPavingValue& pavings, Nat fineness, const Paver& paver);
+Void adjoin_outer_approximation_to(const HybridEnclosure& enclosure, HybridAugmentedPaving& pavings, Nat fineness, const Paver& paver);
 
 } // namespace Ariadne
 

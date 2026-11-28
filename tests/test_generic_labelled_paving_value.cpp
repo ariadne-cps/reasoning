@@ -101,7 +101,7 @@ class TestGenericLabelledPavingValue : public Ariadne::Testing::ContextFixture {
         const Paving original(new RobddPaving(robdd));
         const auto labelled = make_labelled_augmented_paving(
             AugmentedPaving(original, mapping), state, auxiliary);
-        const LabelledAugmentedPavingValue copy(labelled);
+        const LabelledAugmentedPaving copy(labelled);
         ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const RobddPaving*>(
