@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/parallel_reachability.hpp
+ *            src/hybrid_grid.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,25 +22,31 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/parallel_reachability.hpp
- *  @brief Parallel reachability lane execution and rounding-mode validation.
+/** @file src/hybrid_grid.cpp
+ *  @brief Materialize generic hybrid grids from lazy scaling values.
  */
 
-#ifndef ARIADNE_REASONING_PARALLEL_REACHABILITY_HPP
-#define ARIADNE_REASONING_PARALLEL_REACHABILITY_HPP
+#include <utility>
 
-#include <cstddef>
-#include <functional>
+#include "algebra/vector.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 
 namespace Ariadne {
-/** @brief Thread manager used for parallel reachability execution. */
-class ThreadManager;
-namespace ReasoningDetail {
-/** @brief Check the floating-point rounding mode required by reachability workers. */
-int require_caller_rounding_mode(int mode);
-/** @brief Execute independent reachability lanes using the supplied thread manager. */
-void run_reachability_lanes(std::size_t count,
-                            const std::function<void(std::size_t)>& process, ThreadManager& threading);
-} // namespace ReasoningDetail
+
+Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space) {
+    Vector<ExactDouble> lengths(space.dimension(), 1.0_x);
+    for (SizeType axis = 0; axis < space.dimension(); ++axis) {
+        lengths[axis] = scalings.scaling(space[axis]);
+    }
+    return Grid(lengths);
+}
+
+Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalings) {
+    return Hybrid<Grid>(std::move(space),
+                        [scalings = std::move(scalings)](const DiscreteLocation& location,
+                                                         const RealSpace& real_space) mutable {
+                            return grid_from_scalings(scalings[location], real_space);
+                        });
+}
+
 } // namespace Ariadne
-#endif

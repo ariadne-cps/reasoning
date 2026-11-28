@@ -29,7 +29,7 @@
 #include <memory>
 #include <utility>
 
-#include "reasoning/analysis_paving_factory.hpp"
+#include "analysis_paving_factory.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {

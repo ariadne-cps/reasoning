@@ -1,7 +1,7 @@
 /***************************************************************************
- *            test_hybrid_augmented_paving.cpp
+ *            tests/test_hybrid_augmented_paving.cpp
  *
- *  Copyright  2006-20  Luca Geretti
+ *  Copyright  2026  Luca Geretti
  *
  ****************************************************************************/
 
@@ -15,52 +15,71 @@
  *
  *  Ariadne Reasoning is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Ariadne Reasoning.  If not, see <https://www.gnu.org/licenses/>.
+ *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
 /** @file tests/test_hybrid_augmented_paving.cpp
- *  @brief Test hybrid augmented paving semantics and regressions.
+ *  @brief Generic HybridAugmentedPaving snapshots, orbits and flattened drawing.
  */
 
 #include <iostream>
 #include <memory>
 #include <sstream>
 
-#include "algebra/vector.hpp"
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "function/function.hpp"
 #include "geometry/box.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
-#include "hybrid/hybrid_augmented_paving_draw.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
-#include "hybrid/hybrid_paving.hpp"
+#include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_set.hpp"
-#include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/numeric.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "paving/binary_tree_paving.hpp"
+#include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_orbit.hpp"
-#include "reasoning/hybrid_augmented_paving_orbit_draw.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_augmented_paving_value_drawing.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
+#include "reasoning/labelled_paving_value.hpp"
+#include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"
-#include "utility/tuple.hpp"
 
 #include "ariadne-testing.hpp"
 
 using namespace Ariadne;
 using namespace std;
 
+// Count the Euclidean boundaries emitted by a location-filtered rendering.
+class FlattenedPavingCanvas final : public NullCanvas {
+  public:
+    Nat boundaries = 0u;
+    Void fill_boundary(const List<Point2d>&) override { ++boundaries; }
+};
+
 class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
     RealVariable x;
     RealVariable y;
     DiscreteLocation q;
     HybridAutomaton system;
+
+    static Hybrid<Scalings> unit_scalings(const HybridSpace& space) {
+        return Hybrid<Scalings>(space, [](const DiscreteLocation&, const RealSpace&) {
+            return Scalings(1.0_x, Map<RealVariable, ExactDouble>{});
+        });
+    }
+
+    HybridAugmentedPaving make_value(const std::function<Paving(const Grid&)>& backend) const {
+        Hybrid<Grid> grids = make_hybrid_grids(system.state_space(), unit_scalings(system.state_space()));
+        return make_hybrid_augmented_paving(grids, system, backend);
+    }
 
   public:
     using ContextFixture::ContextFixture;
@@ -72,40 +91,18 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
         system.new_mode(q, {dot(x) = -x, dot(y) = -y});
     }
 
-    Void test_hybrid_augmented_paving_interface() {
-        HybridGrid grid(system.state_space());
-        HybridPaving hgtp(grid);
-        HybridAugmentedPaving from_grid = make_analysis_paving<HybridAugmentedPaving>(grid, system);
-        // Construct independently from the originating automaton.
-        LabelledMapping explicit_mapping(system.continuous_state_space(q),
-                                         system.auxiliary_function(q),
-                                         system.continuous_auxiliary_space(q));
-        HybridAuxiliaryMapping auxiliary(system.state_auxiliary_space(),
-                                         [explicit_mapping](const DiscreteLocation&) { return explicit_mapping; });
-        HybridAugmentedPaving independent(grid, auxiliary);
-        ARIADNE_TESTING_PROVE(independent.auxiliary_mapping(q).argument_space() ==
-                              system.continuous_state_space(q));
-        HybridAugmentedPaving from_paving = make_analysis_paving<HybridAugmentedPaving>(hgtp, system);
-        // Backend selection survives the augmented wrapper and copies.
+    Void test_hybrid_augmented_paving_value_interface() {
         auto manager = std::make_shared<RobddManager>();
-        HybridPaving robdd_grid(grid, manager);
-        HybridAugmentedPaving robdd_storage(
-            robdd_grid, make_hybrid_auxiliary_mapping(system));
-        robdd_storage.adjoin_outer_approximation(
-            HybridBoundedConstraintSet(q, {0.9_dec <= x <= 1.1_dec,
-                                           0.9_dec <= y <= 1.1_dec}),
-            2u);
-        ARIADNE_TESTING_PROVE(robdd_storage.size() > 0u);
-        ARIADNE_TESTING_PROVE(
-            dynamic_cast<const RobddPaving*>(&static_cast<const PavingInterface&>(
-                robdd_storage.state_paving()[q])) != nullptr);
+        std::function<Paving(const Grid&)> robdd_backend =
+            [manager](const Grid& selected) { return Paving(new RobddPaving(manager, selected)); };
+        std::function<Paving(const Grid&)> tree_backend =
+            [](const Grid& selected) { return Paving(new BinaryTreePaving(selected)); };
 
-        ARIADNE_TESTING_PROVE(from_grid.is_empty());
-        ARIADNE_TESTING_EXPECT_EQUAL(from_grid.size(), 0u);
-        ARIADNE_TESTING_PROVE(from_grid.begin() == from_grid.end());
-        ARIADNE_TESTING_PROVE(from_grid.auxiliary_data().state_auxiliary_space()[q] == system.state_auxiliary_space()[q]);
-        ARIADNE_TESTING_PROVE(from_grid.grid().space() == grid.space());
-        ARIADNE_TESTING_PROVE(from_grid.auxiliary_mapping(q).argument_space() == system.continuous_state_space(q));
+        HybridAugmentedPaving storage = make_value(robdd_backend);
+        ARIADNE_TESTING_PROVE(Ariadne::is_empty(storage));
+        ARIADNE_TESTING_EXPECT_EQUAL(storage.size(), 0u);
+        ARIADNE_TESTING_PROVE(storage.begin() == storage.end());
+        ARIADNE_TESTING_PROVE(storage.space() == system.state_space());
 
         HybridBoundedConstraintSet initial(q, {0.9_dec <= x <= 1.1_dec, 0.9_dec <= y <= 1.1_dec});
         HybridExactBoxes boxes;
@@ -114,88 +111,147 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
                                                               {-2, 2}
         }));
 
-        from_grid.adjoin_outer_approximation(initial, 2u);
-        ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
-        from_grid.adjoin_outer_approximation(boxes, 2u);
-        from_grid.adjoin_lower_approximation(initial, 4u, 3u);
-        ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
+        Ariadne::adjoin_outer_approximation(storage, initial, 2u);
+        ARIADNE_TESTING_PROVE(storage.size() > 0u);
+        Ariadne::adjoin_outer_approximation(storage, boxes, 2u);
+        Ariadne::adjoin_lower_approximation(storage, initial, 4u, 3u);
+        ARIADNE_TESTING_PROVE(storage.size() > 0u);
+        ARIADNE_TESTING_PROVE(storage[q].size() > 0u);
+        // Backend selection survives in the materialized slice.
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(&static_cast<const PavingInterface&>(
+                storage[q].state_paving())) != nullptr);
 
-        HybridPaving& state_set = from_grid.state_paving();
-        ARIADNE_TESTING_PROVE(&state_set == &from_grid.state_set());
-        const HybridAugmentedPaving& const_storage = from_grid;
-        const HybridPaving& const_state_set = const_storage.state_paving();
-        ARIADNE_TESTING_PROVE(&const_state_set == &const_storage.state_set());
-        ARIADNE_TESTING_PROVE(state_set.size() == const_state_set.size());
-        ARIADNE_TESTING_PROVE(const_storage.begin() != const_storage.end());
+        // Read-only slice as an owning generic labelled value snapshot.
+        const LabelledAugmentedPaving slice =
+            make_labelled_augmented_paving(storage[q], system.continuous_state_space(q),
+                                           system.continuous_auxiliary_space(q));
+        const LabelledAugmentedPaving copied_slice(slice);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(slice), system.continuous_state_space(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(slice), system.continuous_auxiliary_space(q));
+        ARIADNE_TESTING_PROVE(copied_slice.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(
+                    copied_slice.value().state_paving())) != nullptr);
 
-        HybridPaving auxiliary_set = from_grid.state_auxiliary_paving();
-        ARIADNE_TESTING_PROVE(auxiliary_set.size() > 0u);
-        independent.adjoin_outer_approximation(initial, 2u);
-        ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().size() > 0u);
-        ARIADNE_TESTING_PROVE(independent.state_auxiliary_paving().space(q) ==
-                              system.state_auxiliary_space()[q]);
-        const HybridAugmentedPaving& const_independent = independent;
-        LabelledAugmentedPaving labelled_view = const_independent[q];
-        ARIADNE_TESTING_PROVE(labelled_view.size() == independent.size());
+        HybridAugmentedPaving other = make_value(robdd_backend);
+        ARIADNE_TESTING_PROVE(Ariadne::subset(other, storage));
+        Ariadne::adjoin(other, storage);
+        ARIADNE_TESTING_PROVE(other.size() == storage.size());
+        ARIADNE_TESTING_PROVE(Ariadne::intersect(other, storage));
+        Ariadne::restrict(other, storage);
+        Ariadne::remove(other, storage);
+        ARIADNE_TESTING_PROVE(Ariadne::is_empty(other));
 
-        ARIADNE_TESTING_PROVE(subset(from_paving, from_grid));
-        from_paving.adjoin(from_grid);
-        ARIADNE_TESTING_PROVE(from_paving.size() == from_grid.size());
-        ARIADNE_TESTING_PROVE(intersect(from_paving, from_grid));
-        from_paving.restrict(from_grid);
-        from_paving.remove(from_grid);
-        ARIADNE_TESTING_PROVE(from_paving.is_empty());
+        Ariadne::restrict_to_extent(storage, 4u);
+        Ariadne::mince(storage, 3u);
+        Ariadne::recombine(storage);
+        ARIADNE_TESTING_PROVE(storage.size() > 0u);
 
-        from_grid.restrict_to_extent(4u);
-        from_grid.mince(3u);
-        from_grid.recombine();
-        ARIADNE_TESTING_PROVE(from_grid.size() > 0u);
+        // Snapshot the occupied location; it must retain its cells after the
+        // original is cleared.
+        const LabelledAugmentedPaving snapshot =
+            make_labelled_augmented_paving(storage[q], system.continuous_state_space(q),
+                                           system.continuous_auxiliary_space(q));
+        const SizeType snapshot_size = snapshot.value().size();
+        ARIADNE_TESTING_PROVE(snapshot_size > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(snapshot_size, storage[q].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(snapshot), system.continuous_state_space(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(snapshot), system.continuous_auxiliary_space(q));
 
-        auto element = from_grid[q];
-        LabelledAugmentedPaving labelled = element;
-        ARIADNE_TESTING_PROVE(labelled.size() == from_grid.size());
-        element.clear();
-        ARIADNE_TESTING_PROVE(from_grid.is_empty());
+        // The whole-family copy keeps every materialized location, its backend
+        // and its auxiliary mapping; generic set operations do not mutate the original.
+        const HybridAugmentedPaving family(storage);
+        ARIADNE_TESTING_PROVE(family.size() == storage.size());
+        ARIADNE_TESTING_PROVE(family.has_value(q));
+        ARIADNE_TESTING_EXPECT_EQUAL(family[q].size(), storage[q].size());
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(family[q].state_paving())) != nullptr);
+        ARIADNE_TESTING_PROVE(Ariadne::subset(family, family));
+        ARIADNE_TESTING_PROVE(Ariadne::intersect(family, family));
+        HybridAugmentedPaving family_copy = family;
+        Ariadne::remove(family_copy, family);
+        ARIADNE_TESTING_PROVE(family_copy.has_value(q));
+        ARIADNE_TESTING_PROVE(family_copy[q].is_empty());
+        ARIADNE_TESTING_PROVE(not Ariadne::is_empty(storage));
 
-        from_grid.adjoin_outer_approximation(initial, 2u);
-        NullCanvas canvas;
+        // Clear the location directly on the state paving.
+        storage[q].state_paving().clear();
+        ARIADNE_TESTING_PROVE(Ariadne::is_empty(storage));
+        ARIADNE_TESTING_EXPECT_EQUAL(snapshot.value().size(), snapshot_size);
+        ARIADNE_TESTING_PROVE(not snapshot.value().is_empty());
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const RobddPaving*>(
+                &static_cast<const PavingInterface&>(snapshot.value().state_paving())) != nullptr);
+
+        // The generic value draws the flattened state-auxiliary pavings per location.
+        Ariadne::adjoin_outer_approximation(storage, initial, 2u);
+        ARIADNE_TESTING_PROVE(storage.size() > 0u);
         Set<DiscreteLocation> locations{q};
-        draw(canvas, locations, Variables2d(x, y), from_grid);
-        HybridAugmentedPavingDrawable drawable(from_grid);
-        const HybridDrawableInterface& drawable_interface = drawable;
-        drawable_interface.draw(canvas, locations, Variables2d(x, y));
+        FlattenedPavingCanvas selected_canvas;
+        PavingDrawing::draw(selected_canvas, locations, Variables2d(x, y), storage);
+        ARIADNE_TESTING_PROVE(selected_canvas.boundaries > 0u);
+        FlattenedPavingCanvas all_canvas;
+        PavingDrawing::draw(all_canvas, Set<DiscreteLocation>{}, Variables2d(x, y), storage);
+        ARIADNE_TESTING_EXPECT_EQUAL(all_canvas.boundaries, selected_canvas.boundaries);
+        FlattenedPavingCanvas excluded_canvas;
+        PavingDrawing::draw(excluded_canvas, Set<DiscreteLocation>{DiscreteLocation(1)},
+                            Variables2d(x, y), storage);
+        ARIADNE_TESTING_EXPECT_EQUAL(excluded_canvas.boundaries, 0u);
 
-        ARIADNE_TESTING_NOTE(from_grid);
+        // The same projection drawn directly from the flattened state-auxiliary slice.
+        FlattenedPavingCanvas direct_canvas;
+        const BinaryTreePaving slice_paving = storage[q].state_auxiliary_paving();
+        const RealSpace state_space = system.continuous_state_space(q);
+        const Projection2d projection(slice_paving.grid().dimension(),
+                                      state_space.index(x), state_space.index(y));
+        PavingDrawing::draw(direct_canvas, projection, static_cast<const SubPavingInterface&>(slice_paving));
+        ARIADNE_TESTING_EXPECT_EQUAL(direct_canvas.boundaries, selected_canvas.boundaries);
 
-        from_grid.clear();
-        ARIADNE_TESTING_PROVE(from_grid.is_empty());
+        ARIADNE_TESTING_NOTE(storage);
+
+        storage[q].state_paving().clear();
+        ARIADNE_TESTING_PROVE(Ariadne::is_empty(storage));
     }
 
-    Void test_hybrid_augmented_paving_orbit() {
-        HybridGrid grid(system.state_space());
-        HybridAugmentedPaving initial = make_analysis_paving<HybridAugmentedPaving>(grid, system);
+    Void test_hybrid_augmented_paving_value_orbit() {
+        std::function<Paving(const Grid&)> tree_backend =
+            [](const Grid& selected) { return Paving(new BinaryTreePaving(selected)); };
+        HybridAugmentedPaving initial = make_value(tree_backend);
         HybridBoundedConstraintSet initial_set(q, {0.9_dec <= x <= 1.1_dec, 0.9_dec <= y <= 1.1_dec});
-        initial.adjoin_outer_approximation(initial_set, 2u);
+        Ariadne::adjoin_outer_approximation(initial, initial_set, 2u);
 
         Orbit<HybridAugmentedPaving> orbit(initial);
         ARIADNE_TESTING_PROVE(orbit.initial().size() == initial.size());
-        ARIADNE_TESTING_PROVE(orbit.reach().is_empty());
-        ARIADNE_TESTING_PROVE(orbit.intermediate().is_empty());
-        ARIADNE_TESTING_PROVE(orbit.final().is_empty());
+        ARIADNE_TESTING_PROVE(orbit.reach().size() == 0u);
+        ARIADNE_TESTING_PROVE(orbit.intermediate().size() == 0u);
+        ARIADNE_TESTING_PROVE(orbit.final().size() == 0u);
 
-        HybridAugmentedPaving reach = make_analysis_paving<HybridAugmentedPaving>(grid, system);
-        reach.adjoin_outer_approximation(initial_set, 2u);
+        HybridAugmentedPaving reach = make_value(tree_backend);
+        Ariadne::adjoin_outer_approximation(reach, initial_set, 2u);
         HybridAugmentedPaving intermediate = reach;
         HybridAugmentedPaving final_set = reach;
 
         Orbit<HybridAugmentedPaving> full_orbit(initial, reach, intermediate, final_set);
         ARIADNE_TESTING_PROVE(full_orbit.initial().size() == initial.size());
-        ARIADNE_TESTING_PROVE(full_orbit.reach().size() == reach.size());
-        ARIADNE_TESTING_PROVE(full_orbit.intermediate().size() == intermediate.size());
-        ARIADNE_TESTING_PROVE(full_orbit.final().size() == final_set.size());
+        ARIADNE_TESTING_EXPECT_EQUAL(full_orbit.reach()[q].size(), reach[q].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(full_orbit.intermediate()[q].size(), intermediate[q].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(full_orbit.final()[q].size(), final_set[q].size());
+        ARIADNE_TESTING_PROVE(Ariadne::subset(full_orbit.initial(), full_orbit.reach()));
 
-        NullCanvas canvas;
-        draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit);
+        // Location selection precedes drawing.
+        FlattenedPavingCanvas canvas;
+        PavingDrawing::draw(canvas, Set<DiscreteLocation>{q}, Variables2d(x, y), full_orbit.reach());
+        ARIADNE_TESTING_PROVE(canvas.boundaries > 0u);
+        FlattenedPavingCanvas all_locations_canvas;
+        PavingDrawing::draw(all_locations_canvas, Set<DiscreteLocation>{}, Variables2d(x, y), full_orbit.reach());
+        ARIADNE_TESTING_EXPECT_EQUAL(all_locations_canvas.boundaries, canvas.boundaries);
+        FlattenedPavingCanvas excluded_canvas;
+        PavingDrawing::draw(excluded_canvas, Set<DiscreteLocation>{DiscreteLocation(1)},
+                            Variables2d(x, y), full_orbit.reach());
+        ARIADNE_TESTING_EXPECT_EQUAL(excluded_canvas.boundaries, 0u);
     }
 
     Void test_owned_auxiliary_space_lifetime_and_identity() {
@@ -224,11 +280,11 @@ class TestHybridAugmentedPaving : public Ariadne::Testing::ContextFixture {
 };
 
 int main(int argc, char** argv) {
-    DrawerManager::instance().set_drawer(GridDrawer(2));
+    DrawerManager::instance().set_drawer(BoxDrawer());
 
     ARIADNE_TESTING_SUITE("test_hybrid_augmented_paving");
-    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_interface);
-    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_orbit);
+    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_value_interface);
+    ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_hybrid_augmented_paving_value_orbit);
     ARIADNE_TESTING_ADD_TEST(TestHybridAugmentedPaving, test_owned_auxiliary_space_lifetime_and_identity);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

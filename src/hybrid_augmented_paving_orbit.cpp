@@ -31,8 +31,6 @@
 namespace Ariadne {
 
 struct Orbit<HybridAugmentedPaving>::Data {
-    Data(const HybridGrid& grid, const HybridAuxiliaryMapping& aux)
-        : initial(grid, aux), reach(grid, aux), intermediate(grid, aux), final(grid, aux) {}
     HybridAugmentedPaving initial;
     HybridAugmentedPaving reach;
     HybridAugmentedPaving intermediate;
@@ -41,7 +39,7 @@ struct Orbit<HybridAugmentedPaving>::Data {
 
 Orbit<HybridAugmentedPaving>::
     Orbit(const HybridAugmentedPaving& initial_set)
-    : _data(new Data(initial_set.grid(), initial_set.auxiliary_data())) {
+    : _data(new Data()) {
     this->_data->initial = initial_set;
 }
 
@@ -50,7 +48,7 @@ Orbit<HybridAugmentedPaving>::
           const HybridAugmentedPaving& reach_set,
           const HybridAugmentedPaving& intermediate_set,
           const HybridAugmentedPaving& final_set)
-    : _data(new Data(initial_set.grid(), initial_set.auxiliary_data())) {
+    : _data(new Data()) {
     this->_data->initial = initial_set;
     this->_data->reach = reach_set;
     this->_data->intermediate = intermediate_set;

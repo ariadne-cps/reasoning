@@ -32,6 +32,8 @@
 #include "evolution/traits.hpp"
 #include "geometry/set_interface.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
+#include "labelled/value.hpp"
+#include "symbolic/space.hpp"
 
 // AugmentedPaving and set-interface associations are reasoning-level concerns.
 // The generic space traits preserve the EuclideanSpace API during staging;
@@ -39,36 +41,47 @@
 namespace Ariadne {
 
 class HybridSpace;
-class LabelledAugmentedPaving;
-class HybridAugmentedPaving;
 class BinaryTreePaving;
+class Grid;
+class Paving;
+class AugmentedPaving;
+template<class T>
+class Hybrid;
 
 /** @brief Associate a dynamical system type with its reachability storage type. */
 template<class SYS>
 struct AnalysisTraits;
 
-/** @brief Use labelled augmented pavings for iterated maps. */
+/** @brief Use labelled augmented paving values for iterated maps. */
 template<>
 struct AnalysisTraits<IteratedMap> {
-    using StorageType = LabelledAugmentedPaving;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
+    using PavingType = Paving;
 };
 
-/** @brief Use labelled augmented pavings for vector fields. */
+/** @brief Use labelled augmented paving values for vector fields. */
 template<>
 struct AnalysisTraits<VectorField> {
-    using StorageType = LabelledAugmentedPaving;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
+    using PavingType = Paving;
 };
 
-/** @brief Use labelled augmented pavings for differential inclusions. */
+/** @brief Use labelled augmented paving values for differential inclusions. */
 template<>
 struct AnalysisTraits<DifferentialInclusion> {
-    using StorageType = LabelledAugmentedPaving;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
+    using PavingType = Paving;
 };
 
-/** @brief Use hybrid augmented pavings for hybrid automata. */
+/** @brief Use generic location-indexed augmented paving values for hybrid automata. */
 template<>
 struct AnalysisTraits<HybridAutomatonInterface> {
-    using StorageType = HybridAugmentedPaving;
+    using StorageType = Hybrid<AugmentedPaving>;
+    using GridType = Hybrid<Grid>;
+    using PavingType = Paving;
 };
 
 /** @brief Select set and approximation interfaces for a state space. */
@@ -113,7 +126,7 @@ struct SpaceAnalysisTraits<HybridSpace> {
     using LocatedSetInterfaceType = EffectiveHybridLocatedSetInterface;
     using RegularSetInterfaceType = EffectiveHybridRegularSetInterface;
     using RegularLocatedSetInterfaceType = EffectiveHybridRegularLocatedSetInterface;
-    using SetApproximationType = HybridPaving;
+    using SetApproximationType = Hybrid<AugmentedPaving>;
 };
 
 } // namespace Ariadne

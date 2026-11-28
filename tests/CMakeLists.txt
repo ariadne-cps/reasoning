@@ -10,11 +10,23 @@ set(UNIT_TESTS
     test_verify_safety
     test_iterated_map_reachability
     test_augmented_paving
+    test_augmented_paving_plot
+    test_enclosure_augmented_paving
     test_hybrid_augmented_paving
+    test_hybrid_paving
+    test_grid_adapters
+    test_generic_hybrid_grid_adapters
+    test_hybrid_paving_value_adapters
+    test_labelled_augmented_paving_adapters
+    test_generic_labelled_paving_drawing
+    test_generic_labelled_paving_value
+    test_scaling_adapters
+    test_paving_drawing
     test_neural_symbolic
 )
 foreach(TEST IN LISTS UNIT_TESTS)
     add_executable(${TEST} ${TEST}.cpp)
+    target_include_directories(${TEST} PRIVATE "${PROJECT_SOURCE_DIR}/src")
     target_link_libraries(${TEST} PRIVATE ariadne-reasoning reasoning ariadne-testing)
     add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}> --concise --logtonull)
     set_property(TEST ${TEST} PROPERTY LABELS "reasoning")

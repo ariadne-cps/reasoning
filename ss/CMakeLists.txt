@@ -8,4 +8,6 @@ if(NOT TARGET sat)
     ariadne_add_submodule(sat)
 endif()
 
-
+if(NOT TARGET paving)
+    ariadne_add_submodule(paving)
+endif()

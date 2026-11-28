@@ -245,9 +245,9 @@ int main(int argc, const char* argv[]) {
                         Logger::instance().decrease_level(2u);
                         throw;
                     } }, [&] {
-                    if(result==nullptr || result->is_empty())
+                    if(result==nullptr || is_empty(*result))
                         throw std::runtime_error("Empty reachable set");
-                    Bench::keep_alive(result->size());
+                    Bench::keep_alive(result->value().size());
                     ++completed_rounds;
                     ++completed_executions;
                     round_progress.update_current(static_cast<double>(completed_rounds));
@@ -267,8 +267,8 @@ int main(int argc, const char* argv[]) {
 
             // Compare the final reached geometry, not the backend-specific
             // enabled-leaf counts. This conversion is OUTSIDE timed work.
-            BinaryTreePaving materialized(result->state_paving().grid());
-            const auto& state = result->state_paving();
+            BinaryTreePaving materialized(result->value().state_paving().grid());
+            const auto& state = result->value().state_paving();
             for (auto it = state.begin(), end = state.end(); it != end; ++it)
                 materialized.adjoin(*it);
             if (implementation == "tree") {

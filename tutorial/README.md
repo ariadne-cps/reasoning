@@ -25,6 +25,11 @@ cmake --build tutorial/build --parallel
 ./tutorial/build/tutorial_reasoning
 ```
 
+The C++ tutorial includes only the public `ariadne-reasoning.hpp` umbrella
+for Ariadne APIs, plus the standard `<iostream>` header for console output.
+It prints the proof result and the chain-reachable cell count using standard
+streams; an unproved result prints an error and yields exit code 1.
+
 ## Python tutorial
 
 Point `PYTHONPATH` to the installed `pyariadne_reasoning` extension and configure the

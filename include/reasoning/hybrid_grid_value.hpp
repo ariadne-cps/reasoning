@@ -1,5 +1,5 @@
 /***************************************************************************
- *            reasoning/hybrid_augmented_paving_orbit_draw.hpp
+ *            reasoning/hybrid_grid_value.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,23 +22,29 @@
  *  along with Ariadne Reasoning. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @file reasoning/hybrid_augmented_paving_orbit_draw.hpp
- *  @brief Drawing adapters for hybrid augmented paving orbits.
+/** @file reasoning/hybrid_grid_value.hpp
+ *  @brief Materialize paving grids from generic lazy scaling values.
  */
 
-// Drawing of the reasoning-owned hybrid augmented paving orbit.
-// The hybrid paving itself is rendered by hybrid/hybrid_augmented_paving_draw.hpp.
-#ifndef ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
-#define ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
+#ifndef ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
+#define ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP
 
-#include "hybrid/hybrid_augmented_paving_draw.hpp"
-#include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "evolution/scalings.hpp"
+#include "hybrid/value.hpp"
+#include "paving/grid.hpp"
 
 namespace Ariadne {
-/** @brief Draw the reachable phase of a hybrid augmented paving orbit. */
-inline Void draw(CanvasInterface& canvas, const Set<DiscreteLocation>& locations,
-                 const Variables2d& axes, const Orbit<HybridAugmentedPaving>& orbit) {
-    Ariadne::draw(canvas, locations, axes, orbit.reach());
-}
+
+/** @brief Materialize the ordered grid lengths for a location-independent scaling. */
+Grid grid_from_scalings(const Scalings& scalings, const RealSpace& space);
+
+/** @brief Lazily build one grid per location from generic scaling values.
+ *  @details The captured scaling family is copied into the provider. Neither
+ *  scaling policies nor grids are eagerly materialized. Location-dependent
+ *  coordinate order is supplied by the requested HybridSpace.
+ */
+Hybrid<Grid> make_hybrid_grids(HybridSpace space, Hybrid<Scalings> scalings);
+
 } // namespace Ariadne
-#endif // ARIADNE_REASONING_HYBRID_AUGMENTED_PAVING_ORBIT_DRAW_HPP
+
+#endif // ARIADNE_REASONING_HYBRID_GRID_VALUE_HPP

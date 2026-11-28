@@ -31,22 +31,24 @@
 
 #include "algebra/matrix.hpp"
 #include "algebra/vector.hpp"
+#include "analysis_paving_factory.hpp"
 #include "drawing/drawer.hpp"
 #include "drawing/drawer_manager.hpp"
+#include "drawing/labelled_figure.hpp"
+#include "drawing/labelled_graphics_interface.hpp"
 #include "evolution/hybrid_evolver.hpp"
 #include "evolution/hybrid_time.hpp"
 #include "evolution/orbit.hpp"
 #include "function/function.hpp"
 #include "geometry/box.hpp"
+#include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_graphics.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "integration/integrator.hpp"
-#include "labelled/figure.hpp"
-#include "labelled/graphics_interface.hpp"
 #include "logging/test_runner.hpp"
 #include "numeric/rational.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
+#include "paving/robdd_paving.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automata.hpp"
@@ -181,10 +183,32 @@ Void TestHybridReachability::test_analyser_configuration() {
     DiscreteLocation other_q;
     RealVariable u("u");
     other_system.new_mode(other_q, {dot(u) = -u});
-    ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error,
-                                  config.set_grid(std::make_shared<HybridGrid>(other_system.state_space())));
+    Hybrid<Scalings> other_scalings(other_system.state_space(),
+                                    [](const DiscreteLocation&, const RealSpace&) { return Scalings(ApproximateDouble(1.0)); });
+    ARIADNE_TESTING_EXPECT_THROWS(std::runtime_error, config.set_grid(other_scalings));
 
     config.set_scaling(x, ApproximateDouble(0.5));
+
+    // Generic location-indexed access round-trips the legacy grid and scalings.
+    Hybrid<Scalings> scalings_value = config.scalings_value();
+    ARIADNE_TESTING_PROVE(scalings_value.has_location(q));
+    ARIADNE_TESTING_PROVE(scalings_value.space() == system.state_space());
+    ARIADNE_TESTING_EXPECT_EQUAL(scalings_value[q].scaling(x), 0.5_x);
+    Hybrid<Grid> grid_value = config.grid_value();
+    ARIADNE_TESTING_PROVE(grid_value.has_location(q));
+    ARIADNE_TESTING_PROVE(grid_value.space() == system.state_space());
+    Hybrid<Grid> configured_grids = config.grid();
+    ARIADNE_TESTING_EXPECT_EQUAL(grid_value[q], configured_grids[q]);
+    ARIADNE_TESTING_PROVE(config.grid().space() == system.state_space());
+    ARIADNE_TESTING_PROVE(not config.grid().has_value(q));
+
+    scalings_value[q].set_scaling(x, ApproximateDouble(0.25));
+    config.set_grid(scalings_value);
+    ARIADNE_TESTING_EXPECT_EQUAL(config.scalings_value()[q].scaling(x), 0.25_x);
+    configured_grids = config.grid();
+    ARIADNE_TESTING_EXPECT_EQUAL(configured_grids[q],
+                                 grid_from_scalings(config.scalings_value()[q],
+                                                    system.continuous_state_space(q)));
 
     ARIADNE_TESTING_NOTE(const_analyser.configuration().transient_time());
     ARIADNE_TESTING_NOTE(const_analyser.configuration().lock_to_grid_steps());
@@ -228,7 +252,7 @@ Void TestHybridReachability::test_lower_reachability() {
     analyser->configuration().set_transient_time(0.0);
     // With zero transient time no infinite-time evolution is performed.
     auto infinite_lower_reach = analyser->lower_reach(initial);
-    ARIADNE_TESTING_PROVE(infinite_lower_reach.is_empty());
+    ARIADNE_TESTING_PROVE(Ariadne::is_empty(infinite_lower_reach));
 
     analyser->configuration().set_transient_time(0.5);
     auto transient_lower_reach = analyser->lower_reach(initial);
@@ -301,6 +325,16 @@ Void TestHybridReachability::test_verify_safety() {
     ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
     ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
 
+    // The certificate stores the generic value directly; the value accessors
+    // are near-identity snapshots preserving the per-location backend.
+    const HybridAugmentedPaving chain_value = certificate.chain_reach_value();
+    const HybridAugmentedPaving safe_value = certificate.safe_value();
+    ARIADNE_TESTING_PROVE(chain_value.size() == certificate.chain_reach_set.size());
+    ARIADNE_TESTING_PROVE(safe_value.size() == certificate.safe_set.size());
+    ARIADNE_TESTING_PROVE(chain_value.has_value(q));
+    ARIADNE_TESTING_PROVE(chain_value[q].size() == certificate.chain_reach_set[q].size());
+    ARIADNE_TESTING_PROVE(subset(chain_value, safe_value));
+
     analyser->configuration().set_transient_time(1.0);
     auto transient_certificate = analyser->verify_safety(initial, safe);
     ARIADNE_TESTING_PROVE(definitely(transient_certificate.is_safe));
@@ -329,19 +363,23 @@ Void TestHybridReachability::test_selected_robdd_backend() {
     });
     auto robdd = exposed_analyser.upper_reach(initial, time);
     ARIADNE_TESTING_PROVE(robdd.size() > 0u);
+    ARIADNE_TESTING_PROVE(robdd.has_value(q));
     ARIADNE_TESTING_PROVE(
         dynamic_cast<const RobddPaving*>(
-            &static_cast<const PavingInterface&>(robdd.state_paving()[q])) != nullptr);
+            &static_cast<const PavingInterface&>(robdd[q].state_paving())) != nullptr);
     // Compare complete analysis results geometrically. Algebra between
     // different backends is intentionally unsupported; GridCell coverage
     // is independent of both the representation and its ROBDD manager.
     auto geometrically_contained = [](const HybridAugmentedPaving& candidate,
                                       const HybridAugmentedPaving& container) {
         for (auto it = candidate.begin(); it != candidate.end(); ++it) {
-            const auto cell = *it;
-            if (!container.state_paving().nontrivial_location(cell.location()) ||
-                !container.state_paving()[cell.location()].superset(cell.euclidean_set()))
+            const DiscreteLocation& loc = it->first;
+            if (!container.has_value(loc))
                 return false;
+            for (const auto& cell: it->second.state_paving()) {
+                if (!container[loc].state_paving().superset(cell))
+                    return false;
+            }
         }
         return true;
     };
@@ -372,29 +410,27 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
     GeneralHybridEvolver evolver(system);
     evolver.set_integrator(TaylorPicardIntegrator(StepMaximumError(1e-5)));
     ExposedHybridAnalyser exposed_analyser(evolver);
-    const auto grid = exposed_analyser.configuration().grid();
+    const Hybrid<Grid>& grids = exposed_analyser.configuration().grid();
     auto fresh = [&] {
-        return make_analysis_paving<HybridAugmentedPaving>(grid, system);
+        return make_hybrid_augmented_paving(grids, system);
     };
 
     HybridAugmentedPaving input = fresh();
-    GridCell root(grid[q], 0u, BinaryWord{});
-    HybridGridCell first(q, system.continuous_state_space(q),
-                         root.split(false).split(false));
-    HybridGridCell second(q, system.continuous_state_space(q),
-                          root.split(true).split(true));
-    input.state_paving().adjoin(first);
-    input.state_paving().adjoin(second);
-    input.state_paving().adjoin(HybridGridCell(q, system.continuous_state_space(q),
-                                               root.split(false).split(true)));
-    ARIADNE_TESTING_PROVE(input.size() >= 2u);
+    Hybrid<Grid> materialized_grids = grids;
+    GridCell root(materialized_grids[q], 0u, BinaryWord{});
+    const GridCell first = root.split(false).split(false);
+    const GridCell second = root.split(true).split(true);
+    input[q].state_paving().adjoin(first);
+    input[q].state_paving().adjoin(second);
+    input[q].state_paving().adjoin(root.split(false).split(true));
+    ARIADNE_TESTING_PROVE(input[q].size() >= 2u);
 
     threads.set_concurrency(2u);
     auto singleton = fresh(), single_reach = fresh(), single_evolved = fresh();
-    singleton.state_paving().adjoin(first);
+    singleton[q].state_paving().adjoin(first);
     exposed_analyser._adjoin_upper_reach_evolve(single_reach, single_evolved,
                                                 singleton, HybridTime(Decimal(0.25), 1u), 2u, evolver);
-    ARIADNE_TESTING_PROVE(not single_evolved.is_empty());
+    ARIADNE_TESTING_PROVE(not Ariadne::is_empty(single_evolved));
 
     auto compute = [&](std::size_t concurrency) {
         threads.set_concurrency(concurrency);
@@ -402,7 +438,7 @@ Void TestHybridReachability::test_parallel_upper_reach_evolve() {
         HybridAugmentedPaving evolved = fresh();
         // The reach destination already contains a cell; the evolve
         // destination is empty and must create its location during adjoin.
-        reach.state_paving().adjoin(first);
+        reach[q].state_paving().adjoin(first);
         exposed_analyser._adjoin_upper_reach_evolve(reach, evolved, input,
                                                     HybridTime(Decimal(0.25), 1u), 2u, evolver);
         return std::make_pair(std::move(reach), std::move(evolved));
@@ -442,7 +478,7 @@ Void TestHybridReachability::test_upper_reach_helper() {
 }
 
 int main(int argc, char** argv) {
-    DrawerManager::instance().set_drawer(GridDrawer(2));
+    DrawerManager::instance().set_drawer(BoxDrawer());
 
     ARIADNE_TESTING_SUITE("test_hybrid_reachability");
     ARIADNE_TESTING_ADD_TEST(TestHybridReachability, test_bouncing_ball);

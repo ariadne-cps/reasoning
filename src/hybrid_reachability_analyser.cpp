@@ -44,14 +44,13 @@
 #include "function/functional.hpp"
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_graphics.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_space.hpp"
 #include "integration/integrator.hpp"
 #include "logging/logging.hpp"
 #include "numeric/numeric.hpp"
 #include "paving/binary_tree_paving.hpp"
-#include "reasoning/reachability_analyser.tpl.hpp"
+#include "reachability_analyser.tpl.hpp"
 #include "rendering/figure.hpp"
 #include "set/list_set.hpp"
 #include "system/hybrid_automaton_interface.hpp"
@@ -84,15 +83,26 @@ HybridReachabilityAnalyser*
 }
 
 HybridReachabilityAnalyserConfiguration::ReachabilityAnalyserConfiguration(ReachabilityAnalyser<HybridAutomatonInterface>& analyser)
-    : _analyser(analyser), _paver(new SubdivisionPaver()) {
+    : _analyser(analyser), _space(analyser.system().state_space()), _paver(new SubdivisionPaver()) {
     set_transient_time(0.0);
     set_transient_steps(0);
     set_lock_to_grid_time(1.0);
     set_lock_to_grid_steps(1);
     set_maximum_grid_fineness(3);
     set_maximum_grid_extent(16);
-    set_grid(std::shared_ptr<HybridGrid>(new HybridGrid(_analyser.system().state_space(), SimpleHybridScalings())));
+    _scalings = _make_scalings();
+    _grids = make_hybrid_grids(_space, _scalings);
     set_outer_overspill_policy(ChainOverspillPolicy::ERROR);
+}
+
+Hybrid<Scalings> HybridReachabilityAnalyserConfiguration::_make_scalings() const {
+    return Hybrid<Scalings>(_space,
+                            [overrides = _variable_scalings](const DiscreteLocation&, const RealSpace&) {
+                                Map<RealVariable, ExactDouble> entries;
+                                for (const auto& entry: overrides)
+                                    entries.insert(RealVariable(entry.first), entry.second);
+                                return Scalings(1.0_x, entries);
+                            });
 }
 
 OutputStream&
@@ -123,11 +133,21 @@ Void HybridReachabilityAnalyserConfiguration::set_bounding_domain_ptr(const std:
     _bounding_domain_ptr = value;
 }
 
-Void HybridReachabilityAnalyserConfiguration::set_grid(const std::shared_ptr<HybridGrid> value_ptr) {
-    ARIADNE_ASSERT_MSG(possibly(value_ptr->space() == _analyser.system().state_space()),
-                       "The grid to set has a different hybrid space than the system.");
+Void HybridReachabilityAnalyserConfiguration::set_grid(const Hybrid<Scalings>& scalings) {
+    ARIADNE_ASSERT_MSG(possibly(scalings.space() == _analyser.system().state_space()),
+                       "The scalings to set have a different hybrid space than the system.");
 
-    _grid_ptr = value_ptr;
+    _space = scalings.space();
+    _scalings = scalings;
+    _grids = make_hybrid_grids(_space, _scalings);
+}
+
+HybridAugmentedPaving SafetyCertificate<HybridSpace>::chain_reach_value() const {
+    return chain_reach_set;
+}
+
+HybridAugmentedPaving SafetyCertificate<HybridSpace>::safe_value() const {
+    return safe_set;
 }
 
 } // namespace Ariadne

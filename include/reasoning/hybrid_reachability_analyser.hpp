@@ -35,15 +35,13 @@
 #include "evolution/configuration_interface.hpp"
 #include "evolution/hybrid_evolver_interface.hpp"
 #include "evolution/hybrid_orbit.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
-#include "hybrid/hybrid_grid.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
 #include "logging/logging.hpp"
 #include "paving/paver.hpp"
-#include "reasoning/hybrid_augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/hybrid_grid_value.hpp"
 #include "reasoning/hybrid_reachability_analyser_interface.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton_interface.hpp"
@@ -55,11 +53,6 @@ class Orbit;
 
 class DiscreteLocation;
 class HybridAutomatonInterface;
-
-class HybridGrid;
-class HybridGridCell;
-class HybridPaving;
-class HybridAugmentedPaving;
 
 template<class ES>
 class HybridListSet;
@@ -73,6 +66,11 @@ struct SafetyCertificate<HybridSpace> {
     ValidatedSierpinskian is_safe;
     HybridAugmentedPaving chain_reach_set;
     HybridAugmentedPaving safe_set;
+
+    /** @brief Return an owning generic snapshot of the chain-reachable set. */
+    HybridAugmentedPaving chain_reach_value() const;
+    /** @brief Return an owning generic snapshot of the safe set. */
+    HybridAugmentedPaving safe_value() const;
 };
 
 using HybridSafetyCertificate = SafetyCertificate<HybridSpace>;
@@ -88,6 +86,9 @@ class HybridReachabilityAnalyser
     : public ReachabilityAnalyser<HybridAutomatonInterface> {
   public:
     typedef HybridReachabilityAnalyserConfiguration ConfigurationType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::CompactSetInterfaceType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::OvertSetInterfaceType;
+    using typename ReachabilityAnalyser<HybridAutomatonInterface>::TimeType;
 
   public:
     //!@{
@@ -98,6 +99,58 @@ class HybridReachabilityAnalyser
 
     //! \brief Make a dynamically-allocated copy.
     virtual HybridReachabilityAnalyser* clone() const;
+    //!@}
+
+    //!@{
+    //! \name Non-breaking generic results
+    //! The storage is already the generic location-indexed value, so these
+    //! accessors return the analyser results directly.
+
+    //! \brief Generic snapshot of a lower-approximation to the evolved set.
+    HybridAugmentedPaving lower_evolve_value(const OvertSetInterfaceType& initial_set,
+                                             const TimeType& time) const {
+        return lower_evolve(initial_set, time);
+    }
+
+    //! \brief Generic snapshots of lower reachable and evolved sets.
+    Pair<HybridAugmentedPaving, HybridAugmentedPaving>
+        lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const {
+        return lower_reach_evolve(initial_set, time);
+    }
+
+    //! \brief Generic snapshot of a lower-approximation to the reachable set up to \a time.
+    HybridAugmentedPaving lower_reach_value(const OvertSetInterfaceType& initial_set,
+                                            const TimeType& time) const {
+        return lower_reach(initial_set, time);
+    }
+
+    //! \brief Generic snapshot of an infinite-time lower reachable set.
+    HybridAugmentedPaving lower_reach_value(const OvertSetInterfaceType& initial_set) const {
+        return lower_reach(initial_set);
+    }
+
+    //! \brief Generic snapshot of an upper-approximation to the evolved set.
+    HybridAugmentedPaving upper_evolve_value(const CompactSetInterfaceType& initial_set,
+                                             const TimeType& time) const {
+        return upper_evolve(initial_set, time);
+    }
+
+    //! \brief Generic snapshots of upper reachable and evolved sets.
+    Pair<HybridAugmentedPaving, HybridAugmentedPaving>
+        upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const {
+        return upper_reach_evolve(initial_set, time);
+    }
+
+    //! \brief Generic snapshot of an upper-approximation to the reachable set up to \a time.
+    HybridAugmentedPaving upper_reach_value(const CompactSetInterfaceType& initial_set,
+                                            const TimeType& time) const {
+        return upper_reach(initial_set, time);
+    }
+
+    //! \brief Generic snapshot of the outer chain-reachable set.
+    HybridAugmentedPaving outer_chain_reach_value(const CompactSetInterfaceType& initial_set) const {
+        return outer_chain_reach(initial_set);
+    }
     //!@}
 };
 
@@ -209,9 +262,17 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     //! This property is only used in the chain_reach() routines.
     SharedPointer<HybridExactBoxes> _bounding_domain_ptr;
 
-    //! \brief The grid used for approximation.
-    //! \details Provided as a pointer in order to avoid double construction. It must always be defined.
-    SharedPointer<HybridGrid> _grid_ptr;
+    //! \brief The hybrid space of the configured grid.
+    HybridSpace _space;
+    //! \brief Per-variable scaling overrides applied by the scalings factory (default scaling 1.0).
+    Map<Identifier, ExactDouble> _variable_scalings;
+    //! \brief Primary generic location-indexed scalings (lazy per location).
+    Hybrid<Scalings> _scalings;
+    //! \brief Primary generic location-indexed grids (lazy per location).
+    Hybrid<Grid> _grids;
+
+    //! \brief Build the lazy scalings family from the recorded variable overrides.
+    Hybrid<Scalings> _make_scalings() const;
 
     //! \brief Algorithm used to approximate evolved hybrid enclosures.
     Paver _paver;
@@ -255,17 +316,23 @@ class ReachabilityAnalyserConfiguration<HybridAutomatonInterface> : public Confi
     const HybridExactBoxes& bounding_domain() const { return *_bounding_domain_ptr; }
     Void set_bounding_domain(const HybridExactBoxes& bounding_domain);
 
-    const HybridGrid& grid() const { return *_grid_ptr; }
-    HybridGrid& grid() { return *_grid_ptr; }
+    const Hybrid<Grid>& grid() const { return _grids; }
 
     //! \brief Algorithm used for approximating evolved enclosures on the grid.
     const Paver& paver() const { return _paver; }
     Void set_paver(Paver paver) { _paver = std::move(paver); }
-    //! \brief Check the consistency in respect to the system space, then set the grid.
-    Void set_grid(const std::shared_ptr<HybridGrid> value_ptr);
+
+    // Generic location-indexed grid and scaling access: these stored families
+    // are the primary and only configuration state.
+    const Hybrid<Grid>& grid_value() const { return _grids; }
+    const Hybrid<Scalings>& scalings_value() const { return _scalings; }
+    //! \brief Check the consistency in respect to the system space, then set the grid from generic scalings.
+    Void set_grid(const Hybrid<Scalings>& scalings);
 
     Void set_scaling(const RealVariable& v, ApproximateDouble s) {
-        dynamic_cast<SimpleHybridScalings&>(static_cast<HybridScalingsInterface&>(this->grid().scalings())).set_scaling(v, s);
+        _variable_scalings[v.name()] = cast_exact(s);
+        _scalings = _make_scalings();
+        _grids = make_hybrid_grids(_space, _scalings);
     }
 
     const ChainOverspillPolicy& outer_overspill_policy() const { return _outer_overspill_policy; }

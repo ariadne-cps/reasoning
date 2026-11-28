@@ -51,6 +51,8 @@ def verify_contracting_system_safety():
     if not certificate.proved_safe():
         raise RuntimeError("Safety could not be proved (possibly indeterminate)")
 
+    # The owning generic snapshot exposes the same chain-reachable cells
+    # without the legacy labelled-paving subclass, as in the C++ tutorial.
     cells = certificate.chain_reach_size()
     if cells == 0:
         raise RuntimeError("Safety certificate has an empty chain-reachable set")

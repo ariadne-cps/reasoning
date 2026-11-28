@@ -31,13 +31,13 @@
 #include <string>
 
 #include "algebra/algebra.hpp"
+#include "drawing/labelled_figure.hpp"
 #include "evolution/enclosure.hpp"
 #include "evolution/orbit.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "function/formula.hpp"
 #include "function/taylor_function.hpp"
 #include "integration/integrator.hpp"
-#include "labelled/figure.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
@@ -115,9 +115,13 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto safety_certificate = analyser.verify_safety(initial_set, safe_set);
         ARIADNE_TESTING_NOTE(safety_certificate.is_safe);
-        ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.size());
-        ARIADNE_TESTING_NOTE(safety_certificate.safe_set.size());
+        ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.value().size());
+        ARIADNE_TESTING_NOTE(safety_certificate.safe_set.value().size());
         ARIADNE_TESTING_PROVE(definitely(safety_certificate.is_safe));
+        const auto chain_copy = safety_certificate.chain_reach_set;
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(chain_copy), system.state_space());
+        ARIADNE_TESTING_PROVE(subset(chain_copy, safety_certificate.chain_reach_set));
+        ARIADNE_TESTING_PROVE(subset(safety_certificate.chain_reach_set, chain_copy));
     }
 
     Void test_verify_safety_crossing_bounding() {

@@ -26,14 +26,16 @@
  *  @brief Expose reachability analysers and paving orbits to Python.
  */
 
+#include <type_traits>
+
 #include "evolution/hybrid_evolver.hpp"
 #include "evolution/vector_field_evolver.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
 #include "pybind11.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_reachability_analyser.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/neural_symbolic.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "system/hybrid_automaton.hpp"
@@ -42,9 +44,69 @@
 
 using namespace Ariadne;
 
+// Export the representation-independent alternatives without removing the
+// existing Python names for legacy labelled paving subclasses.
+Void export_labelled_paving_values(pybind11::module& module) {
+    pybind11::class_<LabelledValue<Grid>> grid_value_class(module, "LabelledGrid");
+    grid_value_class.def(pybind11::init([](const Grid& grid, const RealSpace& space) {
+                             return make_labelled_grid(grid, space);
+                         }),
+                         pybind11::arg("grid"), pybind11::arg("space"));
+    grid_value_class.def("space", [](const LabelledValue<Grid>& value) {
+        return value.space();
+    });
+    grid_value_class.def("value", [](LabelledValue<Grid>& value) -> Grid& { return value.value(); }, pybind11::return_value_policy::reference_internal);
+
+    pybind11::class_<LabelledValue<Paving>> paving_value_class(module, "LabelledPaving");
+    paving_value_class.def(pybind11::init([](const Paving& paving, const RealSpace& space) {
+                               return make_labelled_paving(paving, space);
+                           }),
+                           pybind11::arg("paving"), pybind11::arg("space"));
+    paving_value_class.def("space", [](const LabelledValue<Paving>& value) {
+        return value.space();
+    });
+    paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& { return value.value(); }, pybind11::return_value_policy::reference_internal);
+
+    // Generic, owning snapshots returned by continuous safety certificates.
+    pybind11::class_<LabelledAugmentedPaving> augmented_value_class(
+        module, "LabelledAugmentedPaving");
+    augmented_value_class.def("state_space", [](const LabelledAugmentedPaving& paving) {
+        return state_space(paving);
+    });
+    augmented_value_class.def("auxiliary_space", [](const LabelledAugmentedPaving& paving) {
+        return auxiliary_space(paving);
+    });
+    augmented_value_class.def("state_auxiliary_space", [](const LabelledAugmentedPaving& paving) {
+        return state_auxiliary_space(paving);
+    });
+    augmented_value_class.def("size", [](const LabelledAugmentedPaving& paving) {
+        return paving.value().size();
+    });
+    augmented_value_class.def("is_empty", [](const LabelledAugmentedPaving& paving) {
+        return paving.value().is_empty();
+    });
+    augmented_value_class.def("clear", [](LabelledAugmentedPaving& paving) {
+        paving.value().clear();
+    });
+    augmented_value_class.def("state_paving", [](LabelledAugmentedPaving& paving) -> Paving& { return paving.value().state_paving(); }, pybind11::return_value_policy::reference_internal);
+
+    module.def("make_labelled_grid", &make_labelled_grid,
+               pybind11::arg("grid"), pybind11::arg("space"));
+    module.def("make_labelled_paving", &make_labelled_paving,
+               pybind11::arg("paving"), pybind11::arg("space"));
+}
+
+// Generic, owning location-indexed snapshots returned by hybrid analyses.
+Void export_hybrid_augmented_paving_value(pybind11::module& module) {
+    pybind11::class_<HybridAugmentedPaving> value_class(module, "HybridAugmentedPaving");
+    value_class.def("size", &HybridAugmentedPaving::size);
+    value_class.def("__len__", &HybridAugmentedPaving::size);
+    value_class.def("has_value", &HybridAugmentedPaving::has_value);
+    value_class.def("__getitem__", [](const HybridAugmentedPaving& value, const DiscreteLocation& location) -> const AugmentedPaving& { return value[location]; }, pybind11::return_value_policy::reference_internal);
+}
+
 Void export_augmented_paving(pybind11::module& module) {
     pybind11::class_<AugmentedPaving> storage_class(module, "AugmentedPaving");
-    pybind11::class_<LabelledAugmentedPaving, pybind11::bases<AugmentedPaving>> labelled_storage_class(module, "LabelledAugmentedPaving");
 }
 
 template<class RA>
@@ -62,10 +124,17 @@ Void export_safety_certificate(pybind11::module& module, const char* name) {
         return definitely(certificate.is_safe);
     });
     safety_certificate_class.def("chain_reach_size", [](const SafetyCertificateType& certificate) {
-        return certificate.chain_reach_set.size();
+        if constexpr (std::is_same_v<StateSpaceType, EuclideanSpace>)
+            return certificate.chain_reach_set.value().size();
+        else
+            return certificate.chain_reach_set.size();
     });
     safety_certificate_class.def_readonly("chain_reach_set", &SafetyCertificateType::chain_reach_set);
     safety_certificate_class.def_readonly("safe_set", &SafetyCertificateType::safe_set);
+    if constexpr (std::is_same_v<StateSpaceType, HybridSpace>) {
+        safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
+        safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
+    }
 }
 
 template<class RA, class... Params>
@@ -88,6 +157,41 @@ Void export_reachability_analyser(pybind11::module& module, const char* name) {
     reachability_analyser_class.def("upper_reach", (StorageType (RA::*)(const CompactSetType&, const TimeType&) const) & RA::upper_reach);
     reachability_analyser_class.def("outer_chain_reach", (StorageType (RA::*)(const CompactSetType&) const) & RA::outer_chain_reach);
     reachability_analyser_class.def("verify_safety", (SafetyCertificateType (RA::*)(const CompactSetType&, const OpenSetType&) const) & RA::verify_safety);
+
+    if constexpr (std::is_same_v<typename RA::StateSpaceType, EuclideanSpace>) {
+        reachability_analyser_class.def("lower_evolve_value",
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_evolve(s, t);
+                                        });
+        reachability_analyser_class.def("lower_reach_evolve_values",
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_reach_evolve(s, t);
+                                        });
+        reachability_analyser_class.def("lower_reach_value",
+                                        [](const RA& a, const OvertSetType& s, const TimeType& t) {
+                                            return a.lower_reach(s, t);
+                                        });
+        reachability_analyser_class.def("lower_reach_value",
+                                        [](const RA& a, const OvertSetType& s) {
+                                            return a.lower_reach(s);
+                                        });
+        reachability_analyser_class.def("upper_evolve_value",
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_evolve(s, t);
+                                        });
+        reachability_analyser_class.def("upper_reach_evolve_values",
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_reach_evolve(s, t);
+                                        });
+        reachability_analyser_class.def("upper_reach_value",
+                                        [](const RA& a, const CompactSetType& s, const TimeType& t) {
+                                            return a.upper_reach(s, t);
+                                        });
+        reachability_analyser_class.def("outer_chain_reach_value",
+                                        [](const RA& a, const CompactSetType& s) {
+                                            return a.outer_chain_reach(s);
+                                        });
+    }
 
     pybind11::class_<Configuration> reachability_analyser_configuration_class(module, "ReachabilityAnalyserConfiguration");
     reachability_analyser_configuration_class.def("set_transient_time", &Configuration::set_transient_time);
@@ -135,13 +239,6 @@ Void export_hybrid_reasoning(pybind11::module& module) {
     evolver_configuration_class.def("__repr__", &__cstr__<EvolverConfiguration>);
 
     // The returned storage and certificate must be inspectable from Python.
-    auto hybrid_augmented_paving_class = pybind11::reinterpret_borrow<pybind11::class_<HybridAugmentedPaving>>(
-        module.attr("HybridAugmentedPaving"));
-    hybrid_augmented_paving_class.def("size", &HybridAugmentedPaving::size);
-    hybrid_augmented_paving_class.def("__len__", &HybridAugmentedPaving::size);
-    hybrid_augmented_paving_class.def("is_empty", &HybridAugmentedPaving::is_empty);
-    hybrid_augmented_paving_class.def("__str__", &__cstr__<HybridAugmentedPaving>);
-
     export_safety_certificate<Analyser>(module, "HybridSafetyCertificate");
 
     pybind11::class_<Analyser> analyser_class(module, "HybridReachabilityAnalyser");
@@ -181,6 +278,32 @@ Void export_hybrid_reasoning(pybind11::module& module) {
         return a.verify_safety(initial, safe);
     });
 
+    // Generic owning snapshots; the legacy storage methods above are unchanged.
+    analyser_class.def("lower_evolve_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_evolve_value(s, t);
+    });
+    analyser_class.def("lower_reach_evolve_values", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_reach_evolve_values(s, t);
+    });
+    analyser_class.def("lower_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.lower_reach_value(s, t);
+    });
+    analyser_class.def("lower_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s) {
+        return a.lower_reach_value(s);
+    });
+    analyser_class.def("upper_evolve_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_evolve_value(s, t);
+    });
+    analyser_class.def("upper_reach_evolve_values", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_reach_evolve_values(s, t);
+    });
+    analyser_class.def("upper_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s, const HybridTime& t) {
+        return a.upper_reach_value(s, t);
+    });
+    analyser_class.def("outer_chain_reach_value", [](const Analyser& a, const HybridBoundedConstraintSet& s) {
+        return a.outer_chain_reach_value(s);
+    });
+
     pybind11::class_<Configuration> configuration_class(module, "HybridReachabilityAnalyserConfiguration");
     configuration_class.def("set_transient_time", &Configuration::set_transient_time);
     configuration_class.def("set_transient_steps", &Configuration::set_transient_steps);
@@ -193,8 +316,9 @@ Void export_hybrid_reasoning(pybind11::module& module) {
 
 void reasoning_submodule(pybind11::module& module) {
     module.def("make_expression", [](const NeuralParameterSnapshot& snapshot, const Space<Real>& space) { return make_expression(snapshot, space); }, pybind11::arg("snapshot"), pybind11::arg("space"));
+    export_labelled_paving_values(module);
+    export_hybrid_augmented_paving_value(module);
     export_augmented_paving(module);
-    pybind11::class_<HybridAugmentedPaving>(module, "HybridAugmentedPaving");
     export_hybrid_reasoning(module);
     export_safety_certificate<ContinuousReachabilityAnalyser>(module, "SafetyCertificate");
     export_reachability_analyser<ContinuousReachabilityAnalyser, VectorFieldEvolver>(module, "ContinuousReachabilityAnalyser");

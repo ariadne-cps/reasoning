@@ -38,17 +38,19 @@
 #include "evolution/enclosure.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "geometry/set.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
 #include "logging/logging.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
 #include "paving/paving_interface.hpp"
-#include "reasoning/analysis_paving_factory.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"
+#include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/reachability_analyser_interface.hpp"
 #include "set/function_set.hpp"
 
 namespace Ariadne {
+
+class HybridAutomatonInterface;
 
 template<class ES>
 class Orbit;
@@ -108,8 +110,8 @@ class ReachabilityAnalyser
 
     typedef typename Interface::EnclosureType EnclosureType;
     typedef typename Interface::StorageType StorageType;
-    using GridType = typename StorageType::GridType;
-    using PavingType = typename StorageType::PavingType;
+    using GridType = typename AnalysisTraits<SYS>::GridType;
+    using PavingType = typename AnalysisTraits<SYS>::PavingType;
 
   private:
 
@@ -151,15 +153,14 @@ class ReachabilityAnalyser
         if constexpr (std::is_same_v<StorageType, LabelledAugmentedPaving>) {
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
-                return StorageType(factory(grid.euclidean_grid()), system);
+                return make_labelled_augmented_paving(factory(grid.value()), system);
             };
         } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPaving>) {
             // The same factory creates the continuous paving on demand in
             // every hybrid location. Captured managers survive all copies.
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
-                return StorageType(HybridPaving(grid, factory),
-                                   make_hybrid_auxiliary_mapping(system));
+                return make_hybrid_augmented_paving(grid, system, factory);
             };
         } else {
             throw std::logic_error("Unsupported storage for paving factory");

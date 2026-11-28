@@ -37,6 +37,7 @@
 #include "logging/test_runner.hpp"
 #include "paving/augmented_paving.hpp"
 #include "paving/binary_tree_paving.hpp"
+#include "paving/robdd_paving.hpp"
 #include "reasoning/reachability_analyser.hpp"
 #include "set/function_set.hpp"
 #include "system/iterated_map.hpp"
@@ -131,8 +132,17 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
             {-4, 4}
         })));
         ARIADNE_TESTING_PROVE(const_config.bounding_domain_ptr() != nullptr);
-        config.set_grid(LabelledGrid(Grid(2), system.state_space()));
+        config.set_grid(make_labelled_grid(Grid(2), system.state_space()));
         ARIADNE_TESTING_PROVE(const_config.grid().space() == system.state_space());
+
+        // The coordinate labels and grid round-trip through the value-based grid.
+        const auto generic_grid = make_labelled_grid(Grid(2u), system.state_space());
+        config.set_grid(generic_grid);
+        const auto& grid_snapshot = const_config.grid();
+        ARIADNE_TESTING_EXPECT_EQUAL(grid_snapshot.space(), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(grid_snapshot.value(), generic_grid.value());
+        ARIADNE_TESTING_EXPECT_EQUAL(config.grid().value(), grid_snapshot.value());
+        ARIADNE_TESTING_EXPECT_EQUAL(config.grid().space(), grid_snapshot.space());
         config.set_outer_overspill_policy(ChainOverspillPolicy::WARNING);
         ARIADNE_TESTING_PROVE(const_config.outer_overspill_policy() == ChainOverspillPolicy::WARNING);
         config.set_outer_overspill_policy(ChainOverspillPolicy::ERROR);
@@ -145,25 +155,24 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(copy.get() != nullptr);
         ARIADNE_TESTING_PROVE(copy->system().state_space() == system.state_space());
 
-        // Labelled views of an iterated-map system.
-        LabelledGrid lgrid(system);
-        LabelledBinaryTreePaving lgtp(lgrid);
-        LabelledAugmentedPaving ls1(lgrid, system);
-        LabelledAugmentedPaving ls2(lgtp, system);
-        ARIADNE_TESTING_PROVE(ls1.state_space() == system.state_space());
-        ARIADNE_TESTING_PROVE(ls2.state_space() == system.state_space());
+        // Generic labelled views of an iterated-map system.
+        const auto lgrid = make_labelled_grid(Grid(system.state_space().dimension()), system.state_space());
+        const auto ls1 = make_labelled_augmented_paving(lgrid, system);
+        const auto ls2 = make_labelled_augmented_paving(Paving(new BinaryTreePaving(lgrid.value())), system);
+        ARIADNE_TESTING_PROVE(state_space(ls1) == system.state_space());
+        ARIADNE_TESTING_PROVE(state_space(ls2) == system.state_space());
     }
 
     Void test_lower_reachability() {
         auto lower_evolve = analyser.lower_evolve(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(lower_evolve.size() > 0u);
+        ARIADNE_TESTING_PROVE(lower_evolve.value().size() > 0u);
 
         auto lower_reach = analyser.lower_reach(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(lower_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(lower_reach.value().size() > 0u);
 
         auto reach_evolve = analyser.lower_reach_evolve(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(reach_evolve.first.size() > 0u);
-        ARIADNE_TESTING_PROVE(reach_evolve.second.size() > 0u);
+        ARIADNE_TESTING_PROVE(reach_evolve.first.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(reach_evolve.second.value().size() > 0u);
 
         analyser.configuration().set_transient_time(Integer(0));
         analyser.configuration().set_bounding_domain_ptr(std::make_shared<BoundingDomainType>(BoundingDomainType({
@@ -172,11 +181,11 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         })));
         // With zero transient time no infinite-time evolution is performed.
         auto infinite_lower_reach = analyser.lower_reach(initial_set);
-        ARIADNE_TESTING_PROVE(infinite_lower_reach.is_empty());
+        ARIADNE_TESTING_PROVE(infinite_lower_reach.value().is_empty());
 
         analyser.configuration().set_transient_time(Integer(2));
         auto transient_lower_reach = analyser.lower_reach(initial_set);
-        ARIADNE_TESTING_PROVE(transient_lower_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(transient_lower_reach.value().size() > 0u);
 
         // No bounding domain: the restriction steps are skipped.
         analyser.configuration().set_bounding_domain_ptr(nullptr);
@@ -191,33 +200,33 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         })));
 
         auto upper_evolve = analyser.upper_evolve(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(upper_evolve.size() > 0u);
+        ARIADNE_TESTING_PROVE(upper_evolve.value().size() > 0u);
 
         auto upper_reach = analyser.upper_reach(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(upper_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(upper_reach.value().size() > 0u);
 
         auto reach_evolve = analyser.upper_reach_evolve(initial_set, Integer(3));
-        ARIADNE_TESTING_PROVE(reach_evolve.first.size() > 0u);
-        ARIADNE_TESTING_PROVE(reach_evolve.second.size() > 0u);
+        ARIADNE_TESTING_PROVE(reach_evolve.first.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(reach_evolve.second.value().size() > 0u);
 
         auto chain_reach = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_PROVE(chain_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(chain_reach.value().size() > 0u);
 
         analyser.configuration().set_transient_time(Integer(2));
         auto transient_chain_reach = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_PROVE(transient_chain_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(transient_chain_reach.value().size() > 0u);
 
         // A step count that is not a multiple of lock_to_grid_time exercises
         // the remainder-time step of upper_reach_evolve.
         analyser.configuration().set_lock_to_grid_time(Integer(2));
         auto remainder_reach_evolve = analyser.upper_reach_evolve(initial_set, Integer(5));
-        ARIADNE_TESTING_PROVE(remainder_reach_evolve.first.size() > 0u);
-        ARIADNE_TESTING_PROVE(remainder_reach_evolve.second.size() > 0u);
+        ARIADNE_TESTING_PROVE(remainder_reach_evolve.first.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(remainder_reach_evolve.second.value().size() > 0u);
 
         // No bounding domain: the restriction steps are skipped.
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto unbounded_chain_reach = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_PROVE(unbounded_chain_reach.size() > 0u);
+        ARIADNE_TESTING_PROVE(unbounded_chain_reach.value().size() > 0u);
     }
 
     Void test_upper_reach_break() {
@@ -230,13 +239,13 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         premature_analyser.configuration().set_maximum_grid_fineness(2);
         premature_analyser.configuration().set_lock_to_grid_time(Integer(1));
         auto upper_reach = premature_analyser.upper_reach(initial_set, Integer(4));
-        ARIADNE_TESTING_NOTE(upper_reach.size());
+        ARIADNE_TESTING_NOTE(upper_reach.value().size());
     }
 
     Void test_upper_reach_helper() {
         auto reach = analyser.upper_reach(initial_set, Integer(2));
         auto upper = analyser._upper_reach(reach, Integer(2), 3u, analyser.evolver());
-        ARIADNE_TESTING_PROVE(upper.size() > 0u);
+        ARIADNE_TESTING_PROVE(upper.value().size() > 0u);
     }
 
     Void test_verify_safety() {
@@ -244,12 +253,82 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto certificate = analyser.verify_safety(initial_set, safe_set);
         ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
-        ARIADNE_TESTING_PROVE(certificate.chain_reach_set.size() > 0u);
+        ARIADNE_TESTING_PROVE(certificate.chain_reach_set.value().size() > 0u);
+
+        // The certificate already stores generic owned labelled values.
+        auto chain_value = certificate.chain_reach_set;
+        const auto& safe_value = certificate.safe_set;
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(chain_value), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(chain_value),
+                                     auxiliary_space(certificate.chain_reach_set));
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(safe_value), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(chain_value.value().size(),
+                                     certificate.chain_reach_set.value().size());
+        ARIADNE_TESTING_PROVE(subset(chain_value, safe_value));
+        ARIADNE_TESTING_PROVE(
+            dynamic_cast<const BinaryTreePaving*>(
+                &static_cast<const PavingInterface&>(chain_value.value().state_paving())) != nullptr);
+        chain_value.value().clear();
+        ARIADNE_TESTING_PROVE(chain_value.value().is_empty());
+        ARIADNE_TESTING_PROVE(certificate.chain_reach_set.value().size() > 0u);
 
         SymbolicSetType outside_symbolic_safe_set({2_dec <= x <= 3_dec, 2_dec <= y <= 3_dec});
         auto outside_safe_set = outside_symbolic_safe_set.euclidean_set(system.state_space());
         auto negative_certificate = analyser.verify_safety(initial_set, outside_safe_set);
         ARIADNE_TESTING_PROVE(is_indeterminate(negative_certificate.is_safe));
+    }
+
+    Void test_generic_continuous_result_paths() {
+        // Test the two actual backends, not just construction of an API wrapper.
+        const Grid grid(2u);
+        for (bool use_robdd: {false, true}) {
+            const auto manager = std::make_shared<RobddManager>();
+            analyser.set_paving_factory([use_robdd, manager](const Grid& candidate) -> Paving {
+                if (use_robdd)
+                    return Paving(new RobddPaving(manager, candidate));
+                return Paving(new BinaryTreePaving(candidate));
+            });
+            const auto generic_reach = analyser.upper_reach(initial_set, Integer(1));
+            const auto replica_reach = analyser.upper_reach(initial_set, Integer(1));
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_reach), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(generic_reach),
+                                         auxiliary_space(replica_reach));
+            ARIADNE_TESTING_PROVE(subset(generic_reach, replica_reach));
+            ARIADNE_TESTING_PROVE(subset(replica_reach, generic_reach));
+            ARIADNE_TESTING_PROVE(generic_reach.value().size() > 0u);
+            const auto& backend = static_cast<const PavingInterface&>(
+                generic_reach.value().state_paving());
+            if (use_robdd) {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(&backend) != nullptr);
+            } else {
+                ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(&backend) != nullptr);
+            }
+            auto detached = generic_reach;
+            detached.value().clear();
+            ARIADNE_TESTING_PROVE(detached.value().is_empty());
+            ARIADNE_TESTING_PROVE(generic_reach.value().size() > 0u);
+
+            const auto lower = analyser.lower_reach(initial_set, Integer(1));
+            const auto lower_evolved = analyser.lower_evolve(initial_set, Integer(1));
+            const auto upper_evolved = analyser.upper_evolve(initial_set, Integer(1));
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_evolved), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_evolved), system.state_space());
+            const auto lower_pair = analyser.lower_reach_evolve(initial_set, Integer(1));
+            const auto upper_pair = analyser.upper_reach_evolve(initial_set, Integer(1));
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_pair.first), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(lower_pair.second), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_pair.first), system.state_space());
+            ARIADNE_TESTING_EXPECT_EQUAL(state_space(upper_pair.second), system.state_space());
+        }
+
+        // Both unbounded-time entry points retain labelled state coordinates.
+        analyser.configuration().set_transient_time(Integer(0));
+        analyser.configuration().set_bounding_domain_ptr(nullptr);
+        ARIADNE_TESTING_EXPECT_EQUAL(
+            state_space(analyser.lower_reach(initial_set)), system.state_space());
+        ARIADNE_TESTING_EXPECT_EQUAL(
+            state_space(analyser.outer_chain_reach(initial_set)), system.state_space());
     }
 
     Void test_verbose_logging() {
@@ -258,13 +337,13 @@ class TestIteratedMapReachability : public Ariadne::Testing::ContextFixture {
         LogVerbosityScope diagnostics(100u);
         analyser.configuration().set_transient_time(Integer(0));
         analyser.configuration().set_bounding_domain_ptr(nullptr);
-        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set, Integer(2)).size() > 0u);
-        ARIADNE_TESTING_PROVE(analyser.lower_reach_evolve(initial_set, Integer(2)).first.size() > 0u);
-        ARIADNE_TESTING_PROVE(analyser.upper_reach(initial_set, Integer(2)).size() > 0u);
-        ARIADNE_TESTING_PROVE(analyser.upper_reach_evolve(initial_set, Integer(2)).first.size() > 0u);
-        ARIADNE_TESTING_PROVE(analyser.outer_chain_reach(initial_set).size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set, Integer(2)).value().size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.lower_reach_evolve(initial_set, Integer(2)).first.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.upper_reach(initial_set, Integer(2)).value().size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.upper_reach_evolve(initial_set, Integer(2)).first.value().size() > 0u);
+        ARIADNE_TESTING_PROVE(analyser.outer_chain_reach(initial_set).value().size() > 0u);
         // Zero transient time: no infinite-time evolution is performed.
-        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set).is_empty());
+        ARIADNE_TESTING_PROVE(analyser.lower_reach(initial_set).value().is_empty());
         auto certificate = analyser.verify_safety(initial_set, safe_set);
         ARIADNE_TESTING_PROVE(definitely(certificate.is_safe));
     }
@@ -300,5 +379,6 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_upper_reach_break);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verify_safety_reach_escapes);
     ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_verbose_logging);
+    ARIADNE_TESTING_ADD_TEST(TestIteratedMapReachability, test_generic_continuous_result_paths);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

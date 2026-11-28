@@ -39,6 +39,12 @@
 
 using namespace Ariadne;
 
+// Free is_empty for the generic value storages (hybrid and labelled).
+template<class SYS>
+Bool storage_is_empty(const typename ReachabilityAnalyser<SYS>::StorageType& storage) {
+    return is_empty(storage);
+}
+
 template<class SYS>
 struct LoggingAnalyser : ReachabilityAnalyser<SYS> {
     using Base = ReachabilityAnalyser<SYS>;
@@ -72,30 +78,30 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
         auto lower_evolved = analyser.lower_evolve(initial, horizon);
         auto lower_reached = analyser.lower_reach(initial, horizon);
         auto lower_pair = analyser.lower_reach_evolve(initial, horizon);
-        ARIADNE_TESTING_PROVE(not lower_evolved.is_empty());
-        ARIADNE_TESTING_PROVE(not lower_reached.is_empty());
-        ARIADNE_TESTING_PROVE(not lower_pair.first.is_empty());
-        ARIADNE_TESTING_PROVE(not analyser.lower_reach(initial).is_empty());
-        ARIADNE_TESTING_PROVE(not analyser.upper_evolve(initial, horizon).is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(lower_evolved));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(lower_reached));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(lower_pair.first));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.lower_reach(initial)));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.upper_evolve(initial, horizon)));
         auto reached = analyser.upper_reach(initial, horizon);
-        ARIADNE_TESTING_PROVE(not reached.is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(reached));
         auto upper_pair = analyser.upper_reach_evolve(initial, horizon);
-        ARIADNE_TESTING_PROVE(not upper_pair.second.is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(upper_pair.second));
         // Repeat with a positive remainder while diagnostics are enabled.
         if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
             config.set_lock_to_grid_time(2.0 * horizon.continuous_time().get_d());
         else
             config.set_lock_to_grid_time(Natural(2u) * horizon);
-        ARIADNE_TESTING_PROVE(not analyser.upper_evolve(initial, horizon).is_empty());
-        ARIADNE_TESTING_PROVE(not analyser.upper_reach(initial, horizon).is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.upper_evolve(initial, horizon)));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.upper_reach(initial, horizon)));
         auto remainder_pair = analyser.upper_reach_evolve(initial, horizon);
-        ARIADNE_TESTING_PROVE(not remainder_pair.second.is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(remainder_pair.second));
         if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
             config.set_lock_to_grid_time(horizon.continuous_time().get_d());
         else
             config.set_lock_to_grid_time(horizon);
-        ARIADNE_TESTING_PROVE(not analyser._upper_reach(reached, horizon, 0u, analyser.evolver()).is_empty());
-        ARIADNE_TESTING_PROVE(not analyser.outer_chain_reach(initial).is_empty());
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser._upper_reach(reached, horizon, 0u, analyser.evolver())));
+        ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(analyser.outer_chain_reach(initial)));
         config.set_maximum_grid_extent(4u);
         ARIADNE_TESTING_PROVE(definitely(analyser.verify_safety(initial, safe).is_safe));
 
@@ -104,11 +110,11 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
         auto input = analyser.storage();
         if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>) {
             DiscreteLocation q;
-            GridCell root(input.grid()[q], 0u, BinaryWord{});
-            input.state_paving().adjoin(HybridGridCell(q,
-                                                       analyser.system().continuous_state_space(q), root));
+            Hybrid<Grid> materialized_grids = analyser.configuration().grid();
+            GridCell root(materialized_grids[q], 0u, BinaryWord{});
+            input[q].state_paving().adjoin(root);
         } else
-            input.state_paving().adjoin(GridCell(Grid(1u), 0u, BinaryWord{}));
+            input.value().state_paving().adjoin(GridCell(Grid(1u), 0u, BinaryWord{}));
         auto& threads = ThreadManager::instance();
         auto previous = threads.concurrency();
         struct Restore {
@@ -120,8 +126,8 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
             threads.set_concurrency(workers);
             auto reach = analyser.storage(), evolved = analyser.storage();
             analyser._adjoin_upper_reach_evolve(reach, evolved, input, horizon, 2u, analyser.evolver());
-            ARIADNE_TESTING_PROVE(not reach.is_empty());
-            ARIADNE_TESTING_PROVE(not evolved.is_empty());
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(reach));
+            ARIADNE_TESTING_PROVE(not storage_is_empty<SYS>(evolved));
         }
     }
 };
