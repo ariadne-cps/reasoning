@@ -53,8 +53,7 @@ def verify_contracting_system_safety():
 
     # The owning generic snapshot exposes the same chain-reachable cells
     # without the legacy labelled-paving subclass, as in the C++ tutorial.
-    chain_value = certificate.chain_reach_value()
-    cells = chain_value.size()
+    cells = certificate.chain_reach_size()
     if cells == 0:
         raise RuntimeError("Safety certificate has an empty chain-reachable set")
 

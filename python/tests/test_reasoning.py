@@ -11,8 +11,9 @@ def test_reasoning_bindings():
         assert hasattr(a, name), name
     # Binding-level coverage only: C++ regression exercises the snapshots'
     # geometry and ownership; the Release workflows already run the tutorial.
-    for method in ("chain_reach_value", "safe_value"):
-        assert callable(getattr(a.SafetyCertificate, method))
+    for attr in ("chain_reach_set", "safe_set"):
+        assert hasattr(a.SafetyCertificate, attr)
+    assert callable(a.SafetyCertificate.chain_reach_size)
     # The C++ regressions verify actual set, backend and snapshot semantics;
     # this import test verifies the public Python entry points, not the tutorial.
     for method in ("lower_evolve_value", "lower_reach_evolve_values",
