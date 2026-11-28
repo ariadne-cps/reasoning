@@ -28,7 +28,7 @@
 
 #include "reasoning/labelled_paving_value.hpp"
 
-#include "labelled/labelled_augmented_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 
 namespace Ariadne {
 
@@ -47,13 +47,6 @@ LabelledAugmentedPavingValue make_labelled_augmented_paving(
     ARIADNE_PRECONDITION(paving.auxiliary_mapping().result_size() == auxiliary_space.dimension());
     return LabelledAugmentedPavingValue(
         std::move(paving), std::make_pair(std::move(state_space), std::move(auxiliary_space)));
-}
-
-LabelledAugmentedPavingValue make_labelled_augmented_paving_value(
-    const LabelledAugmentedPaving& legacy) {
-    return make_labelled_augmented_paving(
-        static_cast<const AugmentedPaving&>(legacy),
-        legacy.state_space(), legacy.auxiliary_space());
 }
 
 const RealSpace& state_space(const LabelledAugmentedPavingValue& paving) {
@@ -96,6 +89,54 @@ Bool intersect(const LabelledAugmentedPavingValue& left,
                const LabelledAugmentedPavingValue& right) {
     ARIADNE_PRECONDITION(state_space(left) == state_space(right));
     return intersect(left.value(), right.value());
+}
+
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanCompactSetInterface& set, Nat fineness) {
+    pavings.value().adjoin_outer_approximation(set, fineness);
+}
+
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const ValidatedEuclideanCompactSetInterface& set, Nat fineness) {
+    pavings.value().adjoin_outer_approximation(set, fineness);
+}
+
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const ExactBoxType& box, Nat fineness) {
+    pavings.value().adjoin_outer_approximation(box, fineness);
+}
+
+Void adjoin_lower_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanOvertSetInterface& set, Nat extent, Nat fineness) {
+    pavings.value().adjoin_lower_approximation(set, extent, fineness);
+}
+
+Void adjoin_inner_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanSetInterface& set, Nat fineness) {
+    pavings.value().adjoin_inner_approximation(set, fineness);
+}
+
+Void restrict_to_extent(LabelledAugmentedPavingValue& pavings, Nat extent) {
+    pavings.value().restrict_to_extent(extent);
+}
+
+Void mince(LabelledAugmentedPavingValue& pavings, Nat fineness) {
+    pavings.value().mince(fineness);
+}
+
+Void recombine(LabelledAugmentedPavingValue& pavings) {
+    pavings.value().recombine();
+}
+
+Bool is_empty(const LabelledAugmentedPavingValue& pavings) {
+    return pavings.value().is_empty();
+}
+
+Paving inner_approximation(const EffectiveEuclideanSetInterface& set,
+                           const LabelledValue<Grid>& grid, Nat fineness) {
+    Paving paving(new BinaryTreePaving(grid.value()));
+    paving.adjoin_inner_approximation(set, fineness);
+    return paving;
 }
 
 } // namespace Ariadne

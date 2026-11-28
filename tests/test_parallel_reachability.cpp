@@ -85,14 +85,15 @@ class TestParallelReachability : public Testing::ContextFixture {
         ExposedMapAnalyser analyser(evolver);
         Grid grid(1u);
         GridCell root(grid, 2u, BinaryWord{});
-        auto fresh = [&] { return LabelledAugmentedPaving(
-                               Paving(new BinaryTreePaving(grid)), system); };
+        auto fresh = [&] {
+            return make_labelled_augmented_paving(Paving(new BinaryTreePaving(grid)), system);
+        };
         for (bool singleton: {true, false}) {
             auto input = fresh();
-            input.state_paving().adjoin(root.split(false).split(false));
+            input.value().state_paving().adjoin(root.split(false).split(false));
             if (not singleton) {
-                input.state_paving().adjoin(root.split(false).split(true));
-                input.state_paving().adjoin(root.split(true).split(false));
+                input.value().state_paving().adjoin(root.split(false).split(true));
+                input.value().state_paving().adjoin(root.split(true).split(false));
             }
             auto compute = [&](std::size_t workers) {
                 threads.set_concurrency(workers);
@@ -102,7 +103,7 @@ class TestParallelReachability : public Testing::ContextFixture {
             };
             auto serial = compute(0u);
             auto parallel = compute(std::min<std::size_t>(2u, threads.maximum_concurrency()));
-            ARIADNE_TESTING_PROVE(not serial.first.is_empty());
+            ARIADNE_TESTING_PROVE(not is_empty(serial.first));
             ARIADNE_TESTING_PROVE(subset(serial.first, parallel.first));
             ARIADNE_TESTING_PROVE(subset(parallel.first, serial.first));
             ARIADNE_TESTING_PROVE(subset(serial.second, parallel.second));
@@ -156,41 +157,41 @@ class TestParallelReachability : public Testing::ContextFixture {
         for (bool use_robdd: {false, true}) {
             // Same-manager tests are valid; these are not benchmark samples.
             auto manager = std::make_shared<RobddManager>();
-            auto fresh = [&]() -> LabelledAugmentedPaving {
+            auto fresh = [&]() -> LabelledAugmentedPavingValue {
                 if (use_robdd)
-                    return LabelledAugmentedPaving(
+                    return make_labelled_augmented_paving(
                         Paving(new RobddPaving(manager, grid)), system);
-                return LabelledAugmentedPaving(
+                return make_labelled_augmented_paving(
                     Paving(new BinaryTreePaving(grid)), system);
             };
             auto input = fresh();
             GridCell first = root.split(false).split(false);
             GridCell second = root.split(true).split(true);
-            input.state_paving().adjoin(first);
-            input.state_paving().adjoin(second);
-            input.state_paving().adjoin(root.split(false).split(true));
-            ARIADNE_TESTING_PROVE(input.size() >= 2u);
+            input.value().state_paving().adjoin(first);
+            input.value().state_paving().adjoin(second);
+            input.value().state_paving().adjoin(root.split(false).split(true));
+            ARIADNE_TESTING_PROVE(input.value().size() >= 2u);
 
             threading.set_concurrency(2u);
             auto singleton = fresh(), single_reach = fresh(), single_evolved = fresh();
-            singleton.state_paving().adjoin(first);
+            singleton.value().state_paving().adjoin(first);
             analyser._adjoin_upper_reach_evolve(single_reach, single_evolved,
                                                 singleton, 0.125_x, 1u, evolver);
-            ARIADNE_TESTING_PROVE(not single_evolved.is_empty());
+            ARIADNE_TESTING_PROVE(not is_empty(single_evolved));
 
             auto compute = [&](std::size_t concurrency) {
                 threading.set_concurrency(concurrency);
                 auto reach = fresh();
                 auto evolved = fresh();
                 // Exercise incremental coverage, not only empty targets.
-                reach.state_paving().adjoin(first);
+                reach.value().state_paving().adjoin(first);
                 analyser._adjoin_upper_reach_evolve(
                     reach, evolved, input, 0.125_x, 1u, evolver);
                 return std::make_pair(std::move(reach), std::move(evolved));
             };
             auto serial = compute(0u);
-            ARIADNE_TESTING_PROVE(serial.first.size() > 0u);
-            ARIADNE_TESTING_PROVE(serial.second.size() > 0u);
+            ARIADNE_TESTING_PROVE(serial.first.value().size() > 0u);
+            ARIADNE_TESTING_PROVE(serial.second.value().size() > 0u);
             for (std::size_t concurrency: {2u, 4u}) {
                 if (concurrency > threading.maximum_concurrency())
                     continue;

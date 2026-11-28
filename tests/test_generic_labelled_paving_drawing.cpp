@@ -28,14 +28,9 @@
 
 #include <memory>
 
-#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
-
-#ifdef ARIADNE_REASONING_LABELLED_AUGMENTED_PAVING_HPP
-#error The generic drawing header must not import labelled/labelled_augmented_paving.hpp
-#endif
-
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
+#include "reasoning/labelled_augmented_paving_value_drawing.hpp"
 #include "rendering/null_rendering.hpp"
 
 #include "ariadne-testing.hpp"

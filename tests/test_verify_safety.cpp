@@ -115,13 +115,13 @@ class TestVerifySafety : public Ariadne::Testing::ContextFixture {
         analyser.configuration().set_bounding_domain_ptr(nullptr);
         auto safety_certificate = analyser.verify_safety(initial_set, safe_set);
         ARIADNE_TESTING_NOTE(safety_certificate.is_safe);
-        ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.size());
-        ARIADNE_TESTING_NOTE(safety_certificate.safe_set.size());
+        ARIADNE_TESTING_NOTE(safety_certificate.chain_reach_set.value().size());
+        ARIADNE_TESTING_NOTE(safety_certificate.safe_set.value().size());
         ARIADNE_TESTING_PROVE(definitely(safety_certificate.is_safe));
-        const auto generic_chain =
-            make_labelled_augmented_paving_value(safety_certificate.chain_reach_set);
-        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_chain), system.state_space());
-        ARIADNE_TESTING_PROVE(subset(generic_chain, safety_certificate.chain_reach_value()));
+        const auto chain_copy = safety_certificate.chain_reach_set;
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(chain_copy), system.state_space());
+        ARIADNE_TESTING_PROVE(subset(chain_copy, safety_certificate.chain_reach_set));
+        ARIADNE_TESTING_PROVE(subset(safety_certificate.chain_reach_set, chain_copy));
     }
 
     Void test_verify_safety_crossing_bounding() {

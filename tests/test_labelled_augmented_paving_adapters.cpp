@@ -23,16 +23,14 @@
  */
 
 /** @file tests/test_labelled_augmented_paving_adapters.cpp
- *  @brief Compare generic labelled augmented pavings to the legacy implementation.
+ *  @brief Exercise labelled augmented paving values and their drawing adapters.
  */
 
 #include <memory>
 
-#include "labelled/labelled_augmented_paving.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/robdd_paving.hpp"
 #include "reasoning/labelled_augmented_paving_value_drawing.hpp"
-#include "reasoning/labelled_paving_drawing.hpp"
 #include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/paving_drawing.hpp"
 #include "rendering/null_rendering.hpp"
@@ -61,16 +59,17 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         BinaryTreePaving tree(grid);
         tree.adjoin(cell);
         const Paving tree_storage(new BinaryTreePaving(tree));
-        const LabelledAugmentedPaving legacy_tree(tree_storage, state, mapping, auxiliary);
         const auto generic_tree = make_labelled_augmented_paving(
             AugmentedPaving(tree_storage, mapping), state, auxiliary);
-        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_tree), legacy_tree.state_space());
-        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(generic_tree), legacy_tree.auxiliary_space());
+        const auto replica_tree = make_labelled_augmented_paving(
+            AugmentedPaving(tree_storage, mapping), state, auxiliary);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_tree), state);
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(generic_tree), auxiliary);
         ARIADNE_TESTING_EXPECT_EQUAL(state_auxiliary_space(generic_tree),
-                                     legacy_tree.state_auxiliary_space());
+                                     state_auxiliary_space(replica_tree));
         ARIADNE_TESTING_EXPECT_EQUAL(generic_tree.value().auxiliary_mapping().result_size(), 1u);
         ARIADNE_TESTING_PROVE(generic_tree.value().state_paving().superset(cell));
-        ARIADNE_TESTING_PROVE(legacy_tree.state_paving().superset(cell));
+        ARIADNE_TESTING_PROVE(replica_tree.value().state_paving().superset(cell));
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const BinaryTreePaving*>(
                 &static_cast<const PavingInterface&>(generic_tree.value().state_paving())) != nullptr);
@@ -79,24 +78,14 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         RobddPaving robdd(manager, grid);
         robdd.adjoin(cell);
         const Paving robdd_storage(new RobddPaving(robdd));
-        const LabelledAugmentedPaving legacy_robdd(robdd_storage, state, mapping, auxiliary);
-        auto converted_robdd = make_labelled_augmented_paving_value(legacy_robdd);
-        ARIADNE_TESTING_EXPECT_EQUAL(state_space(converted_robdd), state);
-        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(converted_robdd), auxiliary);
+        auto generic_robdd = make_labelled_augmented_paving(
+            AugmentedPaving(robdd_storage, mapping), state, auxiliary);
+        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_robdd), state);
+        ARIADNE_TESTING_EXPECT_EQUAL(auxiliary_space(generic_robdd), auxiliary);
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const RobddPaving*>(
-                &static_cast<const PavingInterface&>(converted_robdd.value().state_paving())) != nullptr);
-        converted_robdd.value().clear();
-        ARIADNE_TESTING_PROVE(converted_robdd.value().is_empty());
-        ARIADNE_TESTING_PROVE(legacy_robdd.state_paving().superset(cell));
-        const auto generic_robdd = make_labelled_augmented_paving(
-            AugmentedPaving(robdd_storage, mapping), state, auxiliary);
-        ARIADNE_TESTING_EXPECT_EQUAL(state_space(generic_robdd), legacy_robdd.state_space());
-        ARIADNE_TESTING_PROVE(generic_robdd.value().state_paving().superset(cell));
-        ARIADNE_TESTING_PROVE(legacy_robdd.state_paving().superset(cell));
-
+                &static_cast<const PavingInterface&>(generic_robdd.value().state_paving())) != nullptr);
         const LabelledAugmentedPavingValue copy(generic_robdd);
-        ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
         ARIADNE_TESTING_PROVE(
             dynamic_cast<const RobddPaving*>(
                 &static_cast<const PavingInterface&>(copy.value().state_paving())) != nullptr);
@@ -106,38 +95,36 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         NullCanvas canvas;
         const Projection2d projection(3u, 0u, 2u);
         PavingDrawing::draw(canvas, projection, copy.value());
-        ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
 
-        // Select one state and one auxiliary variable. The generic adapter
-        // must use the same ordered projection and draw the same cell graph.
-        PavingBoundaryCanvas legacy_canvas, generic_canvas;
-        PavingDrawing::draw(legacy_canvas, Variables2d(y, a), legacy_robdd);
-        PavingDrawing::draw(generic_canvas, Variables2d(y, a), copy);
-        ARIADNE_TESTING_PROVE(legacy_canvas.boundaries > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_canvas.boundaries,
-                                     legacy_canvas.boundaries);
+        // Select one state and one auxiliary variable. Independently built
+        // values must use the same ordered projection and cell graph.
+        PavingBoundaryCanvas first_canvas, second_canvas;
+        PavingDrawing::draw(first_canvas, Variables2d(y, a), copy);
+        PavingDrawing::draw(second_canvas, Variables2d(y, a), generic_robdd);
+        ARIADNE_TESTING_PROVE(first_canvas.boundaries > 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(second_canvas.boundaries, first_canvas.boundaries);
 
         PavingDrawing::LabelledAugmentedPavingValueDrawable drawable(copy);
         std::unique_ptr<LabelledDrawable2dInterface> cloned(drawable.labelled_clone());
         PavingBoundaryCanvas clone_canvas;
         cloned->draw(clone_canvas, Variables2d(y, a));
-        ARIADNE_TESTING_EXPECT_EQUAL(clone_canvas.boundaries,
-                                     legacy_canvas.boundaries);
+        ARIADNE_TESTING_EXPECT_EQUAL(clone_canvas.boundaries, first_canvas.boundaries);
         LabelledFigure figure(Axes2d(-2.0, y, 2.0, -2.0, a, 2.0));
         PavingDrawing::draw(figure, copy);
         PavingBoundaryCanvas figure_canvas;
         figure._paint_all(figure_canvas);
-        ARIADNE_TESTING_EXPECT_EQUAL(figure_canvas.boundaries,
-                                     legacy_canvas.boundaries);
-        ARIADNE_TESTING_PROVE(copy.value().state_paving().superset(cell));
+        ARIADNE_TESTING_EXPECT_EQUAL(figure_canvas.boundaries, first_canvas.boundaries);
 
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_augmented_paving(
             AugmentedPaving(tree_storage, mapping), RealSpace({x}), auxiliary));
         ARIADNE_TESTING_EXPECT_EXCEPTION(make_labelled_augmented_paving(
             AugmentedPaving(tree_storage, mapping), state, RealSpace({a, x})));
+
+        generic_robdd.value().clear();
+        ARIADNE_TESTING_PROVE(generic_robdd.value().is_empty());
     }
 
-    Void test_labelled_set_operations_match_legacy() {
+    Void test_labelled_set_operations() {
         const RealVariable x("x"), y("y"), a("a");
         const RealSpace state({y, x}), other_state({x, y}), auxiliary({a});
         const Grid grid(2u);
@@ -149,30 +136,20 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
         const Paving occupied(new BinaryTreePaving(tree));
         const Paving empty(new BinaryTreePaving(grid));
 
-        LabelledAugmentedPaving legacy_empty(empty, state, mapping, auxiliary);
-        const LabelledAugmentedPaving legacy_full(occupied, state, mapping, auxiliary);
         auto generic_empty = make_labelled_augmented_paving(
             AugmentedPaving(empty, mapping), state, auxiliary);
         const auto generic_full = make_labelled_augmented_paving(
             AugmentedPaving(occupied, mapping), state, auxiliary);
         ARIADNE_TESTING_PROVE(subset(generic_empty, generic_full));
-        ARIADNE_TESTING_PROVE(subset(legacy_empty, legacy_full));
         ARIADNE_TESTING_PROVE(not intersect(generic_empty, generic_full));
-        ARIADNE_TESTING_PROVE(not intersect(legacy_empty, legacy_full));
 
         adjoin(generic_empty, generic_full);
-        legacy_empty.adjoin(legacy_full);
         ARIADNE_TESTING_PROVE(generic_empty.value().state_paving().superset(cell));
-        ARIADNE_TESTING_PROVE(legacy_empty.state_paving().superset(cell));
         ARIADNE_TESTING_PROVE(intersect(generic_empty, generic_full));
-        ARIADNE_TESTING_PROVE(intersect(legacy_empty, legacy_full));
         restrict(generic_empty, generic_full);
-        legacy_empty.restrict(legacy_full);
         ARIADNE_TESTING_PROVE(generic_empty.value().state_paving().superset(cell));
         remove(generic_empty, generic_full);
-        legacy_empty.remove(legacy_full);
         ARIADNE_TESTING_PROVE(generic_empty.value().is_empty());
-        ARIADNE_TESTING_PROVE(legacy_empty.is_empty());
 
         const auto different = make_labelled_augmented_paving(
             AugmentedPaving(occupied, mapping), other_state, auxiliary);
@@ -187,6 +164,6 @@ class TestLabelledAugmentedPavingAdapters : public Ariadne::Testing::ContextFixt
 int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_labelled_augmented_paving_adapters");
     ARIADNE_TESTING_ADD_TEST(TestLabelledAugmentedPavingAdapters, test_metadata_geometry_backends_and_drawing);
-    ARIADNE_TESTING_ADD_TEST(TestLabelledAugmentedPavingAdapters, test_labelled_set_operations_match_legacy);
+    ARIADNE_TESTING_ADD_TEST(TestLabelledAugmentedPavingAdapters, test_labelled_set_operations);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

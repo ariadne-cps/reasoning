@@ -39,13 +39,10 @@
 
 using namespace Ariadne;
 
-// Free is_empty for the generic hybrid value storage, member call for legacy storage.
+// Free is_empty for the generic value storages (hybrid and labelled).
 template<class SYS>
 Bool storage_is_empty(const typename ReachabilityAnalyser<SYS>::StorageType& storage) {
-    if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
-        return is_empty(storage);
-    else
-        return storage.is_empty();
+    return is_empty(storage);
 }
 
 template<class SYS>
@@ -117,7 +114,7 @@ class TestAnalyserLoggingBase : public Testing::ContextFixture {
             GridCell root(materialized_grids[q], 0u, BinaryWord{});
             input[q].state_paving().adjoin(root);
         } else
-            input.state_paving().adjoin(GridCell(Grid(1u), 0u, BinaryWord{}));
+            input.value().state_paving().adjoin(GridCell(Grid(1u), 0u, BinaryWord{}));
         auto& threads = ThreadManager::instance();
         auto previous = threads.concurrency();
         struct Restore {

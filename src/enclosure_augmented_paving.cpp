@@ -52,6 +52,10 @@ Void adjoin_outer_approximation_to(const Enclosure& enclosure, AugmentedPaving& 
     paver.adjoin_outer_approximation(paving.state_paving(), enclosure.state_set(), fineness);
 }
 
+Void adjoin_outer_approximation_to(const Enclosure& enclosure, LabelledAugmentedPavingValue& pavings, Nat fineness, const Paver& paver) {
+    adjoin_outer_approximation_to(enclosure, pavings.value(), fineness, paver);
+}
+
 AugmentedPaving outer_approximation(const Enclosure& enclosure, const Grid& grid, Nat fineness, const Paver& paver) {
     AugmentedPaving result(grid, enclosure.auxiliary_mapping());
     adjoin_outer_approximation_to(enclosure, result, fineness, paver);

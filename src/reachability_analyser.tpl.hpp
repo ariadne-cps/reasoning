@@ -75,10 +75,15 @@ OutputStream& operator<<(OutputStream& os, const ChainOverspillPolicy& policy);
 namespace ReasoningDetail {
 
 // Storage operations are members on the legacy labelled pavings and free
-// functions on the generic hybrid values; dispatch on the storage type.
+// functions on the generic value storages; dispatch on the storage type.
+template<class STORAGE>
+inline constexpr bool is_value_storage_v =
+    std::is_same_v<STORAGE, HybridAugmentedPavingValue> ||
+    std::is_same_v<STORAGE, LabelledAugmentedPavingValue>;
+
 template<class STORAGE, class SET>
 Void storage_adjoin_lower_approximation(STORAGE& storage, const SET& set, Nat extent, Nat fineness) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         adjoin_lower_approximation(storage, set, extent, fineness);
     else
         storage.adjoin_lower_approximation(set, extent, fineness);
@@ -86,7 +91,7 @@ Void storage_adjoin_lower_approximation(STORAGE& storage, const SET& set, Nat ex
 
 template<class STORAGE, class SET>
 Void storage_adjoin_outer_approximation(STORAGE& storage, const SET& set, Nat fineness) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         adjoin_outer_approximation(storage, set, fineness);
     else
         storage.adjoin_outer_approximation(set, fineness);
@@ -94,7 +99,7 @@ Void storage_adjoin_outer_approximation(STORAGE& storage, const SET& set, Nat fi
 
 template<class STORAGE>
 Void storage_adjoin(STORAGE& left, const STORAGE& right) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         adjoin(left, right);
     else
         left.adjoin(right);
@@ -102,7 +107,7 @@ Void storage_adjoin(STORAGE& left, const STORAGE& right) {
 
 template<class STORAGE>
 Void storage_remove(STORAGE& left, const STORAGE& right) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         remove(left, right);
     else
         left.remove(right);
@@ -110,7 +115,7 @@ Void storage_remove(STORAGE& left, const STORAGE& right) {
 
 template<class STORAGE>
 Void storage_restrict(STORAGE& left, const STORAGE& right) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         restrict(left, right);
     else
         left.restrict(right);
@@ -118,7 +123,7 @@ Void storage_restrict(STORAGE& left, const STORAGE& right) {
 
 template<class STORAGE>
 Void storage_restrict_to_extent(STORAGE& storage, Nat extent) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         restrict_to_extent(storage, extent);
     else
         storage.restrict_to_extent(extent);
@@ -126,7 +131,7 @@ Void storage_restrict_to_extent(STORAGE& storage, Nat extent) {
 
 template<class STORAGE>
 Void storage_mince(STORAGE& storage, Nat fineness) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         mince(storage, fineness);
     else
         storage.mince(fineness);
@@ -134,7 +139,7 @@ Void storage_mince(STORAGE& storage, Nat fineness) {
 
 template<class STORAGE>
 Void storage_recombine(STORAGE& storage) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         recombine(storage);
     else
         storage.recombine();
@@ -142,10 +147,34 @@ Void storage_recombine(STORAGE& storage) {
 
 template<class STORAGE>
 Bool storage_is_empty(const STORAGE& storage) {
-    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+    if constexpr (is_value_storage_v<STORAGE>)
         return is_empty(storage);
     else
         return storage.is_empty();
+}
+
+template<class STORAGE>
+const auto& storage_for_log(const STORAGE& storage) {
+    if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>)
+        return storage.value();
+    else
+        return storage;
+}
+
+template<class GRID>
+const auto& storage_grid_for_log(const GRID& grid) {
+    if constexpr (std::is_same_v<GRID, LabelledValue<Grid>>)
+        return grid.value();
+    else
+        return grid;
+}
+
+template<class STORAGE>
+SizeType storage_size(const STORAGE& storage) {
+    if constexpr (std::is_same_v<STORAGE, HybridAugmentedPavingValue>)
+        return storage.size();
+    else
+        return storage.value().size();
 }
 
 // Grid cells of a storage object, as the boxes accepted by the evolver.
@@ -156,6 +185,8 @@ auto first_storage_cell_box(const STORAGE& cells) {
         auto loc = cells.begin();
         auto cell = loc->second.state_paving().begin();
         return HybridExactBox(loc->first, cells.space()[loc->first], cell->box());
+    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>) {
+        return cells.value().begin()->box();
     } else {
         return cells.begin()->box();
     }
@@ -173,6 +204,9 @@ Void for_each_storage_cell(const STORAGE& cells, FN&& fn) {
             for (const auto& cell: iter->second.state_paving())
                 fn(HybridExactBox(location, space, cell.box()));
         }
+    } else if constexpr (std::is_same_v<STORAGE, LabelledAugmentedPavingValue>) {
+        for (const auto& cell: cells.value())
+            fn(cell.box());
     } else {
         for (const auto& cell: cells)
             fn(cell.box());
@@ -216,7 +250,7 @@ auto ReachabilityAnalyser<SYS>::
 
         for (auto enclosure: orbit.reach())
             adjoin_outer_approximation_to(enclosure, reach_cells, accuracy, this->_configuration->paver());
-        LOGGING_PRINTLN_AT(1, "final reach size = " << reach_cells.size());
+        LOGGING_PRINTLN_AT(1, "final reach size = " << ReasoningDetail::storage_size(reach_cells));
 
         for (auto enclosure: orbit.final()) {
             LOGGING_PRINTLN_AT(2, "enclosure = " << enclosure);
@@ -226,7 +260,7 @@ auto ReachabilityAnalyser<SYS>::
             evolve_enclosures.adjoin(new_enclosure);
         }
     }
-    LOGGING_PRINTLN("final evolve size = " << evolve_cells.size());
+    LOGGING_PRINTLN("final evolve size = " << ReasoningDetail::storage_size(evolve_cells));
     LOGGING_PRINTLN("final evolve enclosures size = " << evolve_enclosures.size());
     return result;
 }
@@ -272,7 +306,7 @@ auto ReachabilityAnalyser<SYS>::
         for (auto enclosure: final)
             adjoin_outer_approximation_to(enclosure, result, accuracy, this->_configuration->paver());
     });
-    LOGGING_PRINTLN("_upper_evolve result size = " << result.size());
+    LOGGING_PRINTLN("_upper_evolve result size = " << ReasoningDetail::storage_size(result));
     return result;
 }
 
@@ -381,8 +415,8 @@ Void ReachabilityAnalyser<SYS>::
             process_cell(box, evolver);
     }
 
-    LOGGING_PRINTLN("final reach size = " << reach_cells.size());
-    LOGGING_PRINTLN("final evolve size = " << evolve_cells.size());
+    LOGGING_PRINTLN("final reach size = " << ReasoningDetail::storage_size(reach_cells));
+    LOGGING_PRINTLN("final evolve size = " << ReasoningDetail::storage_size(evolve_cells));
 }
 
 template<class SYS>
@@ -401,7 +435,7 @@ auto ReachabilityAnalyser<SYS>::
 
     // Improve accuracy of initial set for lower computations
     ReasoningDetail::storage_adjoin_lower_approximation(initial_cells, initial_set, grid_extent, grid_fineness + 4);
-    LOGGING_PRINTLN_AT(1, "initial_cells.size()=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "ReasoningDetail::storage_size(initial_cells)=" << ReasoningDetail::storage_size(initial_cells));
     ReasoningDetail::for_each_storage_cell(initial_cells, [&](const auto& box) {
         EnclosureType initial_enclosure = _evolver->enclosure(box);
         ListSet<EnclosureType> final_enclosures = _evolver->orbit(initial_enclosure, time, Semantics::LOWER).final();
@@ -429,7 +463,7 @@ auto ReachabilityAnalyser<SYS>::
     LOGGING_PRINTLN_AT(1, "Adjoining initial set to the grid...");
     // Improve accuracy of initial set for lower computations
     ReasoningDetail::storage_adjoin_lower_approximation(initial_cells, initial_set, grid_extent, grid_fineness + 4);
-    LOGGING_PRINTLN_AT(1, "initial_cells.size()=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "ReasoningDetail::storage_size(initial_cells)=" << ReasoningDetail::storage_size(initial_cells));
     ReasoningDetail::for_each_storage_cell(initial_cells, [&](const auto& box) {
         EnclosureType initial_enclosure = _evolver->enclosure(box);
         ListSet<EnclosureType> reach_enclosures = _evolver->orbit(initial_enclosure, time, Semantics::LOWER).reach();
@@ -459,7 +493,7 @@ auto ReachabilityAnalyser<SYS>::
 
     // Improve accuracy of initial set for lower computations
     ReasoningDetail::storage_adjoin_lower_approximation(initial_cells, initial_set, grid_extent, grid_fineness + 4);
-    LOGGING_PRINTLN_AT(1, "initial_cells.size()=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "ReasoningDetail::storage_size(initial_cells)=" << ReasoningDetail::storage_size(initial_cells));
 
     ReasoningDetail::for_each_storage_cell(initial_cells, [&](const auto& box) {
         EnclosureType initial_enclosure = _evolver->enclosure(box);
@@ -494,7 +528,7 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin_outer_approximation(bounding, this->_configuration->bounding_domain(), maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1, "maximum_grid_extent=" << maximum_grid_extent);
-    LOGGING_PRINTLN_AT(1, "bounding_size=" << bounding.size());
+    LOGGING_PRINTLN_AT(1, "bounding_size=" << ReasoningDetail::storage_size(bounding));
 
     StorageType initial_cells = this->_storage_factory(grid, this->system());
     StorageType evolve_cells = this->_storage_factory(grid, this->system());
@@ -502,7 +536,7 @@ auto ReachabilityAnalyser<SYS>::
 
     if (has_bounding_domain)
         ReasoningDetail::storage_restrict(initial_cells, bounding);
-    LOGGING_PRINTLN_AT(1, "initial_size=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "initial_size=" << ReasoningDetail::storage_size(initial_cells));
 
     ListSet<EnclosureType> starting_enclosures;
 
@@ -526,9 +560,9 @@ auto ReachabilityAnalyser<SYS>::
         if (has_bounding_domain)
             ReasoningDetail::storage_restrict(reach_cells, bounding);
 
-        LOGGING_PRINTLN_AT(1, "reach size=" << reach_cells.size());
-        LOGGING_PRINTLN_AT(1, "evolve size=" << evolve_cells.size());
-        LOGGING_PRINTLN("Found " << reach_cells.size() << " cells.");
+        LOGGING_PRINTLN_AT(1, "reach size=" << ReasoningDetail::storage_size(reach_cells));
+        LOGGING_PRINTLN_AT(1, "evolve size=" << ReasoningDetail::storage_size(evolve_cells));
+        LOGGING_PRINTLN("Found " << ReasoningDetail::storage_size(reach_cells) << " cells.");
     }
     LOGGING_PRINTLN("Computing recurrent evolution...");
 
@@ -547,7 +581,7 @@ auto ReachabilityAnalyser<SYS>::
             ReasoningDetail::storage_restrict(evolve_cells, bounding);
         LOGGING_PRINTLN_AT(1, "Adjoining...");
         ReasoningDetail::storage_adjoin(reach_cells, new_reach_cells);
-        LOGGING_PRINTLN_AT(1, "Found " << new_reach_cells.size() << " cells, of which " << evolve_cells.size() << " are new.");
+        LOGGING_PRINTLN_AT(1, "Found " << ReasoningDetail::storage_size(new_reach_cells) << " cells, of which " << ReasoningDetail::storage_size(evolve_cells) << " are new.");
 
         starting_enclosures = new_evolve_enclosures;
     }
@@ -573,7 +607,7 @@ auto ReachabilityAnalyser<SYS>::
     StorageType evolve_cells = this->_storage_factory(grid, this->system());
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     ReasoningDetail::storage_adjoin_outer_approximation(evolve_cells, initial_set, grid_fineness);
-    LOGGING_PRINTLN_AT(1, "initial_evolve.size()=" << evolve_cells.size());
+    LOGGING_PRINTLN_AT(1, "initial_evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
     TimeType lock_to_grid_time = this->_configuration->lock_to_grid_time();
     Natural time_steps = compute_time_steps(time, lock_to_grid_time);
     TimeType remainder_time = time - (time_steps * lock_to_grid_time);
@@ -590,7 +624,7 @@ auto ReachabilityAnalyser<SYS>::
         evolve_cells = this->_upper_evolve(evolve_cells, remainder_time, grid_fineness, *_evolver);
     }
     ReasoningDetail::storage_recombine(evolve_cells);
-    LOGGING_PRINTLN("final_evolve.size()=" << evolve_cells.size());
+    LOGGING_PRINTLN("final_evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
     return evolve_cells;
 }
 
@@ -606,9 +640,9 @@ auto ReachabilityAnalyser<SYS>::
     Nat grid_fineness = this->_configuration->maximum_grid_fineness();
     LOGGING_PRINTLN_AT(2, "grid_fineness=" << grid_fineness);
     ReasoningDetail::storage_adjoin_outer_approximation(evolve_cells, initial_set, grid_fineness);
-    LOGGING_PRINTLN("initial size = " << evolve_cells.size());
+    LOGGING_PRINTLN("initial size = " << ReasoningDetail::storage_size(evolve_cells));
     StorageType reach_cells(evolve_cells);
-    LOGGING_PRINTLN("reach size =" << reach_cells.size());
+    LOGGING_PRINTLN("reach size =" << ReasoningDetail::storage_size(reach_cells));
     TimeType lock_to_grid_time = this->_configuration->lock_to_grid_time();
     Natural time_steps = compute_time_steps(time, lock_to_grid_time);
     TimeType remainder_time = time - time_steps * lock_to_grid_time;
@@ -623,14 +657,14 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin(accumulated_evolve_cells, found_cells);
         LOGGING_PRINTLN_AT(1, "computing " << i + 1u << "-th reachability step...");
         this->_adjoin_upper_reach_evolve(found_cells, evolve_cells, evolve_cells, lock_to_grid_time, grid_fineness, *_evolver);
-        if constexpr (not std::is_same_v<StorageType, HybridAugmentedPavingValue>)
-            LOGGING_PRINTLN_AT(1, "evolve bounding box = " << evolve_cells.state_paving().bounding_box());
-        LOGGING_PRINTLN_AT(1, "found.size()=" << found_cells.size());
-        LOGGING_PRINTLN_AT(1, "evolve.size()=" << evolve_cells.size());
+        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPavingValue>)
+            LOGGING_PRINTLN_AT(1, "evolve bounding box = " << evolve_cells.value().state_paving().bounding_box());
+        LOGGING_PRINTLN_AT(1, "found.size()=" << ReasoningDetail::storage_size(found_cells));
+        LOGGING_PRINTLN_AT(1, "evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
         ReasoningDetail::storage_remove(evolve_cells, accumulated_evolve_cells);
         ReasoningDetail::storage_adjoin(reach_cells, found_cells);
         ReasoningDetail::storage_adjoin(accumulated_evolve_cells, evolve_cells);
-        LOGGING_PRINTLN_AT(1, "found " << found_cells.size() << " cells, with " << evolve_cells.size() << " new intermediate.");
+        LOGGING_PRINTLN_AT(1, "found " << ReasoningDetail::storage_size(found_cells) << " cells, with " << ReasoningDetail::storage_size(evolve_cells) << " new intermediate.");
         if (ReasoningDetail::storage_is_empty(evolve_cells))
             break;
     }
@@ -643,7 +677,7 @@ auto ReachabilityAnalyser<SYS>::
     // This last step is necessary to add the final set to the result.
     ReasoningDetail::storage_adjoin(reach_cells, evolve_cells);
     ReasoningDetail::storage_recombine(reach_cells);
-    LOGGING_PRINTLN("final_reach size = " << reach_cells.size());
+    LOGGING_PRINTLN("final_reach size = " << ReasoningDetail::storage_size(reach_cells));
     return reach_cells;
 }
 
@@ -660,9 +694,9 @@ auto ReachabilityAnalyser<SYS>::
     LOGGING_PRINTLN_AT(1, "grid_fineness=" << grid_fineness);
     ReasoningDetail::storage_adjoin_outer_approximation(evolve_cells, initial_set, grid_fineness);
 
-    LOGGING_PRINTLN_AT(1, "initial_evolve" << evolve_cells);
+    LOGGING_PRINTLN_AT(1, "initial_evolve" << ReasoningDetail::storage_for_log(evolve_cells));
     StorageType reach_cells(evolve_cells);
-    LOGGING_PRINTLN_AT(1, "reach=" << reach_cells);
+    LOGGING_PRINTLN_AT(1, "reach=" << ReasoningDetail::storage_for_log(reach_cells));
     TimeType lock_to_grid_time = this->_configuration->lock_to_grid_time();
     Natural time_steps = compute_time_steps(time, lock_to_grid_time);
     TimeType remainder_time = time - time_steps * lock_to_grid_time;
@@ -675,9 +709,9 @@ auto ReachabilityAnalyser<SYS>::
     for (Natural i = 0u; i != time_steps; ++i) {
         LOGGING_PRINTLN_AT(1, "computing " << i + 1u << "-th reachability step...");
         this->_adjoin_upper_reach_evolve(found_cells, evolve_cells, evolve_cells, lock_to_grid_time, grid_fineness, *_evolver);
-        LOGGING_PRINTLN_AT(2, "evolve.size()=" << evolve_cells.size());
+        LOGGING_PRINTLN_AT(2, "evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
         ReasoningDetail::storage_adjoin(reach_cells, found_cells);
-        LOGGING_PRINTLN_AT(1, "found " << found_cells.size() << " cells.");
+        LOGGING_PRINTLN_AT(1, "found " << ReasoningDetail::storage_size(found_cells) << " cells.");
     }
     LOGGING_PRINTLN("remainder_time=" << remainder_time);
     if (not ReasoningDetail::storage_is_empty(evolve_cells) and possibly(remainder_time > 0)) {
@@ -686,9 +720,9 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin(reach_cells, found_cells);
     }
     ReasoningDetail::storage_recombine(reach_cells);
-    LOGGING_PRINTLN("reach=" << reach_cells);
+    LOGGING_PRINTLN("reach=" << ReasoningDetail::storage_for_log(reach_cells));
     ReasoningDetail::storage_recombine(evolve_cells);
-    LOGGING_PRINTLN("evolve=" << evolve_cells);
+    LOGGING_PRINTLN("evolve=" << ReasoningDetail::storage_for_log(evolve_cells));
     return std::make_pair(reach_cells, evolve_cells);
 }
 
@@ -716,12 +750,12 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin_outer_approximation(bounding, this->_configuration->bounding_domain(), maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1, "maximum_grid_extent=" << maximum_grid_extent);
-    LOGGING_PRINTLN_AT(1, "bounding_size=" << bounding.size());
+    LOGGING_PRINTLN_AT(1, "bounding_size=" << ReasoningDetail::storage_size(bounding));
 
     StorageType initial_cells = this->_storage_factory(grid, this->system());
     ReasoningDetail::storage_adjoin_outer_approximation(initial_cells, initial_set, maximum_grid_fineness);
     _checked_restriction(initial_cells, bounding, overspill_policy);
-    LOGGING_PRINTLN_AT(1, "initial_size=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "initial_size=" << ReasoningDetail::storage_size(initial_cells));
 
     StorageType reach_cells = this->_storage_factory(grid, this->system());
     StorageType evolve_cells = this->_storage_factory(grid, this->system());
@@ -731,9 +765,9 @@ auto ReachabilityAnalyser<SYS>::
         _checked_restriction(evolve_cells, bounding, overspill_policy);
         ReasoningDetail::storage_recombine(evolve_cells);
         ReasoningDetail::storage_mince(evolve_cells, maximum_grid_fineness);
-        LOGGING_PRINTLN_AT(1, "transient_reach_size=" << reach_cells.size());
-        LOGGING_PRINTLN_AT(1, "transient evolve_size=" << evolve_cells.size());
-        LOGGING_PRINTLN_AT(1, "found " << reach_cells.size() << " cells.");
+        LOGGING_PRINTLN_AT(1, "transient_reach_size=" << ReasoningDetail::storage_size(reach_cells));
+        LOGGING_PRINTLN_AT(1, "transient evolve_size=" << ReasoningDetail::storage_size(evolve_cells));
+        LOGGING_PRINTLN_AT(1, "found " << ReasoningDetail::storage_size(reach_cells) << " cells.");
     } else {
         evolve_cells = initial_cells;
     }
@@ -745,18 +779,18 @@ auto ReachabilityAnalyser<SYS>::
     Nat stage = 0;
     while (not ReasoningDetail::storage_is_empty(starting_cells)) {
         ++stage;
-        LOGGING_PRINTLN_AT(1, "stage=" << std::setw(3) << stage << " #starting=" << std::setw(4) << std::left << starting_cells.size() << " #reached=" << std::setw(4) << std::left << reach_cells.size() << " #evolved=" << std::setw(4) << std::left << accumulated_evolve_cells.size());
+        LOGGING_PRINTLN_AT(1, "stage=" << std::setw(3) << stage << " #starting=" << std::setw(4) << std::left << ReasoningDetail::storage_size(starting_cells) << " #reached=" << std::setw(4) << std::left << ReasoningDetail::storage_size(reach_cells) << " #evolved=" << std::setw(4) << std::left << ReasoningDetail::storage_size(accumulated_evolve_cells));
 
         this->_adjoin_upper_reach_evolve(reach_cells, evolve_cells, starting_cells,
                                          lock_to_grid_time, maximum_grid_fineness, *_evolver);
-        LOGGING_PRINTLN_AT(2, "reach.size()=" << reach_cells.size());
-        LOGGING_PRINTLN_AT(2, "evolve.size()=" << evolve_cells.size());
+        LOGGING_PRINTLN_AT(2, "reach.size()=" << ReasoningDetail::storage_size(reach_cells));
+        LOGGING_PRINTLN_AT(2, "evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
         _checked_restriction(evolve_cells, bounding, overspill_policy);
         starting_cells = evolve_cells;
         ReasoningDetail::storage_remove(starting_cells, accumulated_evolve_cells);
         ReasoningDetail::storage_adjoin(accumulated_evolve_cells, starting_cells);
         ReasoningDetail::storage_mince(starting_cells, maximum_grid_fineness);
-        LOGGING_PRINTLN_AT(2, "evolved to " << evolve_cells.size() << " cells, of which " << starting_cells.size() << " are new.");
+        LOGGING_PRINTLN_AT(2, "evolved to " << ReasoningDetail::storage_size(evolve_cells) << " cells, of which " << ReasoningDetail::storage_size(starting_cells) << " are new.");
     }
     _checked_restriction(reach_cells, bounding, overspill_policy);
     return reach_cells;
@@ -800,12 +834,12 @@ auto ReachabilityAnalyser<SYS>::
         ReasoningDetail::storage_adjoin_outer_approximation(bounding, this->_configuration->bounding_domain(), maximum_grid_fineness);
 
     LOGGING_PRINTLN_AT(1, "maximum_grid_extent=" << maximum_grid_extent);
-    LOGGING_PRINTLN_AT(1, "bounding_size=" << bounding.size());
+    LOGGING_PRINTLN_AT(1, "bounding_size=" << ReasoningDetail::storage_size(bounding));
 
     StorageType initial_cells = this->_storage_factory(grid, this->system());
     ReasoningDetail::storage_adjoin_outer_approximation(initial_cells, initial_set, maximum_grid_fineness);
     _checked_restriction(initial_cells, bounding, overspill_policy);
-    LOGGING_PRINTLN_AT(1, "initial_size=" << initial_cells.size());
+    LOGGING_PRINTLN_AT(1, "initial_size=" << ReasoningDetail::storage_size(initial_cells));
 
     if (not subset(initial_cells, safe_cells)) {
         return SafetyCertificateType{indeterminate, initial_cells, safe_cells};
@@ -819,9 +853,9 @@ auto ReachabilityAnalyser<SYS>::
         _checked_restriction(initial_cells, bounding, overspill_policy);
         ReasoningDetail::storage_recombine(evolve_cells);
         ReasoningDetail::storage_mince(evolve_cells, maximum_grid_fineness);
-        LOGGING_PRINTLN_AT(1, "transient_reach_size=" << reach_cells.size());
-        LOGGING_PRINTLN_AT(1, "transient evolve_size=" << evolve_cells.size());
-        LOGGING_PRINTLN_AT(1, "found " << reach_cells.size() << " cells.");
+        LOGGING_PRINTLN_AT(1, "transient_reach_size=" << ReasoningDetail::storage_size(reach_cells));
+        LOGGING_PRINTLN_AT(1, "transient evolve_size=" << ReasoningDetail::storage_size(evolve_cells));
+        LOGGING_PRINTLN_AT(1, "found " << ReasoningDetail::storage_size(reach_cells) << " cells.");
     } else {
         evolve_cells = initial_cells;
     }
@@ -833,7 +867,7 @@ auto ReachabilityAnalyser<SYS>::
     Nat stage = 0;
     while (not ReasoningDetail::storage_is_empty(starting_cells)) {
         ++stage;
-        LOGGING_PRINTLN_AT(1, "stage=" << std::setw(3) << stage << " #starting=" << std::setw(4) << std::left << starting_cells.size() << " #reached=" << std::setw(4) << std::left << reach_cells.size() << " #evolved=" << std::setw(4) << std::left << accumulated_evolve_cells.size());
+        LOGGING_PRINTLN_AT(1, "stage=" << std::setw(3) << stage << " #starting=" << std::setw(4) << std::left << ReasoningDetail::storage_size(starting_cells) << " #reached=" << std::setw(4) << std::left << ReasoningDetail::storage_size(reach_cells) << " #evolved=" << std::setw(4) << std::left << ReasoningDetail::storage_size(accumulated_evolve_cells));
 
         if (not subset(reach_cells, safe_cells)) {
             return SafetyCertificateType{indeterminate, reach_cells, safe_cells};
@@ -841,14 +875,14 @@ auto ReachabilityAnalyser<SYS>::
 
         this->_adjoin_upper_reach_evolve(reach_cells, evolve_cells, starting_cells,
                                          lock_to_grid_time, maximum_grid_fineness, *_evolver);
-        LOGGING_PRINTLN_AT(2, "reach.size()=" << reach_cells.size());
-        LOGGING_PRINTLN_AT(2, "evolve.size()=" << evolve_cells.size());
+        LOGGING_PRINTLN_AT(2, "reach.size()=" << ReasoningDetail::storage_size(reach_cells));
+        LOGGING_PRINTLN_AT(2, "evolve.size()=" << ReasoningDetail::storage_size(evolve_cells));
         _checked_restriction(initial_cells, bounding, overspill_policy);
         starting_cells = evolve_cells;
         ReasoningDetail::storage_remove(starting_cells, accumulated_evolve_cells);
         ReasoningDetail::storage_adjoin(accumulated_evolve_cells, starting_cells);
         ReasoningDetail::storage_mince(starting_cells, maximum_grid_fineness);
-        LOGGING_PRINTLN_AT(2, "evolved to " << evolve_cells.size() << " cells, of which " << starting_cells.size() << " are new.");
+        LOGGING_PRINTLN_AT(2, "evolved to " << ReasoningDetail::storage_size(evolve_cells) << " cells, of which " << ReasoningDetail::storage_size(starting_cells) << " are new.");
     }
     _checked_restriction(reach_cells, bounding, overspill_policy);
     return SafetyCertificateType{true, reach_cells, safe_cells};
@@ -896,7 +930,11 @@ ReachabilityAnalyserConfiguration<SYS>::ReachabilityAnalyserConfiguration(Reacha
     set_lock_to_grid_time(1);
     set_maximum_grid_fineness(3);
     set_maximum_grid_extent(16);
-    set_grid(GridType(_analyser.system()));
+    if constexpr (std::is_same_v<GridType, LabelledValue<Grid>>)
+        set_grid(make_labelled_grid(Grid(_analyser.system().state_space().dimension()),
+                                    _analyser.system().state_space()));
+    else
+        set_grid(GridType(_analyser.system()));
     set_outer_overspill_policy(ChainOverspillPolicy::ERROR);
 }
 
@@ -914,7 +952,7 @@ OutputStream&
     else
         os << "none";
     os << ",\n  paver=" << paver()
-       << ",\n  grid=" << grid()
+       << ",\n  grid=" << ReasoningDetail::storage_grid_for_log(grid())
        << "\n)\n";
     return os;
 }

@@ -32,6 +32,8 @@
 #include "evolution/traits.hpp"
 #include "geometry/set_interface.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
+#include "labelled/value.hpp"
+#include "symbolic/space.hpp"
 
 // AugmentedPaving and set-interface associations are reasoning-level concerns.
 // The generic space traits preserve the EuclideanSpace API during staging;
@@ -39,8 +41,6 @@
 namespace Ariadne {
 
 class HybridSpace;
-struct LabelledGrid;
-class LabelledAugmentedPaving;
 class BinaryTreePaving;
 class Grid;
 class Paving;
@@ -52,27 +52,27 @@ class Hybrid;
 template<class SYS>
 struct AnalysisTraits;
 
-/** @brief Use labelled augmented pavings for iterated maps. */
+/** @brief Use labelled augmented paving values for iterated maps. */
 template<>
 struct AnalysisTraits<IteratedMap> {
-    using StorageType = LabelledAugmentedPaving;
-    using GridType = LabelledGrid;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
     using PavingType = Paving;
 };
 
-/** @brief Use labelled augmented pavings for vector fields. */
+/** @brief Use labelled augmented paving values for vector fields. */
 template<>
 struct AnalysisTraits<VectorField> {
-    using StorageType = LabelledAugmentedPaving;
-    using GridType = LabelledGrid;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
     using PavingType = Paving;
 };
 
-/** @brief Use labelled augmented pavings for differential inclusions. */
+/** @brief Use labelled augmented paving values for differential inclusions. */
 template<>
 struct AnalysisTraits<DifferentialInclusion> {
-    using StorageType = LabelledAugmentedPaving;
-    using GridType = LabelledGrid;
+    using StorageType = LabelledValue<AugmentedPaving, std::pair<RealSpace, RealSpace>>;
+    using GridType = LabelledValue<Grid>;
     using PavingType = Paving;
 };
 

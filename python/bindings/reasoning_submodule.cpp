@@ -31,7 +31,6 @@
 #include "evolution/hybrid_evolver.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
 #include "paving/augmented_paving.hpp"
 #include "pybind11.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
@@ -69,8 +68,6 @@ Void export_labelled_paving_values(pybind11::module& module) {
     paving_value_class.def("value", [](LabelledValue<Paving>& value) -> Paving& { return value.value(); }, pybind11::return_value_policy::reference_internal);
 
     // Generic, owning snapshots returned by continuous safety certificates.
-    // Keep the legacy certificate fields and the old LabelledAugmentedPaving
-    // Python class available while their remaining consumers are migrated.
     pybind11::class_<LabelledAugmentedPavingValue> augmented_value_class(
         module, "LabelledAugmentedPavingValue");
     augmented_value_class.def("state_space", [](const LabelledAugmentedPavingValue& paving) {
@@ -110,7 +107,6 @@ Void export_hybrid_augmented_paving_value(pybind11::module& module) {
 
 Void export_augmented_paving(pybind11::module& module) {
     pybind11::class_<AugmentedPaving> storage_class(module, "AugmentedPaving");
-    pybind11::class_<LabelledAugmentedPaving, pybind11::bases<AugmentedPaving>> labelled_storage_class(module, "LabelledAugmentedPaving");
 }
 
 template<class RA>
@@ -128,14 +124,14 @@ Void export_safety_certificate(pybind11::module& module, const char* name) {
         return definitely(certificate.is_safe);
     });
     safety_certificate_class.def("chain_reach_size", [](const SafetyCertificateType& certificate) {
-        return certificate.chain_reach_set.size();
+        if constexpr (std::is_same_v<StateSpaceType, EuclideanSpace>)
+            return certificate.chain_reach_set.value().size();
+        else
+            return certificate.chain_reach_set.size();
     });
     safety_certificate_class.def_readonly("chain_reach_set", &SafetyCertificateType::chain_reach_set);
     safety_certificate_class.def_readonly("safe_set", &SafetyCertificateType::safe_set);
-    if constexpr (std::is_same_v<StateSpaceType, EuclideanSpace>) {
-        safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
-        safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
-    } else if constexpr (std::is_same_v<StateSpaceType, HybridSpace>) {
+    if constexpr (std::is_same_v<StateSpaceType, HybridSpace>) {
         safety_certificate_class.def("chain_reach_value", &SafetyCertificateType::chain_reach_value);
         safety_certificate_class.def("safe_value", &SafetyCertificateType::safe_value);
     }
@@ -165,35 +161,35 @@ Void export_reachability_analyser(pybind11::module& module, const char* name) {
     if constexpr (std::is_same_v<typename RA::StateSpaceType, EuclideanSpace>) {
         reachability_analyser_class.def("lower_evolve_value",
                                         [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                                            return a.lower_evolve_value(s, t);
+                                            return a.lower_evolve(s, t);
                                         });
         reachability_analyser_class.def("lower_reach_evolve_values",
                                         [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                                            return a.lower_reach_evolve_values(s, t);
+                                            return a.lower_reach_evolve(s, t);
                                         });
         reachability_analyser_class.def("lower_reach_value",
                                         [](const RA& a, const OvertSetType& s, const TimeType& t) {
-                                            return a.lower_reach_value(s, t);
+                                            return a.lower_reach(s, t);
                                         });
         reachability_analyser_class.def("lower_reach_value",
                                         [](const RA& a, const OvertSetType& s) {
-                                            return a.lower_reach_value(s);
+                                            return a.lower_reach(s);
                                         });
         reachability_analyser_class.def("upper_evolve_value",
                                         [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                                            return a.upper_evolve_value(s, t);
+                                            return a.upper_evolve(s, t);
                                         });
         reachability_analyser_class.def("upper_reach_evolve_values",
                                         [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                                            return a.upper_reach_evolve_values(s, t);
+                                            return a.upper_reach_evolve(s, t);
                                         });
         reachability_analyser_class.def("upper_reach_value",
                                         [](const RA& a, const CompactSetType& s, const TimeType& t) {
-                                            return a.upper_reach_value(s, t);
+                                            return a.upper_reach(s, t);
                                         });
         reachability_analyser_class.def("outer_chain_reach_value",
                                         [](const RA& a, const CompactSetType& s) {
-                                            return a.outer_chain_reach_value(s);
+                                            return a.outer_chain_reach(s);
                                         });
     }
 

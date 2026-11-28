@@ -31,8 +31,10 @@
 
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/value.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "paving/paving_interface.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
+#include "reasoning/labelled_paving_value.hpp"
 #include "reasoning/reachability_analyser.hpp"
 
 namespace Ariadne {
@@ -58,6 +60,26 @@ struct AnalysisPavingFactory<HybridAugmentedPavingValue> {
     /** @brief Lift a generic hybrid state paving to augmented values using the automaton's auxiliary mapping. */
     static HybridAugmentedPavingValue make(const Hybrid<Paving>& state, const HybridAutomatonInterface& system) {
         return make_hybrid_augmented_paving_value(state, make_hybrid_auxiliary_mapping(system));
+    }
+};
+
+/** @brief Construct generic labelled augmented paving values for continuous systems. */
+template<>
+struct AnalysisPavingFactory<LabelledAugmentedPavingValue> {
+    /** @brief Construct an empty value on a labelled grid, with a binary-tree backend. */
+    template<class SYS>
+    static LabelledAugmentedPavingValue make(const LabelledValue<Grid>& grid, const SYS& system) {
+        return make_labelled_augmented_paving(Paving(new BinaryTreePaving(grid.value())), system);
+    }
+    /** @brief Lift a state paving to an augmented value using the system's auxiliary mapping. */
+    template<class SYS>
+    static LabelledAugmentedPavingValue make(const Paving& paving, const SYS& system) {
+        return make_labelled_augmented_paving(paving, system);
+    }
+    /** @brief Attach the system's coordinate labels to an existing augmented paving. */
+    template<class SYS>
+    static LabelledAugmentedPavingValue make(const AugmentedPaving& paving, const SYS& system) {
+        return make_labelled_augmented_paving(paving, system);
     }
 };
 

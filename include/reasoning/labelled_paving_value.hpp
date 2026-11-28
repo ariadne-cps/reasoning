@@ -31,14 +31,15 @@
 
 #include <utility>
 
+#include "geometry/box.hpp"
+#include "geometry/set_interface.hpp"
 #include "labelled/value.hpp"
 #include "paving/augmented_paving.hpp"
+#include "paving/binary_tree_paving.hpp"
 #include "paving/grid.hpp"
 #include "paving/paving_interface.hpp"
 
 namespace Ariadne {
-
-class LabelledAugmentedPaving;
 
 // Keep grid-specific composition in Reasoning, while LabelledValue<T>
 // remains a geometry-independent value/metadata wrapper.
@@ -61,12 +62,26 @@ using LabelledAugmentedPavingValue =
 LabelledAugmentedPavingValue make_labelled_augmented_paving(
     AugmentedPaving paving, RealSpace state_space, RealSpace auxiliary_space);
 
-/** @brief Make an owning generic value from legacy continuous analysis storage.
- *  @details Keeps the original tree or ROBDD backend and ordered coordinates.
- *  Legacy class definitions remain private to the implementation.
- */
-LabelledAugmentedPavingValue make_labelled_augmented_paving_value(
-    const LabelledAugmentedPaving& legacy);
+/** @brief Construct an empty labelled augmented paving value on a labelled grid. */
+template<class SYS>
+LabelledAugmentedPavingValue make_labelled_augmented_paving(const LabelledValue<Grid>& grid, const SYS& system) {
+    ARIADNE_PRECONDITION(grid.space() == system.state_space());
+    return make_labelled_augmented_paving(Paving(new BinaryTreePaving(grid.value())), system);
+}
+
+/** @brief Attach a system's state/auxiliary coordinates and auxiliary mapping to a state paving. */
+template<class SYS>
+LabelledAugmentedPavingValue make_labelled_augmented_paving(Paving paving, const SYS& system) {
+    return make_labelled_augmented_paving(
+        AugmentedPaving(std::move(paving), system.auxiliary_mapping()),
+        system.state_space(), system.auxiliary_space());
+}
+
+/** @brief Attach a system's state/auxiliary coordinates to an augmented paving. */
+template<class SYS>
+LabelledAugmentedPavingValue make_labelled_augmented_paving(AugmentedPaving paving, const SYS& system) {
+    return make_labelled_augmented_paving(std::move(paving), system.state_space(), system.auxiliary_space());
+}
 
 /** @brief Access the labelled augmented paving's state coordinates. */
 const RealSpace& state_space(const LabelledAugmentedPavingValue& paving);
@@ -94,6 +109,24 @@ Bool subset(const LabelledAugmentedPavingValue& left,
 
 Bool intersect(const LabelledAugmentedPavingValue& left,
                const LabelledAugmentedPavingValue& right);
+
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanCompactSetInterface& set, Nat fineness);
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const ValidatedEuclideanCompactSetInterface& set, Nat fineness);
+Void adjoin_outer_approximation(LabelledAugmentedPavingValue& pavings,
+                                const ExactBoxType& box, Nat fineness);
+Void adjoin_lower_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanOvertSetInterface& set, Nat extent, Nat fineness);
+Void adjoin_inner_approximation(LabelledAugmentedPavingValue& pavings,
+                                const EffectiveEuclideanSetInterface& set, Nat fineness);
+Void restrict_to_extent(LabelledAugmentedPavingValue& pavings, Nat extent);
+Void mince(LabelledAugmentedPavingValue& pavings, Nat fineness);
+Void recombine(LabelledAugmentedPavingValue& pavings);
+Bool is_empty(const LabelledAugmentedPavingValue& pavings);
+
+Paving inner_approximation(const EffectiveEuclideanSetInterface& set,
+                           const LabelledValue<Grid>& grid, Nat fineness);
 
 } // namespace Ariadne
 

@@ -2,7 +2,7 @@
 import pyariadne_reasoning as a
 
 def test_reasoning_bindings():
-    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPaving",
+    for name in ("SatSolver", "SmtSolver", "AugmentedPaving", "LabelledAugmentedPavingValue",
                  "LabelledAugmentedPavingValue",
                  "ContinuousReachabilityAnalyser", "SafetyCertificate", "GeneralHybridEvolver",
                  "HybridBoundedConstraintSet", "HybridSafetyCertificate",

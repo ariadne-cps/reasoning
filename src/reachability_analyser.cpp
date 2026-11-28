@@ -59,14 +59,6 @@
 
 namespace Ariadne {
 
-LabelledAugmentedPavingValue SafetyCertificate<EuclideanSpace>::chain_reach_value() const {
-    return make_labelled_augmented_paving_value(chain_reach_set);
-}
-
-LabelledAugmentedPavingValue SafetyCertificate<EuclideanSpace>::safe_value() const {
-    return make_labelled_augmented_paving_value(safe_set);
-}
-
 template class ReachabilityAnalyser<IteratedMap>;
 template class ReachabilityAnalyserConfiguration<IteratedMap>;
 

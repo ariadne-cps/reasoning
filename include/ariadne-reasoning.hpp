@@ -29,8 +29,6 @@
 #ifndef ARIADNE_ARIADNE_REASONING_HPP
 #define ARIADNE_ARIADNE_REASONING_HPP
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
-#include "labelled/labelled_grid.hpp"
 #include "labelled/labelled_mapping.hpp"
 #include "paving/augmented_paving.hpp"
 #include "reasoning/augmented_paving_orbit.hpp"

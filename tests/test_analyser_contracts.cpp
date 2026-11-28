@@ -39,13 +39,9 @@
 
 using namespace Ariadne;
 
-// Free is_empty for the generic hybrid value storage, member call for legacy storage.
 template<class SYS>
 Bool storage_is_empty(const typename ReachabilityAnalyser<SYS>::StorageType& storage) {
-    if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
-        return is_empty(storage);
-    else
-        return storage.is_empty();
+    return is_empty(storage);
 }
 
 template<class SYS>
@@ -70,10 +66,7 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         analyser.configuration().set_maximum_grid_extent(4u);
         auto certificate = analyser.verify_safety(initial, safe);
         auto initial_cells = analyser.storage();
-        if constexpr (std::is_same_v<SYS, HybridAutomatonInterface>)
-            adjoin_outer_approximation(initial_cells, initial, 3u);
-        else
-            initial_cells.adjoin_outer_approximation(initial, 3u);
+        adjoin_outer_approximation(initial_cells, initial, 3u);
         ARIADNE_TESTING_PROVE(subset(initial_cells, certificate.safe_set));
         ARIADNE_TESTING_PROVE(is_indeterminate(certificate.is_safe));
         ARIADNE_TESTING_PROVE(not subset(certificate.chain_reach_set, certificate.safe_set));
@@ -213,8 +206,8 @@ class TestAnalyserContracts : public Testing::ContextFixture {
         continuous.configuration().set_transient_time(Real(1 / 8_q));
         continuous.configuration().set_maximum_grid_extent(0u);
         continuous.configuration().set_outer_overspill_policy(ChainOverspillPolicy::IGNORE);
-        ARIADNE_TESTING_PROVE(not continuous.lower_reach(initial).is_empty());
-        ARIADNE_TESTING_PROVE(not continuous.outer_chain_reach(initial).is_empty());
+        ARIADNE_TESTING_PROVE(not is_empty(continuous.lower_reach(initial)));
+        ARIADNE_TESTING_PROVE(not is_empty(continuous.outer_chain_reach(initial)));
 
         IteratedMap map(List<PrimedRealAssignment>{next(x) = x / 2});
         IteratedMapEvolver map_evolver(map);
@@ -252,8 +245,8 @@ class TestAnalyserContracts : public Testing::ContextFixture {
             input[q].state_paving().adjoin(root);
             bounding[q].state_paving().adjoin(root.split(false));
         } else {
-            auto& input_state = input.state_paving();
-            auto& bounding_state = bounding.state_paving();
+            auto& input_state = input.value().state_paving();
+            auto& bounding_state = bounding.value().state_paving();
             input_state.adjoin(root);
             bounding_state.adjoin(root.split(false));
         }

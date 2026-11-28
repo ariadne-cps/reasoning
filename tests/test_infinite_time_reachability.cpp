@@ -142,13 +142,13 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
         cout << "Computing infinite time lower reachable set" << endl;
         StorageType lower_reach_set = analyser.lower_reach(initial_set);
 
-        ARIADNE_TESTING_PROVE(lower_reach_set.size() > 0);
+        ARIADNE_TESTING_PROVE(lower_reach_set.value().size() > 0);
 
-        cout << "Reached " << lower_reach_set.size() << " cells " << endl
+        cout << "Reached " << lower_reach_set.value().size() << " cells " << endl
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_infinite_time_lower_reach.png", Projection2d(2, 0, 1), graphics_box,
-                            reach_set_colour, lower_reach_set);
+                            reach_set_colour, lower_reach_set.value());
 
         // Zero transient time and no bounding domain: both restriction and
         // transient steps are skipped.
@@ -167,13 +167,13 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
 
         StorageType outer_chain_reach_set = analyser.outer_chain_reach(initial_set);
 
-        ARIADNE_TESTING_PROVE(outer_chain_reach_set.size() > 0);
+        ARIADNE_TESTING_PROVE(outer_chain_reach_set.value().size() > 0);
 
-        cout << "Reached " << outer_chain_reach_set.size() << " cells " << endl
+        cout << "Reached " << outer_chain_reach_set.value().size() << " cells " << endl
              << endl;
 
         PavingDrawing::plot("test_reachability_analyser-map_outer_chain_reach.png", Projection2d(2, 0, 1), graphics_box,
-                            reach_set_colour, outer_chain_reach_set);
+                            reach_set_colour, outer_chain_reach_set.value());
 
         cout << "Recomputing with tight restriction" << endl;
 
@@ -191,11 +191,11 @@ class TestInfiniteTimeReachability : public Ariadne::Testing::ContextFixture {
 
         analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::WARNING);
         auto warned_set = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_NOTE(warned_set.size());
+        ARIADNE_TESTING_NOTE(warned_set.value().size());
 
         analyser.configuration().set_outer_overspill_policy(ChainOverspillPolicy::IGNORE);
         auto ignored_set = analyser.outer_chain_reach(initial_set);
-        ARIADNE_TESTING_NOTE(ignored_set.size());
+        ARIADNE_TESTING_NOTE(ignored_set.value().size());
     }
 };
 

@@ -38,7 +38,6 @@
 #include "evolution/enclosure.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "geometry/set.hpp"
-#include "labelled/labelled_augmented_paving.hpp"
 #include "logging/logging.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"
@@ -82,13 +81,8 @@ using ContinuousReachabilityAnalyser = ReachabilityAnalyser<VectorField>;
 template<>
 struct SafetyCertificate<EuclideanSpace> {
     const ValidatedSierpinskian is_safe;
-    const LabelledAugmentedPaving chain_reach_set;
-    const LabelledAugmentedPaving safe_set;
-
-    /** @brief Return an owning generic snapshot of the chain-reachable set. */
-    LabelledAugmentedPavingValue chain_reach_value() const;
-    /** @brief Return an owning generic snapshot of the safe set. */
-    LabelledAugmentedPavingValue safe_value() const;
+    const LabelledAugmentedPavingValue chain_reach_set;
+    const LabelledAugmentedPavingValue safe_set;
 };
 
 //! \ingroup DynamicsModule
@@ -156,10 +150,10 @@ class ReachabilityAnalyser
     Void set_paving_factory(std::function<Paving(const Grid&)> factory) {
         if (not factory)
             throw std::invalid_argument("Empty paving factory");
-        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPaving>) {
+        if constexpr (std::is_same_v<StorageType, LabelledAugmentedPavingValue>) {
             _storage_factory = [factory = std::move(factory)](
                                    const GridType& grid, const SystemType& system) -> StorageType {
-                return StorageType(factory(grid.euclidean_grid()), system);
+                return make_labelled_augmented_paving(factory(grid.value()), system);
             };
         } else if constexpr (std::is_same_v<StorageType, HybridAugmentedPavingValue>) {
             // The same factory creates the continuous paving on demand in
@@ -222,68 +216,6 @@ class ReachabilityAnalyser
         verify_safety(const CompactSetInterfaceType& initial_set, const OpenSetInterfaceType& safe_set) const override;
 
     //!@}
-
-    // Non-breaking generic results for continuous analysers. Existing virtual
-    // methods and AnalysisTraits still use their legacy storage; each result
-    // is converted into an independent, backend-preserving labelled value.
-    LabelledAugmentedPavingValue lower_evolve_value(
-        const OvertSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(lower_evolve(initial_set, time));
-    }
-
-    Pair<LabelledAugmentedPavingValue, LabelledAugmentedPavingValue>
-        lower_reach_evolve_values(const OvertSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        auto values = lower_reach_evolve(initial_set, time);
-        return {make_labelled_augmented_paving_value(values.first),
-                make_labelled_augmented_paving_value(values.second)};
-    }
-
-    LabelledAugmentedPavingValue lower_reach_value(
-        const OvertSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(lower_reach(initial_set, time));
-    }
-
-    LabelledAugmentedPavingValue lower_reach_value(const OvertSetInterfaceType& initial_set) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(lower_reach(initial_set));
-    }
-
-    LabelledAugmentedPavingValue upper_evolve_value(
-        const CompactSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(upper_evolve(initial_set, time));
-    }
-
-    Pair<LabelledAugmentedPavingValue, LabelledAugmentedPavingValue>
-        upper_reach_evolve_values(const CompactSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        auto values = upper_reach_evolve(initial_set, time);
-        return {make_labelled_augmented_paving_value(values.first),
-                make_labelled_augmented_paving_value(values.second)};
-    }
-
-    LabelledAugmentedPavingValue upper_reach_value(
-        const CompactSetInterfaceType& initial_set, const TimeType& time) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(upper_reach(initial_set, time));
-    }
-
-    LabelledAugmentedPavingValue outer_chain_reach_value(
-        const CompactSetInterfaceType& initial_set) const
-        requires std::is_same_v<StorageType, LabelledAugmentedPaving>
-    {
-        return make_labelled_augmented_paving_value(outer_chain_reach(initial_set));
-    }
 
   protected:
     // Helper functions for operators on lists of sets.
@@ -408,20 +340,6 @@ class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
 
     const GridType& grid() const { return *_grid_ptr; }
     Void set_grid(const GridType& grid);
-
-    // Generic coordinate-labelled grid access for continuous analysers.
-    // Hybrid configurations expose the generic Hybrid<Grid> family.
-    LabelledValue<Grid> grid_value() const
-        requires std::is_same_v<GridType, LabelledGrid>
-    {
-        return make_labelled_grid(grid().euclidean_grid(), grid().space());
-    }
-
-    Void set_grid(const LabelledValue<Grid>& labelled_grid)
-        requires std::is_same_v<GridType, LabelledGrid>
-    {
-        set_grid(GridType(labelled_grid.value(), labelled_grid.space()));
-    }
 
     //! \brief Algorithm used for approximating evolved enclosures on the grid.
     const Paver& paver() const { return _paver; }
