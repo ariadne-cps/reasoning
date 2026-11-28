@@ -41,8 +41,6 @@
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
 #include "hybrid/hybrid_graphics.hpp"
-#include "hybrid/hybrid_grid_cell.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "integration/integrator.hpp"
 #include "labelled/figure.hpp"

@@ -31,7 +31,6 @@
 
 #include <functional>
 
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_set_interface.hpp"
 #include "hybrid/value.hpp"
 #include "paving/augmented_paving.hpp"
@@ -46,14 +45,6 @@ HybridAuxiliaryMapping make_hybrid_auxiliary_mapping(const HybridAutomatonInterf
 
 /** @brief Owning location-indexed family of augmented pavings. */
 using HybridAugmentedPavingValue = Hybrid<AugmentedPaving>;
-
-/** @brief Make an owning generic snapshot of legacy hybrid augmented storage.
- *  @details Every materialised location keeps its original tree or ROBDD
- *  state backend and its location-specific auxiliary mapping. The snapshot's
- *  lazy factory materialises empty slices with the same backend, so set
- *  operations never convert the authoritative representation.
- */
-HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const HybridAugmentedPaving& legacy);
 
 /** @brief Make an empty hybrid augmented paving value on a generic grid family,
  *  using the automaton's auxiliary mapping and a binary-tree backend.

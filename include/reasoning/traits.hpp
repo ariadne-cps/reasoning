@@ -41,7 +41,6 @@ namespace Ariadne {
 class HybridSpace;
 struct LabelledGrid;
 class LabelledAugmentedPaving;
-class HybridAugmentedPaving;
 class BinaryTreePaving;
 class Grid;
 class Paving;

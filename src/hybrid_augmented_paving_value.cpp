@@ -33,34 +33,12 @@
 
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_auxiliary_mapping.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "labelled/set.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "system/hybrid_automaton_interface.hpp"
 
 namespace Ariadne {
-
-HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const HybridAugmentedPaving& legacy) {
-    const HybridSpace space = legacy.state_paving().space();
-    HybridPaving state = legacy.state_paving();
-    HybridAuxiliaryMapping mapping = legacy.auxiliary_data();
-    HybridAugmentedPavingValue result(
-        space,
-        [state = std::move(state), mapping = std::move(mapping)](
-            const DiscreteLocation& location, const RealSpace& real_space) mutable {
-            ARIADNE_PRECONDITION(state.space()[location] == real_space);
-            return AugmentedPaving(state[location], mapping(location).mapping());
-        });
-    for (auto iter = legacy.state_paving().locations_begin(),
-              end = legacy.state_paving().locations_end();
-         iter != end; ++iter) {
-        result.insert(iter->first,
-                      AugmentedPaving(legacy.state_paving()[iter->first],
-                                      legacy.auxiliary_mapping(iter->first).mapping()));
-    }
-    return result;
-}
 
 HybridAugmentedPavingValue make_hybrid_augmented_paving_value(const Hybrid<Grid>& grids,
                                                               const HybridAutomatonInterface& system) {

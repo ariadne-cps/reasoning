@@ -29,6 +29,7 @@
 #ifndef ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
 #define ARIADNE_REASONING_DETAIL_ANALYSIS_PAVING_FACTORY_HPP
 
+#include "hybrid/hybrid_auxiliary_mapping.hpp"
 #include "hybrid/value.hpp"
 #include "paving/paving_interface.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"

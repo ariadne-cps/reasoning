@@ -28,6 +28,8 @@
 
 // Verify the continuous and hybrid enclosure-to-augmented-paving adapters.
 #include "function/taylor_function.hpp"
+#include "hybrid/hybrid_auxiliary_mapping.hpp"
+#include "hybrid/hybrid_set.hpp"
 #include "logging/test_runner.hpp"
 #include "paving/binary_tree_paving.hpp"
 #include "paving/paver.hpp"

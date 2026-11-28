@@ -38,7 +38,6 @@
 #include "evolution/enclosure.hpp"
 #include "evolution/vector_field_evolver.hpp"
 #include "geometry/set.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "labelled/labelled_augmented_paving.hpp"
 #include "logging/logging.hpp"
 #include "paving/binary_tree_paving.hpp"
@@ -411,7 +410,7 @@ class ReachabilityAnalyserConfiguration : public ConfigurationInterface {
     Void set_grid(const GridType& grid);
 
     // Generic coordinate-labelled grid access for continuous analysers.
-    // Hybrid configurations retain their existing HybridGrid API.
+    // Hybrid configurations expose the generic Hybrid<Grid> family.
     LabelledValue<Grid> grid_value() const
         requires std::is_same_v<GridType, LabelledGrid>
     {

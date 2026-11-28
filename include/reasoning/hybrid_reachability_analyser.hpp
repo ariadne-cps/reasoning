@@ -35,7 +35,6 @@
 #include "evolution/configuration_interface.hpp"
 #include "evolution/hybrid_evolver_interface.hpp"
 #include "evolution/hybrid_orbit.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_set.decl.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_set_interface.hpp"

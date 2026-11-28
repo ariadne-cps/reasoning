@@ -23,26 +23,14 @@
  */
 
 /** @file tests/test_hybrid_paving_value_adapters.cpp
- *  @brief Compare lazy hybrid paving values with legacy tree and ROBDD storage.
+ *  @brief Exercise lazy hybrid paving values with tree and ROBDD storage.
  */
 
 #include <memory>
 
-#include "reasoning/hybrid_paving_value.hpp"
-
-#ifdef ARIADNE_HYBRID_GRID_HPP
-#error Generic paving adapter must not import the legacy HybridGrid header
-#endif
-#ifdef ARIADNE_HYBRID_SCALINGS_HPP
-#error Generic paving adapter must not import legacy HybridScalings
-#endif
-
-#include "analysis_paving_factory.hpp"
 #include "function/function.hpp"
 #include "geometry/box.hpp"
-#include "hybrid/hybrid_augmented_paving.hpp"
 #include "hybrid/hybrid_bounded_constraint_set.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid_scalings_test_util.hpp"
 #include "logging/test_runner.hpp"
@@ -50,6 +38,7 @@
 #include "paving/robdd_paving.hpp"
 #include "reasoning/hybrid_augmented_paving_value.hpp"
 #include "reasoning/hybrid_grid_value.hpp"
+#include "reasoning/hybrid_paving_value.hpp"
 #include "system/hybrid_automaton.hpp"
 
 #include "ariadne-testing.hpp"
@@ -71,8 +60,6 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             {x.name(), 2.0_x},
             {y.name(), 3.0_x}
         };
-        const HybridScalings policy(scale_values);
-        const HybridGrid legacy_grid(space, policy);
 
         for (Bool use_robdd: {false, true}) {
             auto manager = std::make_shared<RobddManager>();
@@ -84,7 +71,6 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
                     return Paving(new RobddPaving(manager, selected_grid));
                 return Paving(new BinaryTreePaving(selected_grid));
             };
-            HybridPaving legacy(legacy_grid, create_backend);
 
             Hybrid<Grid> generic_grids = make_hybrid_grids(
                 space, test_scalings_from_map(space, 1.0_x, scale_values));
@@ -99,28 +85,22 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 0u);
             ARIADNE_TESTING_EXPECT_EQUAL(backend_creations, 0u);
 
-            const Grid grid_first = legacy_grid[first];
+            const Grid grid_first(Vector<ExactDouble>{2.0_x});
             const GridCell cell_first(grid_first, 0u, BinaryWord());
             Paving& generic_first = generic[first];
             ARIADNE_TESTING_EXPECT_EQUAL(backend_creations, 1u);
             ARIADNE_TESTING_PROVE(generic_first.grid() == grid_first);
             ARIADNE_TESTING_PROVE(not generic.has_value(second));
             generic_first.adjoin(cell_first);
-            legacy[first].adjoin(cell_first);
             ARIADNE_TESTING_PROVE(generic_first.superset(cell_first));
-            ARIADNE_TESTING_PROVE(legacy[first].superset(cell_first));
-            ARIADNE_TESTING_PROVE(generic_first.subset(static_cast<const PavingInterface&>(legacy[first])));
-            ARIADNE_TESTING_PROVE(legacy[first].subset(static_cast<const PavingInterface&>(generic_first)));
 
-            const Grid grid_second = legacy_grid[second];
+            const Grid grid_second(Vector<ExactDouble>{3.0_x, 2.0_x});
             const GridCell cell_second(grid_second, 0u, BinaryWord());
             Paving& generic_second = generic[second];
-            ARIADNE_TESTING_EXPECT_EQUAL(backend_creations, 3u);
+            ARIADNE_TESTING_EXPECT_EQUAL(backend_creations, 2u);
             ARIADNE_TESTING_PROVE(generic_second.grid() == grid_second);
             generic_second.adjoin(cell_second);
-            legacy[second].adjoin(cell_second);
-            ARIADNE_TESTING_PROVE(generic_second.subset(static_cast<const PavingInterface&>(legacy[second])));
-            ARIADNE_TESTING_PROVE(legacy[second].subset(static_cast<const PavingInterface&>(generic_second)));
+            ARIADNE_TESTING_PROVE(generic_second.superset(cell_second));
             ARIADNE_TESTING_EXPECT_EQUAL(generic.size(), 2u);
 
             const Hybrid<Paving>& read_only = generic;
@@ -287,7 +267,8 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
                 ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(&selected) != nullptr);
         }
     }
-    Void test_set_operations_match_legacy_without_unwanted_materialization() {
+
+    Void test_set_operations_without_unwanted_materialization() {
         const DiscreteLocation first(1), second(2), third(3), absent(4);
         const RealVariable x("x");
         MonolithicHybridSpace spaces;
@@ -295,7 +276,6 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         spaces.new_location(second, RealSpace({x}));
         spaces.new_location(third, RealSpace({x}));
         const HybridSpace space(spaces);
-        const HybridGrid legacy_grid(space);
         const Grid grid(1u);
         const GridCell cell_left(grid, 0u, BinaryWord("0"));
         const GridCell cell_right(grid, 0u, BinaryWord("1"));
@@ -317,57 +297,22 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             };
             Hybrid<Paving> original_left = make_generic();
             Hybrid<Paving> original_right = make_generic();
-            HybridPaving legacy_left(legacy_grid, backend);
-            HybridPaving legacy_right(legacy_grid, backend);
             original_left[first].adjoin(cell_left);
             original_left[second].adjoin(cell_right);
             original_right[first].adjoin(cell_right);
             original_right[third].adjoin(cell_left);
-            legacy_left[first].adjoin(cell_left);
-            legacy_left[second].adjoin(cell_right);
-            legacy_right[first].adjoin(cell_right);
-            legacy_right[third].adjoin(cell_left);
 
             // Comparisons must not force lazy construction.
-            ARIADNE_TESTING_PROVE(subset(original_left, original_right) ==
-                                  subset(legacy_left, legacy_right));
-            ARIADNE_TESTING_PROVE(intersect(original_left, original_right) ==
-                                  intersect(legacy_left, legacy_right));
+            ARIADNE_TESTING_PROVE(not subset(original_left, original_right));
+            ARIADNE_TESTING_PROVE(not intersect(original_left, original_right));
             ARIADNE_TESTING_EXPECT_EQUAL(original_left.size(), 2u);
             ARIADNE_TESTING_EXPECT_EQUAL(original_right.size(), 2u);
             ARIADNE_TESTING_PROVE(not original_left.has_value(third));
             ARIADNE_TESTING_PROVE(not original_right.has_value(second));
             ARIADNE_TESTING_PROVE(not original_left.has_location(absent));
 
-            const auto check_slice = [&](const Hybrid<Paving>& generic,
-                                         const HybridPaving& legacy,
-                                         const DiscreteLocation& location) {
-                ARIADNE_TESTING_PROVE(generic.has_value(location) ==
-                                      legacy.nontrivial_location(location));
-                if (generic.has_value(location)) {
-                    const Paving& lhs = generic[location];
-                    const Paving& rhs = legacy[location];
-                    ARIADNE_TESTING_PROVE(lhs.grid() == rhs.grid());
-                    ARIADNE_TESTING_PROVE(lhs.subset(
-                        static_cast<const PavingInterface&>(rhs)));
-                    ARIADNE_TESTING_PROVE(rhs.subset(
-                        static_cast<const PavingInterface&>(lhs)));
-                    if (use_robdd) {
-                        ARIADNE_TESTING_PROVE(dynamic_cast<const RobddPaving*>(
-                                                  &static_cast<const PavingInterface&>(lhs)) != nullptr);
-                    } else {
-                        ARIADNE_TESTING_PROVE(dynamic_cast<const BinaryTreePaving*>(
-                                                  &static_cast<const PavingInterface&>(lhs)) != nullptr);
-                    }
-                }
-            };
-
             Hybrid<Paving> joined = original_left;
-            HybridPaving legacy_joined = legacy_left;
             adjoin(joined, original_right);
-            legacy_joined.adjoin(legacy_right);
-            for (const auto& location: {first, second, third})
-                check_slice(joined, legacy_joined, location);
             ARIADNE_TESTING_EXPECT_EQUAL(joined.size(), 3u);
             ARIADNE_TESTING_PROVE(joined[first].superset(cell_left));
             ARIADNE_TESTING_PROVE(joined[first].superset(cell_right));
@@ -375,22 +320,14 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             ARIADNE_TESTING_PROVE(intersect(joined, original_right));
 
             Hybrid<Paving> difference = original_left;
-            HybridPaving legacy_difference = legacy_left;
             remove(difference, original_right);
-            legacy_difference.remove(legacy_right);
-            for (const auto& location: {first, second, third})
-                check_slice(difference, legacy_difference, location);
             ARIADNE_TESTING_PROVE(difference.has_value(third));
             ARIADNE_TESTING_PROVE(difference[third].is_empty());
             ARIADNE_TESTING_PROVE(difference[first].superset(cell_left));
             ARIADNE_TESTING_PROVE(not difference[first].superset(cell_right));
 
             Hybrid<Paving> restricted = original_left;
-            HybridPaving legacy_restricted = legacy_left;
             restrict(restricted, original_right);
-            legacy_restricted.restrict(legacy_right);
-            for (const auto& location: {first, second, third})
-                check_slice(restricted, legacy_restricted, location);
             ARIADNE_TESTING_PROVE(restricted[first].is_empty());
             ARIADNE_TESTING_PROVE(restricted[second].is_empty());
             ARIADNE_TESTING_PROVE(not restricted.has_value(third));
@@ -428,7 +365,7 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
         ARIADNE_TESTING_PROVE(not invalid.has_value(first));
     }
 
-    Void test_generic_approximation_matches_legacy() {
+    Void test_generic_approximation_and_augmented_value() {
         const DiscreteLocation first(1), second(2);
         const RealVariable x("x"), y("y");
         MonolithicHybridSpace spaces;
@@ -439,37 +376,37 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             {x.name(), 2.0_x},
             {y.name(), 3.0_x}
         };
-        const HybridScalings policy(scale_values);
-        const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
         auto generic_grids = [&] { return make_hybrid_grids(space, test_scalings_from_map(space, 1.0_x, scale_values)); };
 
-        // Outer approximation of a hybrid compact set: identical slices.
+        // Outer approximation of a hybrid compact set: only its location materializes.
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
-        HybridPaving legacy(legacy_grid, create_tree);
         Hybrid<Paving> generic = make_hybrid_pavings(space, generic_grids(), create_tree);
-        legacy.adjoin_outer_approximation(compact_set, 2u);
         adjoin_outer_approximation(generic, compact_set, 2u);
-        ARIADNE_TESTING_PROVE(legacy[first].size() > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
-        ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(legacy[first])));
-        ARIADNE_TESTING_PROVE(legacy[first].subset(static_cast<const PavingInterface&>(generic[first])));
+        ARIADNE_TESTING_PROVE(generic[first].size() > 0u);
         ARIADNE_TESTING_PROVE(not generic.has_value(second));
 
-        // Lower approximation matches the legacy per-location call.
-        HybridPaving legacy_lower(legacy_grid, create_tree);
+        // Two independently built values agree slice by slice.
+        Hybrid<Paving> replica = make_hybrid_pavings(space, generic_grids(), create_tree);
+        adjoin_outer_approximation(replica, compact_set, 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), replica[first].size());
+        ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(replica[first])));
+        ARIADNE_TESTING_PROVE(replica[first].subset(static_cast<const PavingInterface&>(generic[first])));
+
+        // Lower approximation matches an independent replica.
         Hybrid<Paving> generic_lower = make_hybrid_pavings(space, generic_grids(), create_tree);
-        legacy_lower.adjoin_lower_approximation(compact_set, 4u, 6u);
         adjoin_lower_approximation(generic_lower, compact_set, 4u, 6u);
-        ARIADNE_TESTING_PROVE(legacy_lower[first].size() > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_lower[first].size(), legacy_lower[first].size());
-        ARIADNE_TESTING_PROVE(generic_lower[first].subset(static_cast<const PavingInterface&>(legacy_lower[first])));
-        ARIADNE_TESTING_PROVE(legacy_lower[first].subset(static_cast<const PavingInterface&>(generic_lower[first])));
+        ARIADNE_TESTING_PROVE(generic_lower[first].size() > 0u);
+        Hybrid<Paving> replica_lower = make_hybrid_pavings(space, generic_grids(), create_tree);
+        adjoin_lower_approximation(replica_lower, compact_set, 4u, 6u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_lower[first].size(), replica_lower[first].size());
+        ARIADNE_TESTING_PROVE(generic_lower[first].subset(static_cast<const PavingInterface&>(replica_lower[first])));
+        ARIADNE_TESTING_PROVE(replica_lower[first].subset(static_cast<const PavingInterface&>(generic_lower[first])));
 
         // Extent restriction matches as well.
-        legacy.restrict_to_extent(3u);
         restrict_to_extent(generic, 3u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
+        restrict_to_extent(replica, 3u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), replica[first].size());
 
         // Outer approximation of exact boxes on both locations.
         HybridExactBoxes boxes;
@@ -481,31 +418,29 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
                                  y, x
         }),
                      ExactBoxType({{-2, 2}, {-2, 2}}));
-        HybridPaving legacy_boxes(legacy_grid, create_tree);
         Hybrid<Paving> generic_boxes = make_hybrid_pavings(space, generic_grids(), create_tree);
-        legacy_boxes.adjoin_outer_approximation(boxes, 2u);
         adjoin_outer_approximation(generic_boxes, boxes, 2u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[first].size(), legacy_boxes[first].size());
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[second].size(), legacy_boxes[second].size());
-        ARIADNE_TESTING_PROVE(generic_boxes[first].subset(static_cast<const PavingInterface&>(legacy_boxes[first])));
-        ARIADNE_TESTING_PROVE(legacy_boxes[first].subset(static_cast<const PavingInterface&>(generic_boxes[first])));
+        Hybrid<Paving> replica_boxes = make_hybrid_pavings(space, generic_grids(), create_tree);
+        adjoin_outer_approximation(replica_boxes, boxes, 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[first].size(), replica_boxes[first].size());
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_boxes[second].size(), replica_boxes[second].size());
+        ARIADNE_TESTING_PROVE(generic_boxes[first].subset(static_cast<const PavingInterface&>(replica_boxes[first])));
+        ARIADNE_TESTING_PROVE(replica_boxes[first].subset(static_cast<const PavingInterface&>(generic_boxes[first])));
 
-        // Augmented values delegate to the state paving, as the legacy class.
+        // Augmented values delegate to the state paving per location.
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPaving legacy_aug = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
-        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(legacy_aug);
-        legacy_aug.adjoin_outer_approximation(compact_set, 2u);
+        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
         ARIADNE_TESTING_PROVE(generic_aug[first].size() > 0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_aug[first].size(), legacy_aug.state_paving()[first].size());
-        const HybridAugmentedPavingValue legacy_aug_snapshot = make_hybrid_augmented_paving_value(legacy_aug);
-        ARIADNE_TESTING_PROVE(subset(generic_aug, legacy_aug_snapshot));
-        ARIADNE_TESTING_PROVE(subset(legacy_aug_snapshot, generic_aug));
+        HybridAugmentedPavingValue replica_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
+        adjoin_outer_approximation(replica_aug, compact_set, 2u);
+        ARIADNE_TESTING_PROVE(subset(generic_aug, replica_aug));
+        ARIADNE_TESTING_PROVE(subset(replica_aug, generic_aug));
     }
 
-    Void test_mince_recombine_is_empty_and_inner_approximation_match_legacy() {
+    Void test_mince_recombine_is_empty_and_inner_approximation() {
         const DiscreteLocation first(1), second(2);
         const RealVariable x("x"), y("y");
         MonolithicHybridSpace spaces;
@@ -516,84 +451,65 @@ class TestHybridPavingValueAdapters : public Ariadne::Testing::ContextFixture {
             {x.name(), 2.0_x},
             {y.name(), 3.0_x}
         };
-        const HybridScalings policy(scale_values);
-        const HybridGrid legacy_grid(space, policy);
         auto create_tree = [](const Grid& g) { return Paving(new BinaryTreePaving(g)); };
         auto generic_grids = [&] { return make_hybrid_grids(space, test_scalings_from_map(space, 1.0_x, scale_values)); };
 
         const HybridBoundedConstraintSet compact_set(first, {0.5_dec <= x <= 1.5_dec});
         const HybridBoundedConstraintSet wide_set(first, {-1.0_dec <= x <= 3.0_dec});
 
-        // Factory inner approximation: identical slices, only the set locations materialize.
-        const HybridPaving legacy_inner = inner_approximation(wide_set, legacy_grid, 2u);
+        // Factory inner approximation: only the set locations materialize.
         const Hybrid<Paving> generic_inner = inner_approximation(wide_set, generic_grids(), create_tree, 2u);
-        ARIADNE_TESTING_PROVE(legacy_inner.nontrivial_location(first));
         ARIADNE_TESTING_PROVE(generic_inner.has_value(first));
         ARIADNE_TESTING_PROVE(not generic_inner.has_value(second));
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_inner[first].size(), legacy_inner[first].size());
-        ARIADNE_TESTING_PROVE(generic_inner[first].subset(static_cast<const PavingInterface&>(legacy_inner[first])));
-        ARIADNE_TESTING_PROVE(legacy_inner[first].subset(static_cast<const PavingInterface&>(generic_inner[first])));
+        const Hybrid<Paving> replica_inner = inner_approximation(wide_set, generic_grids(), create_tree, 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_inner[first].size(), replica_inner[first].size());
+        ARIADNE_TESTING_PROVE(generic_inner[first].subset(static_cast<const PavingInterface&>(replica_inner[first])));
+        ARIADNE_TESTING_PROVE(replica_inner[first].subset(static_cast<const PavingInterface&>(generic_inner[first])));
         ARIADNE_TESTING_PROVE(not is_empty(generic_inner));
-        ARIADNE_TESTING_PROVE(is_empty(generic_inner) == legacy_inner.is_empty());
 
-        // adjoin_inner_approximation on existing pavings; fresh values are empty on both sides.
-        HybridPaving legacy(legacy_grid, create_tree);
+        // adjoin_inner_approximation on existing pavings; fresh values are empty.
         Hybrid<Paving> generic = make_hybrid_pavings(space, generic_grids(), create_tree);
         ARIADNE_TESTING_PROVE(is_empty(generic));
-        ARIADNE_TESTING_PROVE(legacy.is_empty());
-        legacy.adjoin_inner_approximation(wide_set, 2u);
         adjoin_inner_approximation(generic, wide_set, 2u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), legacy[first].size());
-        ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(legacy[first])));
-        ARIADNE_TESTING_PROVE(legacy[first].subset(static_cast<const PavingInterface&>(generic[first])));
         ARIADNE_TESTING_PROVE(not is_empty(generic));
-        ARIADNE_TESTING_PROVE(is_empty(generic) == legacy.is_empty());
+        Hybrid<Paving> replica = make_hybrid_pavings(space, generic_grids(), create_tree);
+        adjoin_inner_approximation(replica, wide_set, 2u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic[first].size(), replica[first].size());
+        ARIADNE_TESTING_PROVE(generic[first].subset(static_cast<const PavingInterface&>(replica[first])));
+        ARIADNE_TESTING_PROVE(replica[first].subset(static_cast<const PavingInterface&>(generic[first])));
 
         // mince/recombine parity on an outer approximation.
-        HybridPaving legacy_outer(legacy_grid, create_tree);
         Hybrid<Paving> generic_outer = make_hybrid_pavings(space, generic_grids(), create_tree);
-        legacy_outer.adjoin_outer_approximation(compact_set, 2u);
         adjoin_outer_approximation(generic_outer, compact_set, 2u);
+        Hybrid<Paving> replica_outer = make_hybrid_pavings(space, generic_grids(), create_tree);
+        adjoin_outer_approximation(replica_outer, compact_set, 2u);
         mince(generic_outer, 4u);
-        legacy_outer.mince(4u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_outer[first].size(), legacy_outer[first].size());
-        ARIADNE_TESTING_PROVE(generic_outer[first].subset(static_cast<const PavingInterface&>(legacy_outer[first])));
-        ARIADNE_TESTING_PROVE(legacy_outer[first].subset(static_cast<const PavingInterface&>(generic_outer[first])));
+        mince(replica_outer, 4u);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_outer[first].size(), replica_outer[first].size());
+        ARIADNE_TESTING_PROVE(generic_outer[first].subset(static_cast<const PavingInterface&>(replica_outer[first])));
+        ARIADNE_TESTING_PROVE(replica_outer[first].subset(static_cast<const PavingInterface&>(generic_outer[first])));
         recombine(generic_outer);
-        legacy_outer.recombine();
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_outer[first].size(), legacy_outer[first].size());
-        ARIADNE_TESTING_PROVE(generic_outer[first].subset(static_cast<const PavingInterface&>(legacy_outer[first])));
-        ARIADNE_TESTING_PROVE(legacy_outer[first].subset(static_cast<const PavingInterface&>(generic_outer[first])));
-        ARIADNE_TESTING_PROVE(is_empty(generic_outer) == legacy_outer.is_empty());
+        recombine(replica_outer);
+        ARIADNE_TESTING_EXPECT_EQUAL(generic_outer[first].size(), replica_outer[first].size());
+        ARIADNE_TESTING_PROVE(not is_empty(generic_outer));
 
-        // Augmented values delegate mince/recombine/is_empty to the slices, as the legacy class.
+        // Augmented values delegate mince/recombine/is_empty to the slices.
         HybridAutomaton system;
         system.new_mode(first, {dot(x) = -x});
         system.new_mode(second, {dot(y) = -y, dot(x) = -x});
-        HybridAugmentedPaving legacy_aug = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
-        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(legacy_aug);
-        legacy_aug.adjoin_outer_approximation(compact_set, 2u);
+        HybridAugmentedPavingValue generic_aug = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
         adjoin_outer_approximation(generic_aug, compact_set, 2u);
-        ARIADNE_TESTING_PROVE(is_empty(generic_aug) == legacy_aug.is_empty());
+        ARIADNE_TESTING_PROVE(not is_empty(generic_aug));
         mince(generic_aug, 4u);
-        legacy_aug.mince(4u);
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_aug[first].size(), legacy_aug.state_paving()[first].size());
+        ARIADNE_TESTING_PROVE(generic_aug[first].size() > 0u);
         recombine(generic_aug);
-        legacy_aug.recombine();
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_aug[first].size(), legacy_aug.state_paving()[first].size());
-        ARIADNE_TESTING_PROVE(is_empty(generic_aug) == legacy_aug.is_empty());
+        ARIADNE_TESTING_PROVE(not is_empty(generic_aug));
 
         // adjoin_inner_approximation on augmented values hits the state paving per location.
-        HybridAugmentedPaving legacy_aug_inner = HybridAugmentedPaving(legacy_grid, make_hybrid_auxiliary_mapping(system));
-        HybridAugmentedPavingValue generic_aug_inner = make_hybrid_augmented_paving_value(legacy_aug_inner);
+        HybridAugmentedPavingValue generic_aug_inner = make_hybrid_augmented_paving_value(generic_grids(), system, create_tree);
         adjoin_inner_approximation(generic_aug_inner, wide_set, 2u);
-        legacy_aug_inner.state_paving().adjoin_inner_approximation(wide_set, 2u);
         ARIADNE_TESTING_PROVE(generic_aug_inner.has_value(first));
-        ARIADNE_TESTING_EXPECT_EQUAL(generic_aug_inner[first].size(), legacy_aug_inner.state_paving()[first].size());
-        ARIADNE_TESTING_PROVE(generic_aug_inner[first].state_paving().subset(
-            static_cast<const PavingInterface&>(legacy_aug_inner.state_paving()[first])));
-        ARIADNE_TESTING_PROVE(legacy_aug_inner.state_paving()[first].subset(
-            static_cast<const PavingInterface&>(generic_aug_inner[first].state_paving())));
+        ARIADNE_TESTING_PROVE(generic_aug_inner[first].state_paving().size() > 0u);
     }
 };
 
@@ -602,9 +518,9 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_tree_robdd_and_lazy_locations);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_extend_auxiliary_preserves_lazy_backend);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_auxiliary_extension_preserves_named_grid_scalings);
-    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_set_operations_match_legacy_without_unwanted_materialization);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_set_operations_without_unwanted_materialization);
     ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_rejects_empty_or_wrong_grid_backend);
-    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_generic_approximation_matches_legacy);
-    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_mince_recombine_is_empty_and_inner_approximation_match_legacy);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_generic_approximation_and_augmented_value);
+    ARIADNE_TESTING_ADD_TEST(TestHybridPavingValueAdapters, test_mince_recombine_is_empty_and_inner_approximation);
     return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

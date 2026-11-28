@@ -44,7 +44,6 @@
 #include "function/functional.hpp"
 #include "geometry/box.hpp"
 #include "hybrid/hybrid_graphics.hpp"
-#include "hybrid/hybrid_paving.hpp"
 #include "hybrid/hybrid_set.hpp"
 #include "hybrid/hybrid_space.hpp"
 #include "integration/integrator.hpp"
